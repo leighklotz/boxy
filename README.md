@@ -2,7 +2,7 @@
 
 # Screenshot
 
-![docs/screenshot.png](screenshot.png)
+![docs/screenshot.png](docs/screenshot.png)
 
 ## Boxy Mouse Bindings
 | **Mouse**  | **Action** -| **Description**                              |
