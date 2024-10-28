@@ -9,7 +9,6 @@
 |------------|-------------|----------------------------------------------|
 | Left Click | Move Cursor |Move cursor to position clicked, inside boxes.|
 | Click Drag | Select text |Mark the dragged-over text as selected.       |
-|-----------|--------------|-----------------------------------------------|
 
 ## Boxy Editor Key Bindings
 Below is comprehensive table of key bindings for the visual editor, based on standard Emacs conventions along with custom commands for managing boxes.
