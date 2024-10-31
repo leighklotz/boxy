@@ -72,7 +72,6 @@ Here’s a UX specification for implementing a visual editor that handles both t
 |------------|-------------|----------------------------------------------|
 | Left Click | Move Cursor |Move cursor to position clicked, inside boxes.|
 | Click Drag | Select text |Mark the dragged-over text as selected.       |
-|-----------|--------------|-----------------------------------------------|
 
 ## Boxy Editor Key Bindings
 Below is comprehensive table of key bindings for the visual editor, based on standard Emacs conventions along with custom commands for managing boxes.
@@ -109,7 +108,6 @@ Note that if a text region is selected, any insert or delete commands will delet
 | <return>        | Newline                               | Insert a new line and move cursor to beginning. Extend box to fit. |
 | C-|             | Evaluate                              | Send the text of the current row to the "evaluate" function and output the resulting box after a pipe symbol on the same line.  |
 | <unbound key>   | Unbound key                           | Display "$key undefined" in an alertish yellow rectangle at top of screen, then fade.|
-|-----------------|---------------------------------------|----------------------------------------------------------|
 
 ## Boxy Editor Implementation Notes
 Here are the major implementation decisions to consider for the spec, focused on underlying structures, algorithms, and behavior logic:
