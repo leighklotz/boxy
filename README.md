@@ -1,8 +1,8 @@
 # Boxy - a Boxer-inspired editor
 
-# Screenshot
+## Basic Editor Screenshot
 
-![docs/screenshot.png](docs/screenshot.png)
+![docs/screenshot.png](docs/editor.png)
 
 ## Boxy Mouse Bindings
 | **Mouse**  | **Action** -| **Description**                              |
@@ -46,6 +46,14 @@ Note that if a text region is selected, any insert or delete commands will delet
 | C-&#124;        | Evaluate                              | Send the text of the current row to the "evaluate" function and output the resulting box after a pipe symbol on the same line.  |
 | &lt;unbound key&gt; | Unbound key                       | Display "$key undefined" in an alertish yellow rectangle at top of screen, then fade.|
 
+## Experimental Functions
+
+| **Key Binding** | **Action**                            | **Description**                                          |
+| Ctrl-|          | LLM Infer                             | Prompt an LLM with the current line and insert the results in a new box.|
+
+
+![docs/screenshot.png](docs/infer.png)
+
 ## Spec
 - [spec.md](spec.md)
 
@@ -53,4 +61,3 @@ Note that if a text region is selected, any insert or delete commands will delet
 - https://klotz.me/thesis.pdf
 - https://boxer-project.github.io/boxer-literature/theses/Bochser,%20An%20Integrated%20Scheme%20Programming%20System%20(Eisenberg,%20MIT%20MSc,%201985).pdf
 - https://boxer-project.github.io/
-
