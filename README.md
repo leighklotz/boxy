@@ -2,7 +2,7 @@
 
 ## Basic Editor Screenshot
 
-![docs/screenshot.png](docs/editor.png)
+![docs/editor.png](docs/editor.png)
 
 ## Boxy Mouse Bindings
 | **Mouse**  | **Action** -| **Description**                              |
@@ -52,7 +52,7 @@ Note that if a text region is selected, any insert or delete commands will delet
 | Ctrl-|          | LLM Infer                             | Prompt an LLM with the current line and insert the results in a new box.|
 
 
-![docs/screenshot.png](docs/infer.png)
+![docs/llm-infer.png](docs/llm-infer.png)
 
 ## Spec
 - [spec.md](spec.md)
