@@ -3,46 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { font-family: sans-serif; }
-        .box {
-            border: 1px solid black;
-            padding: 5px;
-            margin: 2px;
-            display: inline-block;
-            min-width: 20px;
-            min-height: 1em;
-            vertical-align: top;
-            white-space: pre-wrap;
-            cursor: text;
-            position: relative;
-        }
-        .cursor {
-            background-color: black;
-            display: inline-block;
-            width: 2px;
-            height: 1em;
-            animation: blink 0.7s step-start infinite;
-        }
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-        .alert {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: yellow;
-            padding: 5px 10px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-            z-index: 1000;
-            opacity: 1;
-            transition: opacity 2s;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
     <title>Boxy Editor</title>
 </head>
+
 <body>
 
     <div id="alert-box" class="alert" style="display: none;">Unbound key</div>
@@ -52,115 +16,6 @@
     <script>
 
         const apiUrl = "http://tensor-psy.klotz.me:5000/v1/chat/completions";
-
-        function getRowText() {
-            const currentRow = [];
-            let currentNode = cursor.parentNode;
-
-            while (currentNode && !(currentNode.nodeType === Node.TEXT_NODE && currentNode.textContent.includes('\n'))) {
-
-                // Recursive function to gather text content
-                function gatherText(node, isNested = false) {
-                    if (node.nodeType === Node.TEXT_NODE) {
-                        currentRow.push(node.textContent);
-                    } else if (node.classList && node.classList.contains('box')) {
-                        if (isNested) currentRow.push('['); // Only add brackets for nested boxes
-                        Array.from(node.childNodes).forEach(child => gatherText(child, true));
-                        if (isNested) currentRow.push(']');
-                    } else {
-                        Array.from(node.childNodes).forEach(child => gatherText(child, isNested));
-                    }
-                }
-
-                // Start gathering content of the current node
-                gatherText(currentNode);
-
-                currentNode = currentNode.nextSibling;
-            }
-
-            // Join the text of the row and return it
-            return currentRow.join('');
-        }
-
-        async function callOpenAPI(question, mode, temperature, repetition_penalty, penalize_nl, seed) {
-            const requestBody = {
-                messages: [
-                    {
-                        role: "user",
-                        content: question
-                    }
-                ],
-                mode: mode,
-                temperature_last: true,
-                temperature: temperature,
-                repetition_penalty: repetition_penalty,
-                penalize_nl: penalize_nl,
-                seed: seed,
-                repeat_last_n: 64,
-                repeat_penalty: 1.000,
-                frequency_penalty: 0.000,
-                presence_penalty: 0.000,
-                top_k: 40,
-                tfs_z: 1.000,
-                top_p: 0.950,
-                min_p: 0.050,
-                typical_p: 1.000,
-                temp: temperature,
-                n_keep: 1,
-                max_tokens: 4096,
-                auto_max_new_tokens: true,
-                skip_special_tokens: false
-            };
-
-            const response = await fetch(apiUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(requestBody)
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            // Assuming the response has a structure where the text response is stored in data.choices[0].message.content
-            return data.choices[0].message.content;
-        }
-
-        async function llmInfer() {
-            let question = getRowText();
-            console.log(question);
-
-            const response = await callOpenAPI(question, "chat", 0.7, 1.0, 0.0, 42);
-
-            if (question.includes('|')) {
-                // Find the first '|' in current row and delete it and the rest of the row
-                let currentRow = cursor.parentNode;
-                let node = currentRow.firstChild;
-
-                while (node) {
-                    if (node.nodeType === Node.TEXT_NODE && node.textContent.includes('|')) {
-                        const textContent = node.textContent;
-                        const index = textContent.indexOf('|');
-                        if (index > -1) {
-                            // Remove the entire text node
-                            currentRow.removeChild(node);
-                            break;
-                        }
-                    }
-                    node = node.nextSibling;
-                }
-            }
-
-            insertTextAtCursor('   |   ');
-            insertAndEnterBox();
-            insertTextAtCursor(response);
-            exitBoxRight();
-
-            console.log("Cursor moved to:", document.activeElement);
-        }
 
         const editor = document.getElementById('editor');
         const cursor = document.querySelector('.cursor');
@@ -187,7 +42,6 @@
             'Ctrl-k': killLine,
             'Ctrl-p': moveCursorUp,
             'Ctrl-n': moveCursorDown,
-            'Ctrl-|': llmInfer,
             'ArrowLeft': moveCursorLeftWithinBox,
             'ArrowRight': moveCursorRightWithinBox,
             'ArrowUp': moveCursorUp,
@@ -712,6 +566,38 @@
             return 0;
         }
 
+        // box access functions for evaluator
+        function getRowText() {
+            const currentRow = [];
+            let currentNode = cursor.parentNode;
+
+            while (currentNode && !(currentNode.nodeType === Node.TEXT_NODE && currentNode.textContent.includes('\n'))) {
+
+                // Recursive function to gather text content
+                function gatherText(node, isNested = false) {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        currentRow.push(node.textContent);
+                    } else if (node.classList && node.classList.contains('box')) {
+                        if (isNested) currentRow.push('['); // Only add brackets for nested boxes
+                        Array.from(node.childNodes).forEach(child => gatherText(child, true));
+                        if (isNested) currentRow.push(']');
+                    } else {
+                        Array.from(node.childNodes).forEach(child => gatherText(child, isNested));
+                    }
+                }
+
+                // Start gathering content of the current node
+                gatherText(currentNode);
+
+                currentNode = currentNode.nextSibling;
+            }
+
+            // Join the text of the row and return it
+            return currentRow.join('');
+        }
+
+
+
         // Add event listeners
         editor.addEventListener('keydown', handleKeydown);
         editor.addEventListener('click', handleClick);
@@ -719,5 +605,12 @@
         // Set initial focus
         editor.focus();
     </script>
-</body>
+
+    <!-- more stuff implemented in modules -->
+    <script src="services/llm-infer/llm-infer.js"> </script>
+    <script>
+      keyMap['Ctrl-|'] = llmInfer
+    </script>
+
+  </body>
 </html>
