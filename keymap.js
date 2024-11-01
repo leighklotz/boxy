@@ -17,6 +17,8 @@ const keyMap = {
     'Ctrl-p': moveCursorUp,
     'Ctrl-n': moveCursorDown,
     'Ctrl-q': insertQuotedChar,
+    'Ctrl-,': moveCursorToStartOfBox,
+    'Ctrl-.': moveCursorToEndOfBox,
     'ArrowLeft': moveCursorLeftWithinBox,
     'ArrowRight': moveCursorRightWithinBox,
     'ArrowUp': moveCursorUp,
