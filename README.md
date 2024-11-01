@@ -51,6 +51,7 @@ Note that if a text region is selected, any insert or delete commands will delet
 
 ## llm-infer
 | **Key Binding** | **Action**                            | **Description**                                          |
+|-----------------|---------------------------------------|----------------------------------------------------------|
 | |               | LLM Infer                             | Prompt an LLM with the current line and insert the results in a new box.|
 | Ctrl-|          | LLM Chat                               | Prompt an LLM with the current box and insert the results in a new box.|
 
