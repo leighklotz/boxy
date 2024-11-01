@@ -51,6 +51,21 @@ async function llmInfer() {
 
     const response = await callOpenAPI(question, "chat", 0.7, 1.0, 0.0, 42);
 
+    insertLlmResponse(question, response);
+}
+
+// todo: use open api chat history instead of just string concat
+async function llmChat() {
+    let history_raw = getBoxRowsText();
+    question = history_raw.join("\n");
+    console.log(question);
+
+    const response = await callOpenAPI(question, "chat", 0.7, 1.0, 0.0, 42);
+
+    insertLlmResponse(question, response);
+}
+
+function insertLlmResponse(question, response) {
     if (question.includes('|')) {
         // Find the first '|' in current row and delete it and the rest of the row
         let currentRow = cursor.parentNode;
@@ -77,4 +92,3 @@ async function llmInfer() {
 
     console.log("Cursor moved to:", document.activeElement);
 }
-

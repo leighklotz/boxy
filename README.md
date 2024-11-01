@@ -34,6 +34,7 @@ Note that if a text region is selected, any insert or delete commands will delet
 | C-b             | Move backward                         | Move cursor backward one char or box          |
 | C-p             | Move up                               | Move cursor up one row in box box, preserving goal column          |
 | C-n             | Move down                             | Move cursor down one row in box box, preserving goal column          |
+| C-q             | Quote Character                       | Insert the next typed character instead of acting on it.      |
 | Arrow Keys      | Move Up, Down, Left, or Right         | Like Ctrl-P, Ctrl-N, Ctrl-B, Ctrl-F. |
 | C-k             | Kill line                             | Delete content from cursor to the end of the line in box   |
 | C-y             | Yank (paste)                          | Paste previously cut or copied text/box at the cursor position. |
@@ -50,10 +51,19 @@ Note that if a text region is selected, any insert or delete commands will delet
 
 ## llm-infer
 | **Key Binding** | **Action**                            | **Description**                                          |
-| Ctrl-|          | LLM Infer                             | Prompt an LLM with the current line and insert the results in a new box.|
+| |               | LLM Infer                             | Prompt an LLM with the current line and insert the results in a new box.|
+| Ctrl-|          | LLM Chat                               | Prompt an LLM with the current box and insert the results in a new box.|
 
+### llm-infer
+One inference per line
 
 ![docs/llm-infer.png](docs/llm-infer.png)
+
+### llm-chat
+One inference per box, continued as a chat
+
+![docs/llm-infer.png](docs/llm-chat.png)
+
 
 ## Spec
 - [spec.md](spec.md)

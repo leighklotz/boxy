@@ -42,6 +42,7 @@
             'Ctrl-k': killLine,
             'Ctrl-p': moveCursorUp,
             'Ctrl-n': moveCursorDown,
+            'Ctrl-q': insertQuotedChar,
             'ArrowLeft': moveCursorLeftWithinBox,
             'ArrowRight': moveCursorRightWithinBox,
             'ArrowUp': moveCursorUp,
@@ -49,6 +50,13 @@
             'Backspace': deleteCharAtCursor,
             'Enter': insertNewline
         };
+
+        var quoteFlag = false;
+
+        // Insert quoted character at cursor position
+        function insertQuotedChar() {
+            quoteFlag = true;
+        }
 
         // Insert a newline at the cursor position
         function insertNewline() {
@@ -395,6 +403,14 @@
                 return;  
             }
 
+            // if quote, just insert the key
+            if (quoteFlag) {
+                insertCharAtCursor(event.key);
+                event.preventDefault();
+                quoteFlag = false;
+                return;
+            }
+
             // Determine the key pressed (with or without Ctrl)
             const key = event.ctrlKey ? `Ctrl-${event.key.toLowerCase()}` : event.key;
 
@@ -566,28 +582,37 @@
             return 0;
         }
 
+        //
         // box access functions for evaluator
+        //
+
+        // Gather text content from a node, serializing nested boxes inside []
+        function gatherText(node, isNested = false) {
+            const textContent = [];
+
+            if (node.nodeType === Node.TEXT_NODE) {
+                textContent.push(node.textContent);
+            } else if (node.classList && node.classList.contains('box')) {
+                if (isNested) textContent.push('['); // Only add brackets for nested boxes
+                Array.from(node.childNodes).forEach(child => textContent.push(...gatherText(child, true)));
+                if (isNested) textContent.push(']');
+            } else {
+                Array.from(node.childNodes).forEach(child => textContent.push(...gatherText(child, isNested)));
+            }
+
+            return textContent;
+        }
+
+        
+        // Gather text content from current row in box, serializing nested boxes inside []
         function getRowText() {
             const currentRow = [];
             let currentNode = cursor.parentNode;
 
             while (currentNode && !(currentNode.nodeType === Node.TEXT_NODE && currentNode.textContent.includes('\n'))) {
 
-                // Recursive function to gather text content
-                function gatherText(node, isNested = false) {
-                    if (node.nodeType === Node.TEXT_NODE) {
-                        currentRow.push(node.textContent);
-                    } else if (node.classList && node.classList.contains('box')) {
-                        if (isNested) currentRow.push('['); // Only add brackets for nested boxes
-                        Array.from(node.childNodes).forEach(child => gatherText(child, true));
-                        if (isNested) currentRow.push(']');
-                    } else {
-                        Array.from(node.childNodes).forEach(child => gatherText(child, isNested));
-                    }
-                }
-
                 // Start gathering content of the current node
-                gatherText(currentNode);
+                currentRow.push(...gatherText(currentNode));
 
                 currentNode = currentNode.nextSibling;
             }
@@ -597,6 +622,28 @@
         }
 
 
+        // returns a list of the text of each row.
+        // if there is a box in any row, serialize its contents between '[' and ']'
+        function getBoxRowsText() {
+            const rowsText = [];
+            // todo: i want currentNode to be the first node of the nox.
+            let currentNode = cursor.parentNode;
+
+            while (currentNode) {
+                const rowText = [];
+                currentNode = currentNode.firstChild;
+
+                while (currentNode && !(currentNode.nodeType === Node.TEXT_NODE && currentNode.textContent.includes('\n'))) {
+                    rowText.push(...gatherText(currentNode));
+                    currentNode = currentNode.nextSibling;
+                }
+
+                rowsText.push(rowText.join(''));
+                currentNode = currentNode?.nextSibling;
+            }
+
+            return rowsText;
+        }
 
         // Add event listeners
         editor.addEventListener('keydown', handleKeydown);
@@ -609,7 +656,8 @@
     <!-- more stuff implemented in modules -->
     <script src="modules/llm-infer/llm-infer.js"> </script>
     <script>
-      keyMap['Ctrl-|'] = llmInfer
+      // keyMap['Ctrl-|'] = llmChat
+      keyMap['|'] = llmInfer
     </script>
 
   </body>
