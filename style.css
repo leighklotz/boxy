@@ -1,0 +1,38 @@
+<style>
+body { font-family: sans-serif; }
+.box {
+    border: 1px solid black;
+    padding: 5px;
+    margin: 2px;
+    display: inline-block;
+    min-width: 20px;
+    min-height: 1em;
+    vertical-align: top;
+    white-space: pre-wrap;
+    cursor: text;
+    position: relative;
+}
+.cursor {
+    background-color: black;
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    animation: blink 0.7s step-start infinite;
+}
+@keyframes blink {
+    50% { opacity: 0; }
+}
+.alert {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: yellow;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 2s;
+}
+</style>
