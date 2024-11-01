@@ -77,6 +77,25 @@ function moveCursor(node, offset = 0) {
     }
 }
 
+function moveCursorToStartOfBox() {
+    console.log('Attempting to move to the start of the current box...');
+    // Move the cursor to the start of the first child of the current box
+    moveCursor(cursor.parentNode.firstChild, 0);
+}
+
+function moveCursorToEndOfBox() {
+    console.log('Attempting to move to the end of the current box...');
+    const currentBox = cursor.parentNode;
+    const lastChild = currentBox.lastChild;
+    if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
+        const textLen = lastChild.textContent.length;
+        moveCursor(lastChild, textLen);
+    } else {
+        // If the last child is an element node, move to its end
+        moveCursor(lastChild, lastChild ? lastChild.textContent.length : 0);
+    }
+}
+
 function moveCursorToStartOfLineInBox() {
     console.log('Attempting to move to the start of the current row...');
     let node = cursor.previousSibling;
@@ -571,6 +590,33 @@ function gatherText(node, isNested = false) {
     return textContent;
 }
 
+function getBoxRowsText() {
+    const rowsText = [];
+    let currentNode = document.getElementById('editor').firstChild;
+    let rowText = [];
+
+    while (currentNode) {
+        if (currentNode.nodeType === Node.TEXT_NODE) {
+            rowText.push(currentNode.textContent);
+        } else if (currentNode.classList && currentNode.classList.contains('box')) {
+            rowText.push(...gatherText(currentNode));
+        }
+
+        if (currentNode.nodeType === Node.TEXT_NODE && currentNode.textContent.includes('\n')) {
+            rowsText.push(rowText.join(''));
+            rowText = [];
+        }
+
+        currentNode = currentNode.nextSibling;
+    }
+
+    // Add the last row, if any
+    if (rowText.length > 0) {
+        rowsText.push(rowText.join(''));
+    }
+
+    return rowsText;
+}
 
 // Gather text content from current row in box, serializing nested boxes inside []
 function getRowText() {
@@ -587,30 +633,6 @@ function getRowText() {
 
     // Join the text of the row and return it
     return currentRow.join('');
-}
-
-
-// returns a list of the text of each row.
-// if there is a box in any row, serialize its contents between '[' and ']'
-function getBoxRowsText() {
-    const rowsText = [];
-    // todo: i want currentNode to be the first node of the nox.
-    let currentNode = cursor.parentNode;
-
-    while (currentNode) {
-        const rowText = [];
-        currentNode = currentNode.firstChild;
-
-        while (currentNode && !(currentNode.nodeType === Node.TEXT_NODE && currentNode.textContent.includes('\n'))) {
-            rowText.push(...gatherText(currentNode));
-            currentNode = currentNode.nextSibling;
-        }
-
-        rowsText.push(rowText.join(''));
-        currentNode = currentNode?.nextSibling;
-    }
-
-    return rowsText;
 }
 
 // Add event listeners
