@@ -46,8 +46,9 @@ Note that if a text region is selected, any insert or delete commands will delet
 | C-&#124;        | Evaluate                              | Send the text of the current row to the "evaluate" function and output the resulting box after a pipe symbol on the same line.  |
 | &lt;unbound key&gt; | Unbound key                       | Display "$key undefined" in an alertish yellow rectangle at top of screen, then fade.|
 
-## Experimental Functions
+## Modules
 
+## llm-infer
 | **Key Binding** | **Action**                            | **Description**                                          |
 | Ctrl-|          | LLM Infer                             | Prompt an LLM with the current line and insert the results in a new box.|
 
