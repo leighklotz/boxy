@@ -60,50 +60,141 @@ async function llmChat() {
     insertLlmResponse(response);
 }
 
-//// Find the first '|' in current row and delete it and the rest of the line.
-//// then, Insert the ' | ' and the response.
-//// normalize space around ' | ' to one space each side.
+// function insertLlmResponse(response) {
+//     let node = cursor;
+//     
+//     // todo: 
+//     // Find the first '|' in current row and delete it and the rest of the line.
+//     // then, Insert the ' | ' and the response.
+//     // normalize space around ' | ' to one space each side.
+// 
+//     insertTextAtCursor(' | ');
+//     insertAndEnterBox();
+//     insertTextAtCursor(response.trim());
+//     exitBoxRight();
+//     
+//     console.log("Cursor moved to:", document.activeElement);
+// }
+
 function insertLlmResponse(response) {
-    let currentRow = cursor.parentNode;
-    let node = currentRow.firstChild;
+    let currentLineContainer = cursor.parentNode;
+    let foundPipe = false;
+    let nodesToClear = [];
 
-    // Traverse the current line to find the text node containing the '|'
-    while (node) {
-        if (node.nodeType === Node.TEXT_NODE && node.textContent.includes('|')) {
-
-            // Delete from node to the end of the line
-            while (node) {
-                if (node.nodeType === Node.TEXT_NODE) {
-                    const newlineIndex = node.textContent.indexOf('\n');
-                    if (newlineIndex !== -1) {
-                        // Keep the newline
-                        node.textContent = node.textContent.slice(newlineIndex);
-                        break;
-                    } else {
-                        // Remove entire text node if no newline
-                        node.remove(); 
-                    }
-                } else {
-                    // Remove non-text nodes
-                    node.remove();
-                }
-                node = cursor.nextSibling; // Move to next sibling
-            }
-
-            found = true;
-            break;
+    for (let node of currentLineContainer.childNodes) {
+        if (node === cursor) {
+            continue; // Skip the cursor
         }
-        node = node.nextSibling;
+        if (!foundPipe && node.nodeType === Node.TEXT_NODE) {
+            const pipeIndex = node.textContent.indexOf('|');
+            if (pipeIndex !== -1) {
+                node.textContent = node.textContent.substring(0, pipeIndex + 1).trim() + ' '; // Normalize space
+                foundPipe = true;
+                // Collect nodes after '|' to clear
+                nodesToClear = [...currentLineContainer.childNodes].slice([...currentLineContainer.childNodes].indexOf(node) + 1);
+                break;
+            }
+        }
     }
 
-    insertTextAtCursor(' | ');
+    // Remove nodes collected to be cleared
+    nodesToClear.forEach(node => node.remove());
+
+    // Move the cursor to the end of the line or right after the '|'
+    if (foundPipe) {
+        moveCursorToEndOfLine(currentLineContainer);
+    } else {
+        // If no '|' found, add it at the end of the current row
+        insertTextAtCursor(' | ');
+        moveCursorToEndOfLine(currentLineContainer);
+    }
+
+    // Insert the response in a new box
     insertAndEnterBox();
     insertTextAtCursor(response.trim());
     exitBoxRight();
-    
+
     console.log("Cursor moved to:", document.activeElement);
 }
 
+function moveCursorToEndOfLine(parentNode) {
+    let lastTextNode = null;
+    let reachedEndOfLine = false;
+
+    parentNode.childNodes.forEach(node => {
+        if (node === cursor) {
+            // If the cursor is encountered, consider it the end point for modifications
+            reachedEndOfLine = true;
+        }
+        if (node.nodeType === Node.TEXT_NODE && !reachedEndOfLine) {
+            const lineBreakIndex = node.textContent.indexOf('\n');
+            if (lineBreakIndex !== -1) {
+                // Found a line break, move the cursor here and mark end of line
+                lastTextNode = node;
+                moveCursor(node, lineBreakIndex);
+                reachedEndOfLine = true;
+            } else {
+                // No line break, continue to update the last text node
+                lastTextNode = node;
+            }
+        }
+    });
+
+    // Move cursor to the end of the last text node if no line break is found
+    if (lastTextNode && !reachedEndOfLine) {
+        moveCursor(lastTextNode, lastTextNode.textContent.length);
+    }
+}
+function insertLlmResponse(response) {
+    let currentLineContainer = cursor.parentNode;
+    let nodes = Array.from(currentLineContainer.childNodes);
+    let foundPipe = false;
+    let indexAfterPipe = 0;
+
+    // Find the '|' character and note where to start clearing content
+    for (let i = 0; i < nodes.length; i++) {
+        let node = nodes[i];
+        if (node.nodeType === Node.TEXT_NODE && node.textContent.includes('|')) {
+            let pipeIndex = node.textContent.indexOf('|');
+            node.textContent = node.textContent.substring(0, pipeIndex + 1); // Keep everything before and including '|'
+            foundPipe = true;
+            indexAfterPipe = i + 1;
+            break;
+        }
+    }
+
+    // Remove all nodes after the '|' character
+    nodes.slice(indexAfterPipe).forEach(node => node.remove());
+
+    // Normalize space around '|'
+    if (foundPipe) {
+        moveCursorToEndOfLine(currentLineContainer);
+        insertTextAtCursor(' ');
+    } else {
+        insertTextAtCursor(' | ');
+        moveCursorToEndOfLine(currentLineContainer);
+    }
+
+    // Insert the response in a new context box
+    insertAndEnterBox();
+    insertTextAtCursor(response.trim());
+    exitBoxRight();
+}
+
+
+function moveCursorToEndOfLine(parentNode) {
+    let lastTextNode = null;
+    parentNode.childNodes.forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            lastTextNode = node; // Update to the last text node
+        }
+    });
+    if (lastTextNode) {
+        moveCursor(lastTextNode, lastTextNode.textContent.length);
+    } else {
+        moveCursor(parentNode, parentNode.childNodes.length); // Fallback to the end of the parent node
+    }
+}
 
 
 
