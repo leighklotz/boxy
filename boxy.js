@@ -44,31 +44,47 @@ function exitBoxRight() {
 }
 
 /** * Cursor Management */
-
 function moveCursor(node, offset = 0) {
   // Remove any empty text nodes before moving the cursor
   if (node && node.nodeType === Node.TEXT_NODE && node.textContent === "") {
-    node.remove();
+    if (node.parentNode && node.parentNode.childNodes.length > 1) {
+      node.remove();
+    }
     return;
   }
 
-  // Adjust to allow moving the cursor to a different parent
   if (node) {
     // Handle text node insertion
     if (node.nodeType === Node.TEXT_NODE) {
       if (offset >= node.textContent.length) {
-        node.parentNode.insertBefore(cursor, node.nextSibling);
+        if (node.nextSibling && node.parentNode !== cursor) {
+          node.parentNode.insertBefore(cursor, node.nextSibling);
+        } else if (node.parentNode !== cursor) {
+          node.parentNode.appendChild(cursor);
+        }
       } else {
         const splitNode = node.splitText(offset);
-        node.parentNode.insertBefore(cursor, splitNode);
+        if (node.parentNode !== cursor) {
+          node.parentNode.insertBefore(cursor, splitNode);
+        }
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       // Insert cursor at the correct child node
-      node.insertBefore(cursor, node.childNodes[offset] || null);
+      if (offset < node.childNodes.length && node.childNodes[offset] !== cursor) {
+        node.insertBefore(cursor, node.childNodes[offset] || null);
+      } else if (node !== cursor) {
+        node.appendChild(cursor);
+      }
     } else {
       // Insert cursor at the parent of the node
-      node.parentNode.insertBefore(cursor, node);
+      if (node.parentNode && node.parentNode !== cursor) {
+        node.parentNode.insertBefore(cursor, node);
+      } else {
+        console.error('Node has no parent or is the cursor itself, cannot move cursor.');
+      }
     }
+  } else {
+    console.error('Invalid node, cannot move cursor.');
   }
 }
 

@@ -4,7 +4,7 @@ async function callOpenAPI(chat_history, question, mode, temperature, repetition
     }
 
     const requestBody = {
-        messages: chat_history ? chat_history : [ { role: "user", content: question } ],
+        messages: chat_history.length ? chat_history : [ { role: "user", content: question } ],
         mode: mode,
         temperature_last: true,
         temperature: temperature,
@@ -46,7 +46,7 @@ async function callOpenAPI(chat_history, question, mode, temperature, repetition
 
 async function llmInfer() {
     let question = getRowText();
-    console.log("llmInfer", question);
+    console.log("llmInfer question", question);
     const response = await callOpenAPI([], question, "chat", 0.7, 1.0, 0.0, 42);
     console.log("llmInfer response", JSON.stringify(response));
     insertLlmResponse(response);
@@ -55,67 +55,13 @@ async function llmInfer() {
 // todo: use open api chat history instead of just string concat
 async function llmChat() {
     let history_raw = getBoxRowsText();
+    console.log("llmChat history_raw", JSON.stringify(history_raw));
     let chatHistory = constructChatHistory(history_raw);
-    console.log("llmChat", JSON.stringify(chatHistory));
+    console.log("llmChat chatHistory", JSON.stringify(chatHistory));
     const response = await callOpenAPI(chatHistory, "", "chat", 0.7, 1.0, 0.0, 42);
     console.log("llmChat response", JSON.stringify(response));
     insertLlmResponse(response);
 }
-
-//function insertLlmResponse(response) {
-//    let currentLineContainer = cursor.parentNode;
-//    let foundPipe = false;
-//    let nodesToClear = [];
-//
-//    for (let node of currentLineContainer.childNodes) {
-//        if (node === cursor) {
-//            continue; // Skip the cursor
-//        }
-//        if (!foundPipe && node.nodeType === Node.TEXT_NODE) {
-//            const pipeIndex = node.textContent.indexOf('|');
-//            if (pipeIndex !== -1) {
-//                node.textContent = node.textContent.substring(0, pipeIndex + 1).trim() + ' '; // Normalize space
-//                foundPipe = true;
-//                // Collect nodes after '|' to clear
-//                nodesToClear = [...currentLineContainer.childNodes].slice([...currentLineContainer.childNodes].indexOf(node) + 1);
-//                break;
-//            }
-//        }
-//    }
-//
-//    // Remove nodes collected to be cleared
-//    nodesToClear.forEach(node => node.remove());
-//
-//    // Move the cursor to the end of the line or right after the '|'
-//    if (foundPipe) {
-//        moveCursorToEndOfLine(currentLineContainer);
-//    } else {
-//        // If no '|' found, add it at the end of the current row
-//        insertTextAtCursor(' | ');
-//        moveCursorToEndOfLine(currentLineContainer);
-//    }
-//
-//    // Insert the response in a new box
-//    insertAndEnterBox();
-//    insertTextAtCursor(response.trim());
-//    exitBoxRight();
-//
-//    console.log("Cursor moved to:", document.activeElement);
-//}
-
-// function moveCursorToEndOfLine(parentNode) {
-//     let lastTextNode = null;
-//     parentNode.childNodes.forEach(node => {
-//         if (node.nodeType === Node.TEXT_NODE) {
-//             lastTextNode = node; // Update to the last text node
-//         }
-//     });
-//     if (lastTextNode) {
-//         moveCursor(lastTextNode, lastTextNode.textContent.length);
-//     } else {
-//         moveCursor(parentNode, parentNode.childNodes.length); // Fallback to the end of the parent node
-//     }
-// }
 
 function moveCursorToEndOfLine(parentNode) {
     let lastTextNode = null;
@@ -253,8 +199,10 @@ function getChatHistory() {
 function constructChatHistory(rowsText) {
     const chatHistory = [];
 
-    console.log("assuming Qwen");
-    chatHistory.push({ role: 'system', content: 'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.' });
+    if (false) {
+        console.log("assuming Qwen");
+        chatHistory.push({ role: 'system', content: 'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.' });
+    }
 
 
     rowsText.forEach(row => {
