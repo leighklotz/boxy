@@ -1,5 +1,5 @@
 async function callOpenAPI(chat_history, question, mode, temperature, repetition_penalty, penalize_nl, seed) {
-    if (chat_history && question) {
+    if (chat_history.length && question) {
         throw new Error("cannot append question to chat_history yet");
     }
 
@@ -47,7 +47,8 @@ async function callOpenAPI(chat_history, question, mode, temperature, repetition
 async function llmInfer() {
     let question = getRowText();
     console.log("llmInfer", question);
-    const response = await callOpenAPI(question, "chat", 0.7, 1.0, 0.0, 42);
+    const response = await callOpenAPI([], question, "chat", 0.7, 1.0, 0.0, 42);
+    console.log("llmInfer response", JSON.stringify(response));
     insertLlmResponse(response);
 }
 
@@ -57,65 +58,64 @@ async function llmChat() {
     let chatHistory = constructChatHistory(history_raw);
     console.log("llmChat", JSON.stringify(chatHistory));
     const response = await callOpenAPI(chatHistory, "", "chat", 0.7, 1.0, 0.0, 42);
+    console.log("llmChat response", JSON.stringify(response));
     insertLlmResponse(response);
 }
 
-// function insertLlmResponse(response) {
-//     let node = cursor;
-//     
-//     // todo: 
-//     // Find the first '|' in current row and delete it and the rest of the line.
-//     // then, Insert the ' | ' and the response.
-//     // normalize space around ' | ' to one space each side.
-// 
-//     insertTextAtCursor(' | ');
-//     insertAndEnterBox();
-//     insertTextAtCursor(response.trim());
-//     exitBoxRight();
-//     
-//     console.log("Cursor moved to:", document.activeElement);
+//function insertLlmResponse(response) {
+//    let currentLineContainer = cursor.parentNode;
+//    let foundPipe = false;
+//    let nodesToClear = [];
+//
+//    for (let node of currentLineContainer.childNodes) {
+//        if (node === cursor) {
+//            continue; // Skip the cursor
+//        }
+//        if (!foundPipe && node.nodeType === Node.TEXT_NODE) {
+//            const pipeIndex = node.textContent.indexOf('|');
+//            if (pipeIndex !== -1) {
+//                node.textContent = node.textContent.substring(0, pipeIndex + 1).trim() + ' '; // Normalize space
+//                foundPipe = true;
+//                // Collect nodes after '|' to clear
+//                nodesToClear = [...currentLineContainer.childNodes].slice([...currentLineContainer.childNodes].indexOf(node) + 1);
+//                break;
+//            }
+//        }
+//    }
+//
+//    // Remove nodes collected to be cleared
+//    nodesToClear.forEach(node => node.remove());
+//
+//    // Move the cursor to the end of the line or right after the '|'
+//    if (foundPipe) {
+//        moveCursorToEndOfLine(currentLineContainer);
+//    } else {
+//        // If no '|' found, add it at the end of the current row
+//        insertTextAtCursor(' | ');
+//        moveCursorToEndOfLine(currentLineContainer);
+//    }
+//
+//    // Insert the response in a new box
+//    insertAndEnterBox();
+//    insertTextAtCursor(response.trim());
+//    exitBoxRight();
+//
+//    console.log("Cursor moved to:", document.activeElement);
+//}
+
+// function moveCursorToEndOfLine(parentNode) {
+//     let lastTextNode = null;
+//     parentNode.childNodes.forEach(node => {
+//         if (node.nodeType === Node.TEXT_NODE) {
+//             lastTextNode = node; // Update to the last text node
+//         }
+//     });
+//     if (lastTextNode) {
+//         moveCursor(lastTextNode, lastTextNode.textContent.length);
+//     } else {
+//         moveCursor(parentNode, parentNode.childNodes.length); // Fallback to the end of the parent node
+//     }
 // }
-
-function insertLlmResponse(response) {
-    let currentLineContainer = cursor.parentNode;
-    let foundPipe = false;
-    let nodesToClear = [];
-
-    for (let node of currentLineContainer.childNodes) {
-        if (node === cursor) {
-            continue; // Skip the cursor
-        }
-        if (!foundPipe && node.nodeType === Node.TEXT_NODE) {
-            const pipeIndex = node.textContent.indexOf('|');
-            if (pipeIndex !== -1) {
-                node.textContent = node.textContent.substring(0, pipeIndex + 1).trim() + ' '; // Normalize space
-                foundPipe = true;
-                // Collect nodes after '|' to clear
-                nodesToClear = [...currentLineContainer.childNodes].slice([...currentLineContainer.childNodes].indexOf(node) + 1);
-                break;
-            }
-        }
-    }
-
-    // Remove nodes collected to be cleared
-    nodesToClear.forEach(node => node.remove());
-
-    // Move the cursor to the end of the line or right after the '|'
-    if (foundPipe) {
-        moveCursorToEndOfLine(currentLineContainer);
-    } else {
-        // If no '|' found, add it at the end of the current row
-        insertTextAtCursor(' | ');
-        moveCursorToEndOfLine(currentLineContainer);
-    }
-
-    // Insert the response in a new box
-    insertAndEnterBox();
-    insertTextAtCursor(response.trim());
-    exitBoxRight();
-
-    console.log("Cursor moved to:", document.activeElement);
-}
 
 function moveCursorToEndOfLine(parentNode) {
     let lastTextNode = null;
@@ -145,8 +145,17 @@ function moveCursorToEndOfLine(parentNode) {
         moveCursor(lastTextNode, lastTextNode.textContent.length);
     }
 }
+
+// Find the first '|' in current row and delete it and the rest of the line.
+// then, Insert the ' | ' and the response.
+// normalize space around ' | ' to one space each side.
 function insertLlmResponse(response) {
     let currentLineContainer = cursor.parentNode;
+    if (!currentLineContainer) {
+        console.error('Cursor is not within a valid line container.');
+        return;
+    }
+
     let nodes = Array.from(currentLineContainer.childNodes);
     let foundPipe = false;
     let indexAfterPipe = 0;
@@ -163,38 +172,46 @@ function insertLlmResponse(response) {
         }
     }
 
-    // Remove all nodes after the '|' character
-    nodes.slice(indexAfterPipe).forEach(node => node.remove());
+    // Remove all nodes after the '|' character, if a '|' was found
+    if (foundPipe) {
+        nodes.slice(indexAfterPipe).forEach(node => node.remove());
+    }
 
     // Normalize space around '|'
     if (foundPipe) {
-        moveCursorToEndOfLine(currentLineContainer);
+        moveCursorToEndOfLineInBox();
         insertTextAtCursor(' ');
     } else {
         insertTextAtCursor(' | ');
-        moveCursorToEndOfLine(currentLineContainer);
     }
 
     // Insert the response in a new context box
+    moveCursorToEndOfLineInBox()
     insertAndEnterBox();
     insertTextAtCursor(response.trim());
     exitBoxRight();
 }
 
 
-function moveCursorToEndOfLine(parentNode) {
-    let lastTextNode = null;
-    parentNode.childNodes.forEach(node => {
+function moveCursorToEndOfLineInBox() {
+    console.log('Attempting to move to the end of the current row...');
+    let node = cursor.nextSibling;
+    while (node) {
         if (node.nodeType === Node.TEXT_NODE) {
-            lastTextNode = node; // Update to the last text node
+            const lineBreakIndex = node.textContent.indexOf('\\n');
+            if (lineBreakIndex !== -1) {
+                console.log(`Moving to end of current row at column ${lineBreakIndex}.`);
+                moveCursor(node, lineBreakIndex);
+                return;
+            }
         }
-    });
-    if (lastTextNode) {
-        moveCursor(lastTextNode, lastTextNode.textContent.length);
-    } else {
-        moveCursor(parentNode, parentNode.childNodes.length); // Fallback to the end of the parent node
+        node = node.nextSibling;
     }
+    // If no line break found, move to the end of the last node
+    console.log('No next line break found, moving to the end of the box.');
+    moveCursor(cursor.parentNode.lastChild, cursor.parentNode.lastChild?.textContent.length ?? 0);
 }
+
 
 
 
@@ -236,6 +253,10 @@ function getChatHistory() {
 function constructChatHistory(rowsText) {
     const chatHistory = [];
 
+    console.log("assuming Qwen");
+    chatHistory.push({ role: 'system', content: 'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.' });
+
+
     rowsText.forEach(row => {
         if (row.includes('|')) {
             const [userPart, responsePart] = row.split('|');
@@ -262,6 +283,3 @@ keyMap['Ctrl-|'] = llmInfer;
 keyMap['|'] = llmChat;
 // keyMap['Tab'] = llmDuplicateTest
 // keyMap['Tab'] = chatTest
-
-
-
