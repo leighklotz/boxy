@@ -131,21 +131,54 @@ function moveCursorToStartOfLineInBox() {
 function moveCursorToEndOfLineInBox() {
   console.log('Attempting to move to the end of the current row...');
   let node = cursor.nextSibling;
+
+  // Traverse siblings to find a line break or the end of the line
   while (node) {
     if (node.nodeType === Node.TEXT_NODE) {
       const lineBreakIndex = node.textContent.indexOf('\n');
       if (lineBreakIndex !== -1) {
         console.log(`Moving to end of current row at column ${lineBreakIndex}.`);
-        moveCursor(node, lineBreakIndex);
+        moveCursor(node, lineBreakIndex); // Move to the line break
         return;
       }
     }
     node = node.nextSibling;
   }
-  // If no line break found, move to the end of the last node
-  console.log('No next line break found, moving to the end of the box.');
-  moveCursor(cursor.parentNode.lastChild, cursor.parentNode.lastChild?.textContent.length ?? 0);
+
+  // If no line break found, move to the end of the last child of the parent node
+  const parent = cursor.parentNode;
+  const lastChild = parent.lastChild;
+
+  if (lastChild && lastChild !== cursor) {
+    // Move to the end of the last node only if it isn't already at the cursor
+    const offset = lastChild.nodeType === Node.TEXT_NODE
+      ? lastChild.textContent.length
+      : lastChild.childNodes?.length || 0;
+    console.log('No next line break found, moving to the end of the last child.');
+    moveCursor(lastChild, offset);
+  } else {
+    console.log('Cursor is already at the end of the current line.');
+  }
 }
+// 
+// function moveCursorToEndOfLineInBox() {
+//   console.log('Attempting to move to the end of the current row...');
+//   let node = cursor.nextSibling;
+//   while (node) {
+//     if (node.nodeType === Node.TEXT_NODE) {
+//       const lineBreakIndex = node.textContent.indexOf('\n');
+//       if (lineBreakIndex !== -1) {
+//         console.log(`Moving to end of current row at column ${lineBreakIndex}.`);
+//         moveCursor(node, lineBreakIndex);
+//         return;
+//       }
+//     }
+//     node = node.nextSibling;
+//   }
+//   // If no line break found, move to the end of the last node
+//   console.log('No next line break found, moving to the end of the box.');
+//   moveCursor(cursor.parentNode.lastChild, cursor.parentNode.lastChild?.textContent.length ?? 0);
+// }
 
 function moveCursorRightWithinBox() {
   console.log('Attempting to move right...');
@@ -340,26 +373,53 @@ function deleteCharAtCursor() {
 // Kill line (Ctrl-k) - Delete from cursor to end of line or join if at newline
 function killLine() {
   let node = cursor.nextSibling;
-  // If at a newline, delete it and join the next line
-  if (node && node.nodeType === Node.TEXT_NODE && node.textContent.startsWith('\n')) {
-    node.textContent = node.textContent.slice(1); // Remove the newline
-    return;
-  }
-  // Delete from cursor to the end of the line
+
   while (node) {
     if (node.nodeType === Node.TEXT_NODE) {
       const newlineIndex = node.textContent.indexOf('\n');
       if (newlineIndex !== -1) {
-        node.textContent = node.textContent.slice(newlineIndex); // Keep the newline break
+        // Found a newline, slice it out and stop further processing
+        node.textContent = node.textContent.slice(newlineIndex);
+        break;
       } else {
-        node.remove(); // Remove entire text node if no newline
+        // Remove the entire text node if no newline
+        const nextNode = node.nextSibling;
+        node.remove();
+        node = nextNode;
       }
     } else {
-      node.remove(); // Remove non-text nodes
+      // Remove non-text nodes and move to the next sibling
+      const nextNode = node.nextSibling;
+      node.remove();
+      node = nextNode;
     }
-    node = cursor.nextSibling; // Move to next sibling
   }
 }
+//
+//
+//// Kill line (Ctrl-k) - Delete from cursor to end of line or join if at newline
+//function killLine() {
+//  let node = cursor.nextSibling;
+//  // If at a newline, delete it and join the next line
+//  if (node && node.nodeType === Node.TEXT_NODE && node.textContent.startsWith('\n')) {
+//    node.textContent = node.textContent.slice(1); // Remove the newline
+//    return;
+//  }
+//  // Delete from cursor to the end of the line
+//  while (node) {
+//    if (node.nodeType === Node.TEXT_NODE) {
+//      const newlineIndex = node.textContent.indexOf('\n');
+//      if (newlineIndex !== -1) {
+//        node.textContent = node.textContent.slice(newlineIndex); // Keep the newline break
+//      } else {
+//        node.remove(); // Remove entire text node if no newline
+//      }
+//    } else {
+//      node.remove(); // Remove non-text nodes
+//    }
+//    node = cursor.nextSibling; // Move to next sibling
+//  }
+//}
 
 // Delete character forward (Ctrl-d), including newline at EOL
 function deleteCharForward() {
