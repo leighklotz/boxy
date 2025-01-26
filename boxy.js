@@ -1,3 +1,5 @@
+// boxy.js
+
 const editor = document.getElementById('editor');
 const cursor = document.querySelector('.cursor');
 const alertBox = document.getElementById('alert-box');
@@ -452,21 +454,27 @@ function handleClick(event) {
   const element = document.elementFromPoint(event.clientX, event.clientY);
   console.log('Element under click:', element);
 
-  // Check if the element is within the editor
-  if (element && editor.contains(element)) {
-    console.log('Element is within editor, proceeding...');
-    // Create a range at the click position
-    const range = document.caretRangeFromPoint(event.clientX, event.clientY);
-    if (range) {
-      console.log('Range found at:', range.startContainer, 'with offset:', range.startOffset);
-      // Move cursor to the clicked position, even if it's outside the current box
-      moveCursorToClickedPosition(range);
+  // if it's the cursor, do not do processing, just clear selection range
+  if (element !== cursor) {
+    // Check if the element is within the editor
+    if (element && editor.contains(element)) {
+      console.log('Element is within editor, proceeding...');
+      // Create a range at the click position
+      const range = document.caretRangeFromPoint(event.clientX, event.clientY);
+      if (range) {
+        console.log('Range found at:', range.startContainer, 'with offset:', range.startOffset);
+        // Move cursor to the clicked position, even if it's outside the current box
+        moveCursorToClickedPosition(range);
+      } else {
+        console.log('Failed to create range from click.');
+      }
     } else {
-      console.log('Failed to create range from click.');
+      console.log('Clicked element is not within the editor.');
     }
   } else {
-    console.log('Clicked element is not within the editor.');
+      console.log('Clicked on cursor.');
   }
+
   selectionRange = null; // Clear any existing selection
 }
 
@@ -475,9 +483,8 @@ function moveCursorToClickedPosition(range) {
   let node = range.startContainer;
   let offset = range.startOffset;
 
-  // Ensure the node is not the cursor itself
+  // If we clicked in the same spot, do nothing.
   if (node === cursor) {
-    console.log("Attempted to insert cursor within itself, aborting.");
     return;
   }
 
@@ -600,17 +607,160 @@ function getBoxRowsText() {
   return rowsText;
 }
 
-// Gather text content from current row in box, serializing nested boxes inside []
-function getRowText() {
-  const currentRow = [];
-  let currentNode = cursor.parentNode;
-  while (currentNode && !(currentNode.nodeType === Node.TEXT_NODE && currentNode.textContent.includes('\n'))) {
-    // Start gathering content of the current node
-    currentRow.push(...gatherText(currentNode));
-    currentNode = currentNode.nextSibling;
+function findLineStart(cursor) {
+  // We'll mimic moveCursorToStartOfLineInBox, but *just return* the node & offset
+  // instead of moving the real cursor.
+
+  let node = cursor.previousSibling;
+  while (node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const lineBreakIndex = node.textContent.lastIndexOf('\n');
+      if (lineBreakIndex !== -1) {
+        // The line starts just after that newline
+        return { node, offset: lineBreakIndex + 1 };
+      }
+    }
+    node = node.previousSibling;
   }
-  // Join the text of the row and return it
-  return currentRow.join('');
+  // If no line break found, the line starts at the very first child of this box
+  const box = cursor.parentNode;
+  if (!box.firstChild) {
+    // Box is empty?
+    return { node: box, offset: 0 };
+  }
+  // If the first child is a text node, we start at offset 0
+  return { node: box.firstChild, offset: 0 };
+}
+
+function findLineEnd(cursor) {
+  let node = cursor.parentNode.lastChild;
+
+  // Ignore the cursor element if it is the lastChild
+  if (node === cursor) {
+    node = node.previousSibling;
+  }
+
+  // If the last child is a text node, return its full length
+  if (node && node.nodeType === Node.TEXT_NODE) {
+    return { node, offset: node.textContent.length };
+  }
+
+  // If the last child is a box, treat it as a serialized unit
+  if (node && node.nodeType === Node.ELEMENT_NODE && node.classList?.contains('box')) {
+    return { node, offset: 1 }; // Boxes are treated as single units
+  }
+
+  // Fallback: If no valid end node exists, return the parent box itself
+  return { node: cursor.parentNode, offset: cursor.parentNode.childNodes?.length || 0 };
+}
+
+function gatherEntireBox(boxElem) {
+  const parts = [];
+  boxElem.childNodes.forEach(child => {
+    if (child.nodeType === Node.TEXT_NODE) {
+      // Collect text nodes (including newlines)
+      parts.push(child.textContent);
+    } 
+    else if (child.nodeType === Node.ELEMENT_NODE) {
+      // If child is another box, recursively gather it with brackets
+      if (child.classList?.contains('box')) {
+        parts.push('[' + gatherEntireBox(child) + ']');
+      } 
+      // Ignore the cursor element
+      else if (child === cursor) {
+        // Skip cursor
+      } 
+      else {
+        // Throw error for unexpected elements
+        throw new Error(
+          `Unexpected element <${child.tagName.toLowerCase()}> inside a box (id=${child.id || 'no-id'}).`
+        );
+      }
+    } 
+    else {
+      // Throw error for unexpected node types
+      throw new Error(`Unexpected node type inside box: ${child.nodeType}`);
+    }
+  });
+  return parts.join('');
+}
+
+function gatherLineText(startNode, startOffset, endNode, endOffset) {
+  const parts = [];
+  let currentNode = startNode;
+  let done = false;
+
+  while (currentNode && !done) {
+    if (currentNode.nodeType === Node.TEXT_NODE) {
+      // Collect text content, slicing if partial
+      const text = currentNode.textContent;
+      const fromIdx = (currentNode === startNode) ? startOffset : 0;
+      const toIdx = (currentNode === endNode) ? endOffset : text.length;
+      parts.push(text.slice(fromIdx, toIdx));
+
+      // Stop if this is the end node
+      if (currentNode === endNode) {
+        done = true;
+      }
+    } 
+    else if (currentNode.nodeType === Node.ELEMENT_NODE) {
+      // Handle boxes by bracketing their entire content
+      if (currentNode.classList?.contains('box')) {
+        parts.push('[' + gatherEntireBox(currentNode) + ']');
+      } 
+      // Ignore the cursor element
+      else if (currentNode === cursor) {
+        // Skip cursor
+      } 
+      else {
+        // Throw error for unexpected elements
+        throw new Error(
+          `Unexpected element <${currentNode.tagName.toLowerCase()}> in line (id=${currentNode.id || 'no-id'}).`
+        );
+      }
+
+      // Stop if this is the end node
+      if (currentNode === endNode) {
+        done = true;
+      }
+    } 
+    else {
+      // Throw error for unexpected node types
+      throw new Error(`Unexpected node type in line: ${currentNode.nodeType}`);
+    }
+
+    // Move to the next sibling if not done
+    if (!done) {
+      currentNode = currentNode.nextSibling;
+    }
+  }
+
+  return parts.join('');
+}
+
+function getRowText() {
+  // 1. Find the start of the line
+  const { node: startNode, offset: startOffset } = findLineStart(cursor);
+
+  // 2. Find the end of the line
+  const { node: endNode, offset: endOffset } = findLineEnd(cursor);
+
+  // 3. Gather text from start to end
+  return gatherLineText(startNode, startOffset, endNode, endOffset);
+}
+
+
+
+/** A simple ordering function to compare DOM siblings (not always necessary). */
+function currentNodeCompare(a, b) {
+  if (a === b) return 0;
+  // Otherwise, we can see if a is before b in the sibling chain
+  let node = a;
+  while (node) {
+    if (node === b) return -1; // a is before b
+    node = node.nextSibling;
+  }
+  return 1; // didn't find b, so presumably a is after
 }
 
 // Add event listeners

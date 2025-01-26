@@ -1,32 +1,36 @@
-async function callOpenAPI(chat_history, question, mode, temperature, repetition_penalty, penalize_nl, seed) {
-    if (chat_history.length && question) {
-        throw new Error("cannot append question to chat_history yet");
-    }
+// llm-infer.js
 
+async function callOpenAPI(messages, mode, temperature, repetition_penalty, penalize_nl, seed) {
     const requestBody = {
-        messages: chat_history.length ? chat_history : [ { role: "user", content: question } ],
-        mode: mode,
-        temperature_last: true,
-        temperature: temperature,
-        repetition_penalty: repetition_penalty,
-        penalize_nl: penalize_nl,
-        seed: seed,
-        repeat_last_n: 64,
-        repeat_penalty: 1.000,
-        frequency_penalty: 0.000,
-        presence_penalty: 0.000,
-        top_k: 40,
-        tfs_z: 1.000,
-        top_p: 0.950,
-        min_p: 0.050,
-        typical_p: 1.000,
-        temp: temperature,
-        n_keep: 1,
-        max_tokens: 4096,
-        auto_max_new_tokens: true,
-        skip_special_tokens: false
+        "messages": [
+            {
+                "role": "system",
+                "content": "Answer briefly:"
+            },
+            ...messages
+        ],
+        "mode": "instruct",
+        "temperature_last": true,
+        "repetition_penalty": 1,
+        "penalize_nl": false,
+        "seed": -1,
+        "repeat_last_n": 64,
+        "repeat_penalty": 1.000,
+        "frequency_penalty": 0.000,
+        "presence_penalty": 0.000,
+        "top_k": 40,
+        "tfs_z": 1.000,
+        "top_p": 0.950,
+        "min_p": 0.050,
+        "typical_p": 1.000,
+        "mirostat": 0,
+        "mirostat_lr": 0.100,
+        "mirostat_ent": 5.000,
+        "n_keep": 1,
+        "max_tokens": 4096,
+        "auto_max_new_tokens": true,
+        "skip_special_tokens": false
     };
-
     const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -45,11 +49,26 @@ async function callOpenAPI(chat_history, question, mode, temperature, repetition
 }
 
 async function llmInfer() {
-    let question = getRowText();
-    console.log("llmInfer question", question);
-    const response = await callOpenAPI([], question, "chat", 0.7, 1.0, 0.0, 42);
-    console.log("llmInfer response", JSON.stringify(response));
-    insertLlmResponse(response);
+  // Delete the old response first
+  // todo: preserve it somehow
+  const { node: pipeNode, offset: pipeOffset } = findPipeIndex();
+
+  if (pipeNode && pipeOffset !== -1) {
+    // If pipe character is found, move to it and remove everything after it
+    moveCursor(pipeNode, pipeOffset);
+    killLine();
+  }
+
+  let question = getRowText();
+  console.log("llmInfer question", question);
+  messages = [
+    { role: "system", content: "Respond very briefly:" },
+    { role: "user", content: question }
+  ];
+
+  const response = await callOpenAPI(messages, "chat", 0.7, 1.0, 0.0, 42);
+  console.log("llmInfer response", JSON.stringify(response));
+  insertLlmResponse(response);
 }
 
 // todo: use open api chat history instead of just string concat
@@ -58,7 +77,7 @@ async function llmChat() {
     console.log("llmChat history_raw", JSON.stringify(history_raw));
     let chatHistory = constructChatHistory(history_raw);
     console.log("llmChat chatHistory", JSON.stringify(chatHistory));
-    const response = await callOpenAPI(chatHistory, "", "chat", 0.7, 1.0, 0.0, 42);
+    const response = await callOpenAPI(chatHistory, "chat", 0.7, 1.0, 0.0, 42);
     console.log("llmChat response", JSON.stringify(response));
     insertLlmResponse(response);
 }
@@ -92,75 +111,57 @@ function moveCursorToEndOfLine(parentNode) {
     }
 }
 
-// Find the first '|' in current row and delete it and the rest of the line.
-// then, Insert the ' | ' and the response.
-// normalize space around ' | ' to one space each side.
-function insertLlmResponse(response) {
-    let currentLineContainer = cursor.parentNode;
-    if (!currentLineContainer) {
-        console.error('Cursor is not within a valid line container.');
-        return;
+function findPipeIndex() {
+  const currentLineContainer = cursor.parentNode;
+
+  if (!currentLineContainer) {
+    console.error('Cursor is not within a valid line container.');
+    return { node: null, offset: -1 }; // Explicitly return null if no container
+  }
+
+  const nodes = Array.from(currentLineContainer.childNodes);
+
+  // Iterate through nodes to find the `|` character
+  for (let node of nodes) {
+    if (node.nodeType === Node.TEXT_NODE && node.textContent.includes('|')) {
+      const pipeOffset = node.textContent.indexOf('|');
+      return { node, offset: pipeOffset }; // Return node and offset where `|` is found
     }
+  }
 
-    let nodes = Array.from(currentLineContainer.childNodes);
-    let foundPipe = false;
-    let indexAfterPipe = 0;
-
-    // Find the '|' character and note where to start clearing content
-    for (let i = 0; i < nodes.length; i++) {
-        let node = nodes[i];
-        if (node.nodeType === Node.TEXT_NODE && node.textContent.includes('|')) {
-            let pipeIndex = node.textContent.indexOf('|');
-            node.textContent = node.textContent.substring(0, pipeIndex + 1); // Keep everything before and including '|'
-            foundPipe = true;
-            indexAfterPipe = i + 1;
-            break;
-        }
-    }
-
-    // Remove all nodes after the '|' character, if a '|' was found
-    if (foundPipe) {
-        nodes.slice(indexAfterPipe).forEach(node => node.remove());
-    }
-
-    // Normalize space around '|'
-    if (foundPipe) {
-        moveCursorToEndOfLineInBox();
-        insertTextAtCursor(' ');
-    } else {
-        insertTextAtCursor(' | ');
-    }
-
-    // Insert the response in a new context box
-    moveCursorToEndOfLineInBox()
-    insertAndEnterBox();
-    insertTextAtCursor(response.trim());
-    exitBoxRight();
+  // If no pipe character is found, return a fallback
+  return { node: null, offset: -1 };
 }
 
+
+// insert ' | ' and LLM response.
+// delete prior responses before calling
+function insertLlmResponse(response) {
+  // Move to the end of the line
+  moveCursorToEndOfLineInBox();
+  insertTextAtCursor(' | ');
+
+  // Insert the LLM response in a new context box
+  insertAndEnterBox();
+  insertTextAtCursor(response.trim());
+  exitBoxRight();
+}
 
 function moveCursorToEndOfLineInBox() {
-    console.log('Attempting to move to the end of the current row...');
-    let node = cursor.nextSibling;
-    while (node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-            const lineBreakIndex = node.textContent.indexOf('\\n');
-            if (lineBreakIndex !== -1) {
-                console.log(`Moving to end of current row at column ${lineBreakIndex}.`);
-                moveCursor(node, lineBreakIndex);
-                return;
-            }
-        }
-        node = node.nextSibling;
-    }
-    // If no line break found, move to the end of the last node
-    console.log('No next line break found, moving to the end of the box.');
-    moveCursor(cursor.parentNode.lastChild, cursor.parentNode.lastChild?.textContent.length ?? 0);
+  console.log('Attempting to move to the end of the current row...');
+  let currentNode = cursor.parentNode.lastChild;
+  if (currentNode && currentNode.nodeType === Node.TEXT_NODE) {
+    moveCursor(currentNode, currentNode.textContent.length);
+  } else if (currentNode) {
+    let textContent = currentNode.textContent;
+    moveCursor(currentNode, textContent.length);
+  } else {
+    let box = cursor.parentNode;
+    let textContent = gatherText(box);
+    let endIndex = textContent.reduce((acc, curr) => acc + curr.length, 0);
+    moveCursor(box, endIndex);
+  }
 }
-
-
-
-
 
 function llmDuplicateTest() {
     let response = getBoxRowsText();
@@ -199,12 +200,6 @@ function getChatHistory() {
 function constructChatHistory(rowsText) {
     const chatHistory = [];
 
-    if (false) {
-        console.log("assuming Qwen");
-        chatHistory.push({ role: 'system', content: 'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.' });
-    }
-
-
     rowsText.forEach(row => {
         if (row.includes('|')) {
             const [userPart, responsePart] = row.split('|');
@@ -227,7 +222,7 @@ function chatTest() {
 
 
 
-keyMap['Ctrl-|'] = llmInfer;
-keyMap['|'] = llmChat;
+keyMap['Ctrl-|'] = llmChat;
+keyMap['|'] = llmInfer;
 // keyMap['Tab'] = llmDuplicateTest
 // keyMap['Tab'] = chatTest
