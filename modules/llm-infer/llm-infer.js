@@ -1,51 +1,58 @@
 // llm-infer.js
 
 async function callOpenAPI(messages, mode, temperature, repetition_penalty, penalize_nl, seed) {
-    const requestBody = {
-        "messages": [
-            {
-                "role": "system",
-                "content": "Answer briefly:"
-            },
-            ...messages
-        ],
-        "mode": "instruct",
-        "temperature_last": true,
-        "repetition_penalty": 1,
-        "penalize_nl": false,
-        "seed": -1,
-        "repeat_last_n": 64,
-        "repeat_penalty": 1.000,
-        "frequency_penalty": 0.000,
-        "presence_penalty": 0.000,
-        "top_k": 40,
-        "tfs_z": 1.000,
-        "top_p": 0.950,
-        "min_p": 0.050,
-        "typical_p": 1.000,
-        "mirostat": 0,
-        "mirostat_lr": 0.100,
-        "mirostat_ent": 5.000,
-        "n_keep": 1,
-        "max_tokens": 4096,
-        "auto_max_new_tokens": true,
-        "skip_special_tokens": false
-    };
+  const requestBody = {
+    "messages": [
+      {
+        "role": "system",
+        "content": "Answer briefly:"
+      },
+      ...messages
+    ],
+    "mode": mode,
+    "temperature": temperature,
+    "temperature_last": true,
+    "repetition_penalty": repetition_penalty,
+    "penalize_nl": penalize_nl,
+    "seed": seed,
+    "repeat_last_n": 64,
+    "repeat_penalty": 1.000,
+    "frequency_penalty": 0.000,
+    "presence_penalty": 0.000,
+    "top_k": 40,
+    "tfs_z": 1.000,
+    "top_p": 0.950,
+    "min_p": 0.050,
+    "typical_p": 1.000,
+    "mirostat": 0,
+    "mirostat_lr": 0.100,
+    "mirostat_ent": 5.000,
+    "n_keep": 1,
+    "max_tokens": 4096,
+    "auto_max_new_tokens": true,
+    "skip_special_tokens": false
+  };
+
+  try {
     const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestBody)
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    // Assuming the response has a structure where the text response is stored in data.choices[0].message.content
     return data.choices[0].message.content;
+
+  } catch (error) {
+    console.error("API call failed:", error);
+    throw error;
+  }
 }
 
 async function llmInfer() {
@@ -61,14 +68,20 @@ async function llmInfer() {
 
   let question = getRowText();
   console.log("llmInfer question", question);
-  messages = [
+  const messages = [
     { role: "system", content: "Respond very briefly:" },
     { role: "user", content: question }
   ];
 
-  const response = await callOpenAPI(messages, "chat", 0.7, 1.0, 0.0, 42);
-  console.log("llmInfer response", JSON.stringify(response));
-  insertLlmResponse(response);
+  try {
+    const response = await callOpenAPI(messages, "chat", 0.7, 1.0, 0.0, 42);
+    console.log("llmInfer response", JSON.stringify(response));
+    insertLlmResponse(response);
+  } catch (error) {
+    console.error("Error during inference:", error);
+    throw new Exception("Failed to get LLM response. Please try again.", error);
+  }
+
 }
 
 // todo: use open api chat history instead of just string concat
@@ -171,13 +184,13 @@ function llmDuplicateTest() {
 
 function getChatHistory() {
     const rowsText = [];
-    let currentNode = document.getElementById('editor').firstChild;
+    let currentNode = editor.firstChild;
     let rowText = [];
 
     while (currentNode) {
         if (currentNode.nodeType === Node.TEXT_NODE) {
             rowText.push(currentNode.textContent);
-        } else if (currentNode.classList && currentNode.classList.contains('box')) {
+        } else if (currentNode.classList?.contains('box')) {
             rowText.push(...gatherText(currentNode));
         }
 
@@ -224,5 +237,5 @@ function chatTest() {
 
 keyMap['Ctrl-|'] = llmChat;
 keyMap['|'] = llmInfer;
-// keyMap['Tab'] = llmDuplicateTest
+keyMap['Tab'] = llmDuplicateTest
 // keyMap['Tab'] = chatTest

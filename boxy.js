@@ -130,55 +130,26 @@ function moveCursorToStartOfLineInBox() {
 
 function moveCursorToEndOfLineInBox() {
   console.log('Attempting to move to the end of the current row...');
-  let node = cursor.nextSibling;
+  const currentBox = cursor.parentNode;
+  let lastChild = currentBox.lastChild;
 
-  // Traverse siblings to find a line break or the end of the line
-  while (node) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const lineBreakIndex = node.textContent.indexOf('\n');
-      if (lineBreakIndex !== -1) {
-        console.log(`Moving to end of current row at column ${lineBreakIndex}.`);
-        moveCursor(node, lineBreakIndex); // Move to the line break
-        return;
-      }
-    }
-    node = node.nextSibling;
+  // Skip the cursor if it's the last child
+  if (lastChild === cursor) {
+    lastChild = lastChild.previousSibling;
   }
 
-  // If no line break found, move to the end of the last child of the parent node
-  const parent = cursor.parentNode;
-  const lastChild = parent.lastChild;
-
-  if (lastChild && lastChild !== cursor) {
-    // Move to the end of the last node only if it isn't already at the cursor
-    const offset = lastChild.nodeType === Node.TEXT_NODE
-      ? lastChild.textContent.length
-      : lastChild.childNodes?.length || 0;
-    console.log('No next line break found, moving to the end of the last child.');
-    moveCursor(lastChild, offset);
+  if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
+    const textLen = lastChild.textContent.length;
+    moveCursor(lastChild, textLen);
+  } else if (lastChild) {
+    // If the last child is not a text node, move to its end
+    const contentLength = lastChild.textContent?.length || 0;
+    moveCursor(lastChild, contentLength);
   } else {
-    console.log('Cursor is already at the end of the current line.');
+    // Handle empty box case
+    console.log('Box is empty, staying at current position.');
   }
 }
-// 
-// function moveCursorToEndOfLineInBox() {
-//   console.log('Attempting to move to the end of the current row...');
-//   let node = cursor.nextSibling;
-//   while (node) {
-//     if (node.nodeType === Node.TEXT_NODE) {
-//       const lineBreakIndex = node.textContent.indexOf('\n');
-//       if (lineBreakIndex !== -1) {
-//         console.log(`Moving to end of current row at column ${lineBreakIndex}.`);
-//         moveCursor(node, lineBreakIndex);
-//         return;
-//       }
-//     }
-//     node = node.nextSibling;
-//   }
-//   // If no line break found, move to the end of the last node
-//   console.log('No next line break found, moving to the end of the box.');
-//   moveCursor(cursor.parentNode.lastChild, cursor.parentNode.lastChild?.textContent.length ?? 0);
-// }
 
 function moveCursorRightWithinBox() {
   console.log('Attempting to move right...');
@@ -311,9 +282,9 @@ function moveCursorDown() {
 }
 
 // Get the current column position of the cursor
-function getColumnPosition(cursor) {
-  const prevText = cursor.previousSibling;
-  return prevText ? prevText.textContent.length : 0;
+function getColumnPosition(cursorNode) {
+    const prevText = cursorNode.previousSibling;
+    return prevText ? prevText.textContent.length : 0;
 }
 
 /** * Inserting and Deleting */
@@ -347,7 +318,8 @@ function insertQuotedChar() {
 // Delete character at the cursor position (Backspace)
 function deleteCharAtCursor() {
   console.log('Attempting to delete character...');
-  let prevNode = cursor.previousSibling;
+  const prevNode = cursor.previousSibling;
+
   // If previous node is a text node, delete the last character in it
   if (prevNode && prevNode.nodeType === Node.TEXT_NODE) {
     const textLen = prevNode.textContent.length;
@@ -449,8 +421,8 @@ function deleteCharForward() {
 function clearSelection() {
   if (selectionRange) {
     selectionRange.deleteContents();
-    selectionRange = null;
   }
+  selectionRange = null;
 }
 
 /** * Key Binding and Executions */
@@ -646,7 +618,7 @@ function gatherText(node, isNested = false) {
 
 function getBoxRowsText() {
   const rowsText = [];
-  let currentNode = document.getElementById('editor').firstChild;
+  let currentNode = editor.firstChild;
   let rowText = [];
   while (currentNode) {
     if (currentNode.nodeType === Node.TEXT_NODE) {
