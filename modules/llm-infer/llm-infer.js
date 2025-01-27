@@ -55,9 +55,9 @@ async function callOpenAPI(messages, mode, temperature, repetition_penalty, pena
   }
 }
 
-async function llmInfer() {
+function killResponse() {
   // Delete the old response first
-  // todo: preserve it somehow
+  // todo: preserve it somehow, undo?
   const { node: pipeNode, offset: pipeOffset } = findPipeIndex();
 
   if (pipeNode && pipeOffset !== -1) {
@@ -65,6 +65,10 @@ async function llmInfer() {
     moveCursor(pipeNode, pipeOffset);
     killLine();
   }
+}
+
+async function llmInfer() {
+  killResponse()
 
   let question = getRowText();
   console.log("llmInfer question", question);
@@ -160,26 +164,12 @@ function insertLlmResponse(response) {
   exitBoxRight();
 }
 
-function moveCursorToEndOfLineInBox() {
-  console.log('Attempting to move to the end of the current row...');
-  let currentNode = cursor.parentNode.lastChild;
-  if (currentNode && currentNode.nodeType === Node.TEXT_NODE) {
-    moveCursor(currentNode, currentNode.textContent.length);
-  } else if (currentNode) {
-    let textContent = currentNode.textContent;
-    moveCursor(currentNode, textContent.length);
-  } else {
-    let box = cursor.parentNode;
-    let textContent = gatherText(box);
-    let endIndex = textContent.reduce((acc, curr) => acc + curr.length, 0);
-    moveCursor(box, endIndex);
-  }
-}
-
 function llmDuplicateTest() {
-    let response = getBoxRowsText();
-    console.log("getBoxRowsText", response);
-    insertLlmResponse(response)
+  killResponse()
+
+  let text = getRowText();
+  console.log("getRowText", text);
+  insertLlmResponse(text)
 }
 
 function getChatHistory() {

@@ -47,46 +47,60 @@ function exitBoxRight() {
 
 /** * Cursor Management */
 function moveCursor(node, offset = 0) {
-  // Remove any empty text nodes before moving the cursor
-  if (node && node.nodeType === Node.TEXT_NODE && node.textContent === "") {
-    if (node.parentNode && node.parentNode.childNodes.length > 1) {
-      node.remove();
+  if (!node) {
+    console.error('Invalid node, cannot move cursor.');
+    return;
+  }
+
+  // Handle empty text nodes: remove them and continue
+  if (node.nodeType === Node.TEXT_NODE && node.textContent === "") {
+    const parentNode = node.parentNode;
+    if (parentNode) {
+      parentNode.removeChild(node); // Remove the empty text node
+      moveCursor(parentNode, offset); // Retry with the parent node
     }
     return;
   }
 
-  if (node) {
-    // Handle text node insertion
-    if (node.nodeType === Node.TEXT_NODE) {
-      if (offset >= node.textContent.length) {
-        if (node.nextSibling && node.parentNode !== cursor) {
-          node.parentNode.insertBefore(cursor, node.nextSibling);
-        } else if (node.parentNode !== cursor) {
-          node.parentNode.appendChild(cursor);
-        }
+  // Handle valid text nodes
+  if (node.nodeType === Node.TEXT_NODE) {
+    if (offset >= node.textContent.length) {
+      // Move to the next sibling or append cursor if at the end of the text node
+      if (node.nextSibling) {
+        node.parentNode.insertBefore(cursor, node.nextSibling);
       } else {
-        const splitNode = node.splitText(offset);
-        if (node.parentNode !== cursor) {
-          node.parentNode.insertBefore(cursor, splitNode);
-        }
-      }
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      // Insert cursor at the correct child node
-      if (offset < node.childNodes.length && node.childNodes[offset] !== cursor) {
-        node.insertBefore(cursor, node.childNodes[offset] || null);
-      } else if (node !== cursor) {
-        node.appendChild(cursor);
+        node.parentNode.appendChild(cursor);
       }
     } else {
-      // Insert cursor at the parent of the node
-      if (node.parentNode && node.parentNode !== cursor) {
-        node.parentNode.insertBefore(cursor, node);
-      } else {
-        console.error('Node has no parent or is the cursor itself, cannot move cursor.');
+      // Split the text node and insert the cursor
+      const splitNode = node.splitText(offset);
+      node.parentNode.insertBefore(cursor, splitNode);
+    }
+    return;
+  }
+
+  // Handle element nodes
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    if (offset < node.childNodes.length) {
+      // Insert cursor before the specified child node
+      const targetNode = node.childNodes[offset];
+      if (targetNode !== cursor) {
+        node.insertBefore(cursor, targetNode);
+      }
+    } else {
+      // Append cursor if offset is beyond child nodes
+      if (node !== cursor) {
+        node.appendChild(cursor);
       }
     }
+    return;
+  }
+
+  // Fallback: insert cursor at the parent of the node if valid
+  if (node.parentNode && node !== cursor) {
+    node.parentNode.insertBefore(cursor, node);
   } else {
-    console.error('Invalid node, cannot move cursor.');
+    console.error('Node has no valid parent or is the cursor itself, cannot move cursor.');
   }
 }
 
@@ -130,26 +144,68 @@ function moveCursorToStartOfLineInBox() {
 
 function moveCursorToEndOfLineInBox() {
   console.log('Attempting to move to the end of the current row...');
-  const currentBox = cursor.parentNode;
-  let lastChild = currentBox.lastChild;
+  const currentBox = cursor.parentElement;
 
-  // Skip the cursor if it's the last child
-  if (lastChild === cursor) {
-    lastChild = lastChild.previousSibling;
+  // Helper function to find the end of the current line
+  function findEndOfLine(node, offset) {
+    let currentNode = node;
+    let currentOffset = offset;
+
+    while (currentNode) {
+      if (currentNode.nodeType === Node.TEXT_NODE) {
+        // Check for a newline character in the current text node
+        const newlineIndex = currentNode.textContent.indexOf('\n', currentOffset);
+        if (newlineIndex !== -1) {
+          return { node: currentNode, offset: newlineIndex };
+        }
+        // No newline, move to the end of the text node
+        currentOffset = currentNode.textContent.length;
+      } else if (currentNode.nodeType === Node.ELEMENT_NODE && currentNode !== cursor) {
+        if (currentNode.classList.contains('box')) {
+          // Ignore the content of nested boxes, move to their last sibling
+          currentNode = currentNode.nextSibling;
+          currentOffset = 0;
+          continue;
+        }
+      }
+
+      // Move to the next sibling, if available
+      if (currentNode.nextSibling) {
+        currentNode = currentNode.nextSibling;
+        currentOffset = 0;
+      } else {
+        // Reached the end of the current node, break out of the loop
+        break;
+      }
+    }
+
+    // Return the position at the end of the last valid node
+    return { node: currentNode, offset: currentOffset };
   }
 
-  if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
-    const textLen = lastChild.textContent.length;
-    moveCursor(lastChild, textLen);
-  } else if (lastChild) {
-    // If the last child is not a text node, move to its end
-    const contentLength = lastChild.textContent?.length || 0;
-    moveCursor(lastChild, contentLength);
+  // Start from the cursor's current position
+  let startNode = cursor.previousSibling;
+  let startOffset = 0;
+
+  if (startNode && startNode.nodeType === Node.TEXT_NODE) {
+    startOffset = startNode.textContent.length;
   } else {
-    // Handle empty box case
-    console.log('Box is empty, staying at current position.');
+    startNode = cursor;
+    startOffset = 0;
+  }
+
+  // Find the end of the current line
+  const endOfLine = findEndOfLine(startNode, startOffset);
+
+  // Move the cursor to the end of the line
+  if (endOfLine.node) {
+    moveCursor(endOfLine.node, endOfLine.offset);
+    console.log('Cursor moved to the end of the line:', endOfLine);
+  } else {
+    console.error('Unable to find the end of the line.');
   }
 }
+
 
 function moveCursorRightWithinBox() {
   console.log('Attempting to move right...');
@@ -318,7 +374,15 @@ function insertQuotedChar() {
 // Delete character at the cursor position (Backspace)
 function deleteCharAtCursor() {
   console.log('Attempting to delete character...');
-  const prevNode = cursor.previousSibling;
+  
+  let prevNode = cursor.previousSibling;
+
+  // Remove any empty text nodes before processing
+  while (prevNode && prevNode.nodeType === Node.TEXT_NODE && prevNode.textContent === '') {
+    console.log('Removing empty text node...');
+    prevNode.remove();
+    prevNode = cursor.previousSibling;
+  }
 
   // If previous node is a text node, delete the last character in it
   if (prevNode && prevNode.nodeType === Node.TEXT_NODE) {
@@ -326,16 +390,18 @@ function deleteCharAtCursor() {
     if (textLen > 0) {
       console.log(`Deleting character at position ${textLen - 1}.`);
       prevNode.textContent = prevNode.textContent.slice(0, -1);
-      // If the text node becomes empty, move the cursor before it
+      
+      // If the text node becomes empty, remove it and move the cursor before it
       if (prevNode.textContent.length === 0) {
-        console.log('Previous text node is now empty, moving cursor before it...');
-        cursor.parentNode.insertBefore(cursor, prevNode);
+        console.log('Previous text node is now empty, removing it...');
         prevNode.remove();
       }
+    } else {
+      console.log('Previous text node is already empty.');
     }
   } else if (prevNode) {
     // If the previous node is not a text node, remove it entirely
-    console.log('Deleting non-text node (e.g., empty node)...');
+    console.log('Deleting non-text node...');
     prevNode.remove();
   } else {
     console.log('No previous node to delete.');
@@ -665,25 +731,40 @@ function findLineStart(cursor) {
 }
 
 function findLineEnd(cursor) {
-  let node = cursor.parentNode.lastChild;
+    console.log('Attempting to find the end of the current line...');
+    let currentNode = cursor;
+    let offset = 0;
 
-  // Ignore the cursor element if it is the lastChild
-  if (node === cursor) {
-    node = node.previousSibling;
-  }
+    // Start from the cursor and move forward through siblings
+    while (currentNode) {
+        if (currentNode.nodeType === Node.TEXT_NODE) {
+            const lineBreakIndex = currentNode.textContent.indexOf('\n');
+            if (lineBreakIndex !== -1) {
+                // Found a newline, return the position before the newline
+                return { node: currentNode, offset: lineBreakIndex };
+            } else {
+                // No newline, continue to next sibling
+                currentNode = currentNode.nextSibling;
+            }
+        } else if (currentNode.nodeType === Node.ELEMENT_NODE && currentNode.classList?.contains('box')) {
+            // Treat boxes as single units and skip over them
+            currentNode = currentNode.nextSibling;
+        } else {
+            // Unexpected node type, skip it
+            currentNode = currentNode.nextSibling;
+        }
+    }
 
-  // If the last child is a text node, return its full length
-  if (node && node.nodeType === Node.TEXT_NODE) {
-    return { node, offset: node.textContent.length };
-  }
+    // If no newline is found, return the end of the last node in the box
+    const lastNode = cursor.parentNode.lastChild;
+    if (lastNode && lastNode.nodeType === Node.TEXT_NODE) {
+        return { node: lastNode, offset: lastNode.textContent.length };
+    } else if (lastNode) {
+        return { node: lastNode, offset: lastNode.textContent?.length || 0 };
+    }
 
-  // If the last child is a box, treat it as a serialized unit
-  if (node && node.nodeType === Node.ELEMENT_NODE && node.classList?.contains('box')) {
-    return { node, offset: 1 }; // Boxes are treated as single units
-  }
-
-  // Fallback: If no valid end node exists, return the parent box itself
-  return { node: cursor.parentNode, offset: cursor.parentNode.childNodes?.length || 0 };
+    // Fallback: Return the parent box itself
+    return { node: cursor.parentNode, offset: 0 };
 }
 
 function gatherEntireBox(boxElem) {
