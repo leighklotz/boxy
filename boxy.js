@@ -80,14 +80,14 @@
 //    - Deletion removes text or nodes while maintaining document structure.
 // 2. **Cursor Positioning**
 //    - The cursor is represented as a `<span>` element with the class `cursor`.
-//    - Cursor movements are handled by `moveCursor()`, which updates the cursor's position in the DOM.
+//    - Cursor movements are handled by `moveCursorTo()`, which updates the cursor's position in the DOM.
 // 3. **Text and Box Serialization**
 //    - The `gatherEntireBox()` function serializes a box and its contents, including nested boxes.
-//    - The `getRowText()` function collects text from the current row, handling boxes and text nodes appropriately.
+//    - The `getCurrentRowText()` function collects text from the current row, handling boxes and text nodes appropriately.
 // ### **Evaluator Integration**
 // The evaluator interacts with the document through high-level functions:
 // 1. **Text Access**
-//    - `getRowText()`: Returns the current row's text content, excluding the cursor.
+//    - `getCurrentRowText()`: Returns the current row's text content, excluding the cursor.
 //    - `getBoxRowsText()`: Returns all rows of text in the current box.
 // 2. **Manipulation**
 //    - The evaluator can insert new content at the cursor position or modify existing boxes.
@@ -97,7 +97,46 @@
 // 2. **Selection**: Basic selection is not fully supported beyond cursor movement.
 // 3. **Clipboard Operations**: Cut/copy/paste functionality is incomplete.
 // 4. and refine the evaluator's integration with the document structure.
+// ---
+// ### Editor SPI
+// You can use this stable SPI to implement new editor primitive operations (e.g. for keybindings)
+// #### **Manipulation Functions**
+//   - `insertCharAtCursor()`
+//   - `insertTextAtCursor()`
+//   - `insertNewline()`
+//   - `deleteCharAtCursor()`
+//   - `modifyBoxContent()`
+//   - `deleteCurrentBox()`
+//   - `insertBoxAtCursor()`
+//   - `createNewBox()`
+//#### **Cursor Management Functions**
+//   - `moveCursorTo()`
+//   - `moveCursorToStartOfBox()`
+//   - `moveCursorToEndOfBox()`
+//   - `moveCursorToStartOfLineInBox()`
+//   - `moveCursorToEndOfLineInBox()`
+//   - `getCurrentCursorPosition()`
+//   - `setCursorPosition()`
+//#### **Box Operations**
+//   - `insertBoxAtCursor()`
+//   - `createNewBox()`
+//   - `deleteCurrentBox()`
+//   - `modifyBoxContent()`
+//   - `findBoxByContent()`
+//   - `serializeBox()`
 
+// ### Evaluator SPI
+// You can use this stable SPI to implement new evaluator primitive operations (e.g. for functions or keybindings)
+//#### **Text Access Functions**
+//   - `getCurrentRowText()`
+//   - `getBoxRowsText()`
+//   - `gatherEntireBox()`
+//   - `getCurrentLineContent()`
+//#### **Utility Functions**
+//   - `serializeBox()`
+//   - `deserializeBox()` [todo]
+//   - `highlightText()`
+//   - `getTextBetweenCursors()`
 
 const editor = document.getElementById('editor');
 const cursor = document.querySelector('.cursor');
@@ -110,19 +149,19 @@ let quoteFlag = false;
 /** * Box Commands */
 
 // Insert a box at the cursor position and enter it
-function insertAndEnterBox() {
+function insertNewBox() {
   clearSelection();
   const newBox = document.createElement('div');
   newBox.classList.add('box');
   cursor.parentNode.insertBefore(newBox, cursor);
-  moveCursor(newBox, 0);
+  moveCursorTo(newBox, 0);
 }
 
 // Enter the box immediately after the cursor
 function enterNextBox() {
   const nextNode = cursor.nextSibling;
   if (nextNode && nextNode.classList.contains('box')) {
-    moveCursor(nextNode, 0);
+    moveCursorTo(nextNode, 0);
   }
 }
 
@@ -145,7 +184,7 @@ function exitBoxRight() {
 }
 
 /** * Cursor Management */
-function moveCursor(node, offset = 0) {
+function moveCursorTo(node, offset = 0) {
   if (!node) {
     console.error('Invalid node, cannot move cursor.');
     return;
@@ -156,7 +195,7 @@ function moveCursor(node, offset = 0) {
     const parentNode = node.parentNode;
     if (parentNode) {
       parentNode.removeChild(node); // Remove the empty text node
-      moveCursor(parentNode, offset); // Retry with the parent node
+      moveCursorTo(parentNode, offset); // Retry with the parent node
     }
     return;
   }
@@ -206,7 +245,7 @@ function moveCursor(node, offset = 0) {
 function moveCursorToStartOfBox() {
   console.log('Attempting to move to the start of the current box...');
   // Move the cursor to the start of the first child of the current box
-  moveCursor(cursor.parentNode.firstChild, 0);
+  moveCursorTo(cursor.parentNode.firstChild, 0);
 }
 
 function moveCursorToEndOfBox() {
@@ -215,10 +254,10 @@ function moveCursorToEndOfBox() {
   const lastChild = currentBox.lastChild;
   if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
     const textLen = lastChild.textContent.length;
-    moveCursor(lastChild, textLen);
+    moveCursorTo(lastChild, textLen);
   } else {
     // If the last child is an element node, move to its end
-    moveCursor(lastChild, lastChild?.textContent.length ?? 0);
+    moveCursorTo(lastChild, lastChild?.textContent.length ?? 0);
   }
 }
 
@@ -227,7 +266,7 @@ function moveCursorToStartOfLineInBox() {
   const result = findBeginningOfLine(cursor.previousSibling, 0);
   if (result) {
     console.log(`Moving to start of current row at column ${result.offset}.`);
-    moveCursor(result.node, result.offset);
+    moveCursorTo(result.node, result.offset);
   }
 }
 
@@ -306,7 +345,7 @@ function moveCursorToEndOfLineInBox() {
 
   // Move the cursor to the end of the line
   if (endOfLine.node) {
-    moveCursor(endOfLine.node, endOfLine.offset);
+    moveCursorTo(endOfLine.node, endOfLine.offset);
     console.log('Cursor moved to the end of the line:', endOfLine);
   } else {
     console.error('Unable to find the end of the line.');
@@ -322,7 +361,7 @@ function moveCursorRightWithinBox() {
   // Check if the next node is a box
   if (nextNode && nextNode.classList?.contains('box')) {
     console.log('Moving past the nested box...');
-    moveCursor(nextNode.nextSibling || cursor.parentNode.nextSibling, 0);
+    moveCursorTo(nextNode.nextSibling || cursor.parentNode.nextSibling, 0);
     return;
   }
 
@@ -333,7 +372,7 @@ function moveCursorRightWithinBox() {
     // Move to the right boundary of the next box, not inside it
     if (parentBox.nextSibling && parentBox.nextSibling.classList?.contains('box')) {
       console.log('Moving past the next box...');
-      moveCursor(parentBox.nextSibling.nextSibling, 0);
+      moveCursorTo(parentBox.nextSibling.nextSibling, 0);
       return;
     } else {
       console.log('Already at the rightmost boundary.');
@@ -344,7 +383,7 @@ function moveCursorRightWithinBox() {
   // If next node is a text node, move forward one character
   if (nextNode && nextNode.nodeType === Node.TEXT_NODE) {
     console.log(`Moving forward within text node. Text length: ${nextNode.textContent.length}`);
-    moveCursor(nextNode, 1); // Move to the next character
+    moveCursorTo(nextNode, 1); // Move to the next character
   } else {
     // If the next node is not a text node, stop at the boundary
     console.log('Next node is not a text node, stopping at the boundary.');
@@ -359,7 +398,7 @@ function moveCursorLeftWithinBox() {
   // Check if the previous node is a box
   if (prevNode && prevNode.classList?.contains('box')) {
     console.log('Moving past the nested box...');
-    moveCursor(prevNode, prevNode.childNodes.length);
+    moveCursorTo(prevNode, prevNode.childNodes.length);
     return;
   }
 
@@ -370,7 +409,7 @@ function moveCursorLeftWithinBox() {
     // Move to the left boundary of the previous box, not inside it
     if (parentBox.previousSibling && parentBox.previousSibling.classList?.contains('box')) {
       console.log('Moving past the previous box...');
-      moveCursor(parentBox.previousSibling, parentBox.previousSibling.childNodes.length);
+      moveCursorTo(parentBox.previousSibling, parentBox.previousSibling.childNodes.length);
       return;
     } else {
       console.log('Already at the leftmost boundary.');
@@ -383,7 +422,7 @@ function moveCursorLeftWithinBox() {
     const textLen = prevNode.textContent.length;
     if (textLen > 0) {
       console.log(`Moving back within text node. Text length: ${textLen}`);
-      moveCursor(prevNode, textLen - 1);
+      moveCursorTo(prevNode, textLen - 1);
     } else {
       console.log('Previous text node is empty, moving to its previous sibling...');
       cursor.parentNode.insertBefore(cursor, prevNode); // Move cursor before the empty node
@@ -391,7 +430,7 @@ function moveCursorLeftWithinBox() {
       prevNode = prevNode.previousSibling;
       if (prevNode && prevNode.nodeType === Node.TEXT_NODE) {
         console.log('Moving to end of previous text node...');
-        moveCursor(prevNode, prevNode.textContent.length);
+        moveCursorTo(prevNode, prevNode.textContent.length);
       }
     }
   } else {
@@ -414,7 +453,7 @@ function moveCursorUp() {
       const lineEnd = prevNode.textContent.lastIndexOf('\n');
       const targetColumn = Math.min(goalColumn, lineEnd);
       console.log(`Moving up to previous line at column ${targetColumn}.`);
-      moveCursor(prevNode, targetColumn);
+      moveCursorTo(prevNode, targetColumn);
       return;
     }
     prevNode = prevNode.previousSibling;
@@ -436,7 +475,7 @@ function moveCursorDown() {
       const lineStart = nextNode.textContent.indexOf('\n') + 1;
       const targetColumn = Math.min(goalColumn, nextNode.textContent.length - lineStart);
       console.log(`Moving down to next line at column ${targetColumn}.`);
-      moveCursor(nextNode, lineStart + targetColumn);
+      moveCursorTo(nextNode, lineStart + targetColumn);
       return;
     }
     nextNode = nextNode.nextSibling;
@@ -696,7 +735,7 @@ function moveCursorToClickedPosition(range) {
   // Check if the clicked node is the editor box or contains text
   if (node.nodeType === Node.ELEMENT_NODE && node.classList?.contains('box')) {
     console.log('Clicked a box, placing cursor inside...');
-    moveCursor(node, 0); // Place cursor at the start of the box
+    moveCursorTo(node, 0); // Place cursor at the start of the box
     return;
   }
 
@@ -705,7 +744,7 @@ function moveCursorToClickedPosition(range) {
   while (parentBox && parentBox !== editor) {
     if (parentBox.classList?.contains('box')) {
       console.log('Clicked inside a box, placing cursor inside...');
-      moveCursor(parentBox, offset);
+      moveCursorTo(parentBox, offset);
       return;
     }
     parentBox = parentBox.parentNode;
@@ -716,7 +755,7 @@ function moveCursorToClickedPosition(range) {
 
   // Move cursor to the specified position, ensuring it is not invalid
   if (node !== editor && node.parentNode !== cursor) {
-    moveCursor(node, offset);
+    moveCursorTo(node, offset);
     console.log('Cursor moved to:', node, 'at offset:', offset);
   } else {
     console.log("Invalid cursor movement attempted.");
@@ -958,7 +997,8 @@ function gatherLineText(startNode, startOffset, endNode, endOffset) {
   return parts.join('');
 }
 
-function getRowText() {
+// Returns Serialized text of row as a string.
+function getCurrentRowText() {
   // 1. Find the start of the line
   const { node: startNode, offset: startOffset } = findLineStart(cursor);
 
@@ -971,6 +1011,76 @@ function getRowText() {
   // 4. trim
   return text.trim()
 }
+
+// Returns the current cursor position in terms of its parent box and offset.
+function getCurrentCursorPosition() {
+  const currentBox = cursor.parentNode;
+  const position = findCursorPositionInBox(currentBox);
+  return { box: currentBox, offset: position.offset };
+}
+
+// Finds the cursor's position within a given box.
+function findCursorPositionInBox(box) {
+  let position = 0;
+  let currentNode = box.firstChild;
+  while (currentNode !== cursor) {
+    if (currentNode.nodeType === Node.TEXT_NODE) {
+      position += currentNode.textContent.length;
+    } else if (currentNode.classList.contains('box')) {
+      position++; // Account for the `[...]` representation
+    }
+    currentNode = currentNode.nextSibling;
+  }
+  return { node: currentNode, offset: position };
+}
+
+// Replaces the content of a box with the specified text, handling nested boxes.
+function modifyBoxContent(box, newText) {
+  clearBoxContent(box);
+  insertTextAtCursor(newText);
+}
+
+// Deletes the current box and moves the cursor to the parent box's boundary.
+function deleteCurrentBox() {
+  const parentBox = cursor.parentNode.parentNode;
+  const boxIndex = Array.from(parentBox.children).indexOf(cursor.parentNode);
+  parentBox.removeChild(cursor.parentNode);
+  moveCursorTo(parentBox, boxIndex);
+}
+
+// Searches for a box containing the specified text and returns its position.
+function findBoxByContent(searchText) {
+  return searchDocument(editor, searchText);
+}
+
+// Combines `getCurrentRowText()` and cursor position to get the current line's content.
+function getCurrentLineContent() {
+  return getCurrentRowText();
+}
+
+function serializeBox(box) {
+  const parts = [];
+  box.childNodes.forEach(child => {
+    if (child.nodeType === Node.TEXT_NODE) {
+      parts.push(child.textContent);
+    } else if (child.classList.contains('box')) {
+      parts.push(`[${serializeBox(child)}]`);
+    }
+  });
+  return parts.join('');
+}
+
+
+// Gets text between two cursor positions, useful for selections.
+function getTextBetweenCursors(start, end) {
+  return gatherLineText(start.node, start.offset, end.node, end.offset);
+}
+
+// Sets the cursor position based on a specified object `{ node, offset }`.
+function setCursorPosition(position) {
+  moveCursorTo(position.node, position.offset);
+}
+
 
 /** A simple ordering function to compare DOM siblings (not always necessary). */
 function currentNodeCompare(a, b) {

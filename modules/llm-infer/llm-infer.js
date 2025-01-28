@@ -97,7 +97,7 @@ function killResponse() {
 
   if (pipeNode && pipeOffset !== -1) {
     // If pipe character is found, move to it and remove everything after it
-    moveCursor(pipeNode, pipeOffset);
+    moveCursorTo(pipeNode, pipeOffset);
     killLine();
 
     // Delete spaces around the cursor
@@ -108,7 +108,7 @@ function killResponse() {
 async function llmInfer() {
   killResponse()
 
-  let question = getRowText();
+  let question = getCurrentRowText();
   console.log("llmInfer question", question);
   const messages = [
     { role: "system", content: "Respond very briefly:" },
@@ -151,7 +151,7 @@ function moveCursorToEndOfLine(parentNode) {
             if (lineBreakIndex !== -1) {
                 // Found a line break, move the cursor here and mark end of line
                 lastTextNode = node;
-                moveCursor(node, lineBreakIndex);
+                moveCursorTo(node, lineBreakIndex);
                 reachedEndOfLine = true;
             } else {
                 // No line break, continue to update the last text node
@@ -162,7 +162,7 @@ function moveCursorToEndOfLine(parentNode) {
 
     // Move cursor to the end of the last text node if no line break is found
     if (lastTextNode && !reachedEndOfLine) {
-        moveCursor(lastTextNode, lastTextNode.textContent.length);
+        moveCursorTo(lastTextNode, lastTextNode.textContent.length);
     }
 }
 
@@ -233,15 +233,15 @@ function insertLlmResponse(response) {
   moveCursorToEndOfLineInBox();
   insertTextAtCursor(' | ');
   // Insert the LLM response in a new context box
-  insertAndEnterBox();
+  insertNewBox();
   insertTextAtCursor(response.trim());
   exitBoxRight();
 }
 
 function llmDuplicateTest() {
   killResponse()
-  let text = getRowText();
-  console.log("getRowText", text);
+  let text = getCurrentRowText();
+  console.log("llmDuplicateTest getCurrentRowText", text);
   insertLlmResponse(text)
 }
 
