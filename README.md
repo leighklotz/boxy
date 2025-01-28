@@ -2,6 +2,8 @@
 
 ## Basic Editor Screenshot
 
+Below is a screenshot showing the editor. Later screenshots show using LLM inference evaluation. Other types of evaluation are possible.
+
 ![docs/editor.png](docs/editor.png)
 
 ## Boxy Mouse Bindings
@@ -66,6 +68,9 @@ One inference per box, continued as a chat
 
 ![docs/llm-infer.png](docs/llm-chat.png)
 
+#### Longer chat example
+
+![docs/llm-infer.png](docs/llm-chat-longer.png)
 
 ## Spec
 - [spec.md](spec.md)
