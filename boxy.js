@@ -34,11 +34,9 @@
 // 1. **Evaluation Workflow**
 //    - Evaluation is initiated using a command (e.g., `|` or `Ctrl-|`).
 //    - The result of an evaluation is appended to the current row, following a ` | ` separator, with normalized spacing.
-// 
 // 2. **Serialization**
 //    - Boxes are serialized as their contents enclosed in `[...]`, with nested boxes represented recursively.
 //    - For example, a box containing "Hello" and a nested box containing "World" would be serialized as `[Hello[World]]`.
-// 
 // 3. **Scripting**
 //    - The evaluator provides primitives for manipulating the document structure, allowing scripts to:
 //      - Insert and modify boxes and text.
@@ -75,23 +73,23 @@
 // ---
 // ### **Implementation Details**
 // 1. **Insertion and Deletion**
-//    - Text insertion uses `insertCharAtCursor()` and `insertTextAtCursor()`.
-//    - Box insertion creates a new `<div>` element with the `box` class.
-//    - Deletion removes text or nodes while maintaining document structure.
+// - Text insertion uses `insertCharAtCursor()` and `insertTextAtCursor()`.
+// - Box insertion creates a new `<div>` element with the `box` class.
+// - Deletion removes text or nodes while maintaining document structure.
 // 2. **Cursor Positioning**
-//    - The cursor is represented as a `<span>` element with the class `cursor`.
-//    - Cursor movements are handled by `moveCursorTo()`, which updates the cursor's position in the DOM.
+// - The cursor is represented as a `<span>` element with the class `cursor`.
+// - Cursor movements are handled by `moveCursorTo()`, which updates the cursor's position in the DOM.
 // 3. **Text and Box Serialization**
-//    - The `gatherEntireBox()` function serializes a box and its contents, including nested boxes.
-//    - The `getCurrentRowText()` function collects text from the current row, handling boxes and text nodes appropriately.
+// - The `gatherEntireBox()` function serializes a box and its contents, including nested boxes.
+// - The `getCurrentRowText()` function collects text from the current row, handling boxes and text nodes appropriately.
 // ### **Evaluator Integration**
 // The evaluator interacts with the document through high-level functions:
 // 1. **Text Access**
-//    - `getCurrentRowText()`: Returns the current row's text content, excluding the cursor.
-//    - `getBoxRowsText()`: Returns all rows of text in the current box.
+// - `getCurrentRowText()`: Returns the current row's text content, excluding the cursor.
+// - `getCurrentBoxText()`: Returns all rows of text in the current box.
 // 2. **Manipulation**
-//    - The evaluator can insert new content at the cursor position or modify existing boxes.
-//    - Results of evaluations are appended to the current row, following a ` | ` separator.
+// - The evaluator can insert new content at the cursor position or modify existing boxes.
+// - Results of evaluations are appended to the current row, following a ` | ` separator.
 // ### **Limitations**
 // 1. **Undo/Redo**: Currently not implemented.
 // 2. **Selection**: Basic selection is not fully supported beyond cursor movement.
@@ -101,42 +99,48 @@
 // ### Editor SPI
 // You can use this stable SPI to implement new editor primitive operations (e.g. for keybindings)
 // #### **Manipulation Functions**
-//   - `insertCharAtCursor()`
-//   - `insertTextAtCursor()`
-//   - `insertNewline()`
-//   - `deleteCharAtCursor()`
-//   - `modifyBoxContent()`
-//   - `deleteCurrentBox()`
-//   - `insertBoxAtCursor()`
-//   - `createNewBox()`
+// - `insertCharAtCursor()`
+// - `insertTextAtCursor()`
+// - `insertNewline()`
+// - `deleteCharAtCursor()`
+// - `insertAndEnterBox()`
+// - `killLine()`
+// - `deleteCurrentBox()`
 //#### **Cursor Management Functions**
-//   - `moveCursorTo()`
-//   - `moveCursorToStartOfBox()`
-//   - `moveCursorToEndOfBox()`
-//   - `moveCursorToStartOfLineInBox()`
-//   - `moveCursorToEndOfLineInBox()`
-//   - `getCurrentCursorPosition()`
-//   - `setCursorPosition()`
+// - `moveCursorTo()`
+// - `moveCursorToStartOfBox()`
+// - `moveCursorToEndOfBox()`
+// - `moveCursorToStartOfLineInBox()`
+// - `moveCursorToEndOfLineInBox()`
+// - `getCurrentCursorPosition()`
+// - `setCursorPosition()`
 //#### **Box Operations**
-//   - `insertBoxAtCursor()`
-//   - `createNewBox()`
-//   - `deleteCurrentBox()`
-//   - `modifyBoxContent()`
-//   - `findBoxByContent()`
-//   - `serializeBox()`
+// - `insertAndEnterBox()`
+// - `deleteCurrentBox()`
+// - `replaceBoxContent()`
+// - `serializeBox()`
+
 
 // ### Evaluator SPI
 // You can use this stable SPI to implement new evaluator primitive operations (e.g. for functions or keybindings)
 //#### **Text Access Functions**
-//   - `getCurrentRowText()`
-//   - `getBoxRowsText()`
-//   - `gatherEntireBox()`
-//   - `getCurrentLineContent()`
+// - `getCurrentRowText()`
+//    Retrieves the current row's text content, excluding the cursor.
+// - `getCurrentBoxText()`
+//   Returns all rows of text in the current box, including nested boxes.
+// - `gatherEntireBox()`  
+//    Serializes a box and its contents, including nested boxes, as a single string.
+// - `serializeBox()`  
+//    Converts a box and its contents into a string representation enclosed in `[...]`.
+// - `deserializeBox()`
+//    parses a serialized box string back into DOM elements.
 //#### **Utility Functions**
-//   - `serializeBox()`
-//   - `deserializeBox()` [todo]
-//   - `highlightText()`
-//   - `getTextBetweenCursors()`
+// - `highlightText()`
+//   Applies visual highlighting to specified text.
+// - `getTextBetweenCursors()`
+//   Retrieves text between two cursor positions.
+// - `getCurrentCursorPosition()`  
+//   Returns the cursor's current position within the document.
 
 const editor = document.getElementById('editor');
 const cursor = document.querySelector('.cursor');
@@ -148,8 +152,8 @@ let quoteFlag = false;
 
 /** * Box Commands */
 
-// Insert a box at the cursor position and enter it
-function insertNewBox() {
+// EDITOR SPI: Insert a box at the cursor position and enter it
+function insertAndEnterBox() {
   clearSelection();
   const newBox = document.createElement('div');
   newBox.classList.add('box');
@@ -157,7 +161,7 @@ function insertNewBox() {
   moveCursorTo(newBox, 0);
 }
 
-// Enter the box immediately after the cursor
+// EDITOR SPI: Enter the box immediately after the cursor
 function enterNextBox() {
   const nextNode = cursor.nextSibling;
   if (nextNode && nextNode.classList.contains('box')) {
@@ -165,7 +169,7 @@ function enterNextBox() {
   }
 }
 
-// Move the cursor out of the current box to the left and position it before the box
+// EDITOR SPI: Move the cursor out of the current box to the left and position it before the box
 function exitBoxLeft() {
   const parentBox = cursor.parentNode;
   if (parentBox !== editor) {
@@ -174,7 +178,7 @@ function exitBoxLeft() {
   }
 }
 
-// Move the cursor out of the current box to the right and position it after the box
+// EDITOR SPI: Move the cursor out of the current box to the right and position it after the box
 function exitBoxRight() {
   const parentBox = cursor.parentNode;
   if (parentBox !== editor) {
@@ -184,6 +188,7 @@ function exitBoxRight() {
 }
 
 /** * Cursor Management */
+// EDITOR SPI: Move cursor to specified node and offset
 function moveCursorTo(node, offset = 0) {
   if (!node) {
     console.error('Invalid node, cannot move cursor.');
@@ -242,12 +247,14 @@ function moveCursorTo(node, offset = 0) {
   }
 }
 
+// EDITOR SPI: Move cursor to start of box
 function moveCursorToStartOfBox() {
   console.log('Attempting to move to the start of the current box...');
   // Move the cursor to the start of the first child of the current box
   moveCursorTo(cursor.parentNode.firstChild, 0);
 }
 
+// EDITOR SPI: Move cursor to end of box
 function moveCursorToEndOfBox() {
   console.log('Attempting to move to the end of the current box...');
   const currentBox = cursor.parentNode;
@@ -261,6 +268,7 @@ function moveCursorToEndOfBox() {
   }
 }
 
+// EDITOR SPI: Move cursor to start of line in box
 function moveCursorToStartOfLineInBox() {
   console.log('Attempting to move to the start of the current row...');
   const result = findBeginningOfLine(cursor.previousSibling, 0);
@@ -287,7 +295,6 @@ function findBeginningOfLine(node, offset) {
   // If no line break found, return the start of the first node in the parent
   return { node: node.parentNode.firstChild, offset: 0 };
 }
-
 
 function findEndOfLine(node, offset) {
   let currentNode = node;
@@ -325,6 +332,7 @@ function findEndOfLine(node, offset) {
   return { node: currentNode, offset: currentOffset };
 }
 
+// EDITOR SPI: Move cursor to end of line in box
 function moveCursorToEndOfLineInBox() {
   console.log('Attempting to move to the end of the current row...');
   const currentBox = cursor.parentElement;
@@ -352,7 +360,7 @@ function moveCursorToEndOfLineInBox() {
   }
 }
 
-
+// EDITOR SPI: Move cursor right within box
 function moveCursorRightWithinBox() {
   console.log('Attempting to move right...');
   goalColumn = -1; // Reset goal column on explicit horizontal motion
@@ -390,6 +398,7 @@ function moveCursorRightWithinBox() {
   }
 }
 
+// EDITOR SPI: Move cursor left within box
 function moveCursorLeftWithinBox() {
   console.log('Attempting to move left...');
   goalColumn = -1; // Reset goal column on explicit horizontal motion
@@ -439,7 +448,7 @@ function moveCursorLeftWithinBox() {
   }
 }
 
-// Move the cursor up within the current box, maintaining goal column
+// EDITOR SPI: move cursor up within the current box, maintaining goal column
 function moveCursorUp() {
   console.log('Attempting to move up...');
   const currentColumn = getColumnPosition(cursor);
@@ -461,7 +470,7 @@ function moveCursorUp() {
   console.log('No previous line found, staying at the current line.');
 }
 
-// Move the cursor down within the current box, maintaining goal column
+// EDITOR SPI: move cursor down within the current box, maintaining goal column
 function moveCursorDown() {
   console.log('Attempting to move down...');
   const currentColumn = getColumnPosition(cursor);
@@ -491,33 +500,33 @@ function getColumnPosition(cursorNode) {
 
 /** * Inserting and Deleting */
 
-// Insert character at the cursor position
+// EDITOR SPI: Insert character at the cursor position
 function insertCharAtCursor(char) {
   clearSelection();
   const textNode = document.createTextNode(char);
   cursor.parentNode.insertBefore(textNode, cursor);
 }
 
-// Insert text at the cursor position
+// EDITOR SPI: Insert text at the cursor position
 function insertTextAtCursor(text) {
   clearSelection();
   const textNode = document.createTextNode(text);
   cursor.parentNode.insertBefore(textNode, cursor);
 }
 
-// Insert a newline at the cursor position
+// EDITOR SPI: Insert a newline at the cursor position
 function insertNewline() {
   clearSelection();
   const textNode = document.createTextNode('\n');
   cursor.parentNode.insertBefore(textNode, cursor);
 }
 
-// Insert quoted character at cursor position
+// EDITOR SPI: Insert quoted character at cursor position
 function insertQuotedChar() {
   quoteFlag = true;
 }
 
-// Delete character at the cursor position (Backspace)
+// EDITOR SPI: Delete character at the cursor position (Backspace)
 function deleteCharAtCursor() {
   console.log('Attempting to delete character...');
   
@@ -554,7 +563,7 @@ function deleteCharAtCursor() {
   }
 }
 
-// Kill line (Ctrl-k) - Delete from cursor to end of line or join if at newline
+// EDITOR SPI: Kill line (Ctrl-k) - Delete from cursor to end of line or join if at newline
 function killLine() {
   let node = cursor.nextSibling;
 
@@ -579,33 +588,8 @@ function killLine() {
     }
   }
 }
-//
-//
-//// Kill line (Ctrl-k) - Delete from cursor to end of line or join if at newline
-//function killLine() {
-//  let node = cursor.nextSibling;
-//  // If at a newline, delete it and join the next line
-//  if (node && node.nodeType === Node.TEXT_NODE && node.textContent.startsWith('\n')) {
-//    node.textContent = node.textContent.slice(1); // Remove the newline
-//    return;
-//  }
-//  // Delete from cursor to the end of the line
-//  while (node) {
-//    if (node.nodeType === Node.TEXT_NODE) {
-//      const newlineIndex = node.textContent.indexOf('\n');
-//      if (newlineIndex !== -1) {
-//        node.textContent = node.textContent.slice(newlineIndex); // Keep the newline break
-//      } else {
-//        node.remove(); // Remove entire text node if no newline
-//      }
-//    } else {
-//      node.remove(); // Remove non-text nodes
-//    }
-//    node = cursor.nextSibling; // Move to next sibling
-//  }
-//}
 
-// Delete character forward (Ctrl-d), including newline at EOL
+// EDITOR SPI: Delete character forward (Ctrl-d), including newline at EOL
 function deleteCharForward() {
   let node = cursor.nextSibling;
   // If the next node is a text node
@@ -629,7 +613,7 @@ function deleteCharForward() {
   }
 }
 
-// Clear the current selection
+// EDITOR SPI: Clear the current selection
 function clearSelection() {
   if (selectionRange) {
     selectionRange.deleteContents();
@@ -638,7 +622,6 @@ function clearSelection() {
 }
 
 /** * Key Binding and Executions */
-
 // Function to display an alert for unbound keys
 function showUnboundKeyAlert(key) {
   alertBox.textContent = `"${key}" is undefined`;
@@ -828,7 +811,9 @@ function gatherText(node, isNested = false) {
   return textContent;
 }
 
-function getBoxRowsText() {
+// EVALUATOR SPI: same as serializeBox(currentBox())
+// todo: combine implementations
+function getCurrentBoxText() {
   const rowsText = [];
   let currentNode = editor.firstChild;
   let rowText = [];
@@ -913,6 +898,8 @@ function findLineEnd(cursor) {
     return { node: cursor.parentNode, offset: 0 };
 }
 
+// EVALUATOR SPI: ???
+// todo: what is this and how is it different from getCurrentBoxText
 function gatherEntireBox(boxElem) {
   const parts = [];
   boxElem.childNodes.forEach(child => {
@@ -944,21 +931,22 @@ function gatherEntireBox(boxElem) {
   return parts.join('');
 }
 
-function gatherLineText(startNode, startOffset, endNode, endOffset) {
+// EVALUATOR SPI: Gets text between two cursor positions, useful for selections.
+function getTextBetweenCursors(start, end) {
   const parts = [];
-  let currentNode = startNode;
+  let currentNode = start.node;
   let done = false;
 
   while (currentNode && !done) {
     if (currentNode.nodeType === Node.TEXT_NODE) {
       // Collect text content, slicing if partial
       const text = currentNode.textContent;
-      const fromIdx = (currentNode === startNode) ? startOffset : 0;
-      const toIdx = (currentNode === endNode) ? endOffset : text.length;
+      const fromIdx = (currentNode === start.node) ? start.offset : 0;
+      const toIdx = (currentNode === end.node) ? end.offset : text.length;
       parts.push(text.slice(fromIdx, toIdx));
 
       // Stop if this is the end node
-      if (currentNode === endNode) {
+      if (currentNode === end.node) {
         done = true;
       }
     } 
@@ -979,7 +967,7 @@ function gatherLineText(startNode, startOffset, endNode, endOffset) {
       }
 
       // Stop if this is the end node
-      if (currentNode === endNode) {
+      if (currentNode === end.node) {
         done = true;
       }
     } 
@@ -997,22 +985,17 @@ function gatherLineText(startNode, startOffset, endNode, endOffset) {
   return parts.join('');
 }
 
-// Returns Serialized text of row as a string.
+// EVALUATOR SPI: Returns Serialized text of row as a string.
 function getCurrentRowText() {
   // 1. Find the start of the line
-  const { node: startNode, offset: startOffset } = findLineStart(cursor);
-
   // 2. Find the end of the line
-  const { node: endNode, offset: endOffset } = findLineEnd(cursor);
-
   // 3. Gather text from start to end
-  const text = gatherLineText(startNode, startOffset, endNode, endOffset);
-
+  const text = getTextBetweenCursors(findLineStart(cursor), findLineEnd(cursor));
   // 4. trim
   return text.trim()
 }
 
-// Returns the current cursor position in terms of its parent box and offset.
+// EVAL SPI: Returns the current cursor position in terms of its parent box and offset.
 function getCurrentCursorPosition() {
   const currentBox = cursor.parentNode;
   const position = findCursorPositionInBox(currentBox);
@@ -1034,13 +1017,13 @@ function findCursorPositionInBox(box) {
   return { node: currentNode, offset: position };
 }
 
-// Replaces the content of a box with the specified text, handling nested boxes.
-function modifyBoxContent(box, newText) {
+// EDITOR SPI: Replaces the content of a box with the specified text, handling nested boxes.
+function setBoxContent(box, newText) {
   clearBoxContent(box);
   insertTextAtCursor(newText);
 }
 
-// Deletes the current box and moves the cursor to the parent box's boundary.
+// EDITOR SPI: Deletes the current box and moves the cursor to the parent box's boundary.
 function deleteCurrentBox() {
   const parentBox = cursor.parentNode.parentNode;
   const boxIndex = Array.from(parentBox.children).indexOf(cursor.parentNode);
@@ -1048,16 +1031,7 @@ function deleteCurrentBox() {
   moveCursorTo(parentBox, boxIndex);
 }
 
-// Searches for a box containing the specified text and returns its position.
-function findBoxByContent(searchText) {
-  return searchDocument(editor, searchText);
-}
-
-// Combines `getCurrentRowText()` and cursor position to get the current line's content.
-function getCurrentLineContent() {
-  return getCurrentRowText();
-}
-
+// EDITOR SPI: Returns a text serialization of the box.
 function serializeBox(box) {
   const parts = [];
   box.childNodes.forEach(child => {
@@ -1070,13 +1044,28 @@ function serializeBox(box) {
   return parts.join('');
 }
 
-
-// Gets text between two cursor positions, useful for selections.
-function getTextBetweenCursors(start, end) {
-  return gatherLineText(start.node, start.offset, end.node, end.offset);
+// Evaluator SPI: Deserialize a box string into DOM nodes
+function deserializeBox(serialized) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(serialized, 'text/html');
+  const box = document.createElement('div');
+  box.classList.add('box');
+  
+  // Convert the parsed HTML into DOM nodes
+  const children = Array.from(doc.body.childNodes);
+  children.forEach(child => {
+    if (child.nodeName === 'BOX') {
+      const newBox = deserializeBox(child.textContent);
+      box.appendChild(newBox);
+    } else {
+      box.appendChild(child);
+    }
+  });
+  
+  return box;
 }
 
-// Sets the cursor position based on a specified object `{ node, offset }`.
+// EDITOR SPI: Sets the cursor position based on a specified object `{ node, offset }`.
 function setCursorPosition(position) {
   moveCursorTo(position.node, position.offset);
 }

@@ -128,7 +128,7 @@ async function llmInfer() {
 
 // todo: use open api chat history instead of just string concat
 async function llmChat() {
-    let history_raw = getBoxRowsText();
+    let history_raw = getCurrentBoxText();
     console.log("llmChat history_raw", JSON.stringify(history_raw));
     let chatHistory = constructChatHistory(history_raw);
     console.log("llmChat chatHistory", JSON.stringify(chatHistory));
@@ -189,7 +189,7 @@ function findPipeIndex() {
       continue;
     }
 
-    // todo: THIS IS WEONG. I WANT TO SKIP NODES BEFORE THE BEGINNING OF THE CURRENT LINE.
+    // todo: THIS IS WRONG. I WANT TO SKIP NODES BEFORE THE BEGINNING OF THE CURRENT LINE.
     if (!isOnCurrentLine) {
       continue; // Skip nodes before the cursor
     }
@@ -233,7 +233,7 @@ function insertLlmResponse(response) {
   moveCursorToEndOfLineInBox();
   insertTextAtCursor(' | ');
   // Insert the LLM response in a new context box
-  insertNewBox();
+  insertAndEnterBox();
   insertTextAtCursor(response.trim());
   exitBoxRight();
 }
