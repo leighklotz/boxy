@@ -66,6 +66,9 @@ One inference per box, continued as a chat
 
 ![docs/llm-infer.png](docs/llm-chat.png)
 
+#### Longer chat example
+
+![docs/llm-infer.png](docs/llm-chat-longer.png)
 
 ## Spec
 - [spec.md](spec.md)
