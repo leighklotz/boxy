@@ -55,15 +55,53 @@ async function callOpenAPI(messages, mode, temperature, repetition_penalty, pena
   }
 }
 
+// Function to delete all spaces to the left and right of the cursor
+function deleteSpacesAroundCursor() {
+  const textNode = cursor.previousSibling;
+
+  // Ensure the previous sibling is a text node
+  if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
+    console.error("Cursor is not adjacent to a text node.");
+    return;
+  }
+
+  const textContent = textNode.nodeValue;
+
+  // Find the cursor's position within the text node
+  const cursorIndex = textContent.length; // Assume cursor is right after the text node
+
+  // Identify spaces to the left of the cursor
+  let leftIndex = cursorIndex - 1;
+  while (leftIndex >= 0 && textContent[leftIndex] === ' ') {
+    leftIndex--;
+  }
+  leftIndex++; // Move back to the first non-space character
+
+  // Identify spaces to the right of the cursor
+  let rightIndex = cursorIndex;
+  while (rightIndex < textContent.length && textContent[rightIndex] === ' ') {
+    rightIndex++;
+  }
+
+  // Remove spaces around the cursor
+  textNode.nodeValue = textContent.slice(0, leftIndex) + textContent.slice(rightIndex);
+
+  console.log(`Updated text content: "${textNode.nodeValue}"`);
+}
+
+
+
+// Function to delete the old response and handle undo functionality
 function killResponse() {
-  // Delete the old response first
-  // todo: preserve it somehow, undo?
   const { node: pipeNode, offset: pipeOffset } = findPipeIndex();
 
   if (pipeNode && pipeOffset !== -1) {
     // If pipe character is found, move to it and remove everything after it
     moveCursor(pipeNode, pipeOffset);
     killLine();
+
+    // Delete spaces around the cursor
+    deleteSpacesAroundCursor();
   }
 }
 
@@ -128,28 +166,65 @@ function moveCursorToEndOfLine(parentNode) {
     }
 }
 
+// todo: use findBeginningOfLine(node, offset) and function findEndOfLine(node, offset)
+//       as bounds for the search. call them each as `fun(cursor,0)`
 function findPipeIndex() {
   const currentLineContainer = cursor.parentNode;
 
   if (!currentLineContainer) {
     console.error('Cursor is not within a valid line container.');
-    return { node: null, offset: -1 }; // Explicitly return null if no container
+    return { node: null, offset: -1 };
   }
 
   const nodes = Array.from(currentLineContainer.childNodes);
+  let isOnCurrentLine = false;
+  let lastPipeNode = null;
+  let lastPipeOffset = -1;
 
-  // Iterate through nodes to find the `|` character
+  // Iterate through nodes to process the current line
   for (let node of nodes) {
-    if (node.nodeType === Node.TEXT_NODE && node.textContent.includes('|')) {
-      const pipeOffset = node.textContent.indexOf('|');
-      return { node, offset: pipeOffset }; // Return node and offset where `|` is found
+    if (node === cursor) {
+      // Start searching for pipes after finding the cursor
+      isOnCurrentLine = true;
+      continue;
+    }
+
+    // todo: THIS IS WEONG. I WANT TO SKIP NODES BEFORE THE BEGINNING OF THE CURRENT LINE.
+    if (!isOnCurrentLine) {
+      continue; // Skip nodes before the cursor
+    }
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      const textContent = node.textContent;
+      const lineEnd = textContent.indexOf('\n');
+
+      // Determine the effective end of the current line
+      const textToSearch = lineEnd === -1 ? textContent : textContent.slice(0, lineEnd);
+
+      // Look for the last `|` in this part of the text
+      const pipeIndex = textToSearch.lastIndexOf('|');
+      if (pipeIndex !== -1) {
+        lastPipeNode = node;
+        lastPipeOffset = pipeIndex;
+      }
+
+      // Stop searching if we encounter a newline
+      if (lineEnd !== -1) {
+        break;
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // Ignore nested elements like DIVs and treat them as invisible
+      if (node.classList.contains('box')) {
+        // Treat nested boxes as a boundary and stop processing
+        break;
+      }
+      continue; // Ignore other element nodes
     }
   }
 
-  // If no pipe character is found, return a fallback
-  return { node: null, offset: -1 };
+  // Return the node and offset of the last found `|`
+  return lastPipeNode ? { node: lastPipeNode, offset: lastPipeOffset } : { node: null, offset: -1 };
 }
-
 
 // insert ' | ' and LLM response.
 // delete prior responses before calling
@@ -157,7 +232,6 @@ function insertLlmResponse(response) {
   // Move to the end of the line
   moveCursorToEndOfLineInBox();
   insertTextAtCursor(' | ');
-
   // Insert the LLM response in a new context box
   insertAndEnterBox();
   insertTextAtCursor(response.trim());
@@ -166,7 +240,6 @@ function insertLlmResponse(response) {
 
 function llmDuplicateTest() {
   killResponse()
-
   let text = getRowText();
   console.log("getRowText", text);
   insertLlmResponse(text)
