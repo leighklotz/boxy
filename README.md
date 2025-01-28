@@ -76,7 +76,8 @@ One inference per box, continued as a chat
 ![docs/editor.png](docs/editor.png)
 
 ## Spec
-- [spec.md](spec.md)
+- [docs/spec.md](docs/spec.md)
+- [model.md](docs/model.md)
 
 ## References
 - https://klotz.me/thesis.pdf
