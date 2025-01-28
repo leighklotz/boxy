@@ -66,4 +66,18 @@ div.box.code {
         font-size: 0.8em;
     }
 }
+
+#status-led {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  right: 0;
+  background-color: transparent;
+}
+
+#status-led.running {
+  background-color: green;
+}
+
+header { display: grid; grid-template-columns: 1fr auto; }
 </style>

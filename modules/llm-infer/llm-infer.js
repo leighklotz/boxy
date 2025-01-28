@@ -104,6 +104,7 @@ function killResponse() {
 }
 
 async function llmInfer() {
+  document.getElementById('status-led').classList.add('running');
   killResponse()
 
   let question = getCurrentRowText();
@@ -117,8 +118,10 @@ async function llmInfer() {
     const response = await callOpenAPI(messages, "instruct", 0.7, 1.0, 0.0, 42);
     console.log("llmInfer response", JSON.stringify(response));
     insertLlmResponse(response);
+    document.getElementById('status-led').classList.remove('running');
   } catch (error) {
     console.error("Error during inference:", error);
+    document.getElementById('status-led').classList.remove('running');
     throw new Exception("Failed to get LLM response. Please try again.", error);
   }
 
@@ -126,6 +129,7 @@ async function llmInfer() {
 
 // todo: use open api chat history instead of just string concat
 async function llmChat() {
+  document.getElementById('status-led').classList.add('running');
   let history_raw = getCurrentBoxText();
   console.log("llmChat history_raw", JSON.stringify(history_raw));
   let chatHistory = constructChatHistory(history_raw);
@@ -133,6 +137,7 @@ async function llmChat() {
   const response = await callOpenAPI(chatHistory, "chat", 0.7, 1.0, 0.0, 42);
   console.log("llmChat response", JSON.stringify(response));
   insertLlmResponse(response);
+  document.getElementById('status-led').classList.remove('running');
 }
 
 function moveCursorToEndOfLine(parentNode) {
