@@ -68,16 +68,16 @@ The cursor's position determines the active context within the document.
 ### **Key Commands**
 The editor supports a variety of keyboard shortcuts for navigation and manipulation:
 
-| Command             | Description                              |
-|---------------------|------------------------------------------|
-| `[` / `Ctrl-[`      | Insert a new box and enter it.           |
-| `]` / Mouse Click    | Exit the current box.                   |
-| `Ctrl-f` / `Ctrl-b` | Move cursor forward/backward.            |
-| `Ctrl-p` / `Ctrl-n` | Move cursor up/down.                    |
-| `Ctrl-k`            | Kill line (delete from cursor to end of row). |
-| `Ctrl-d`            | Delete character forward.               |
-| `Backspace`         | Delete character backward.              |
-| `|` / `Ctrl-|`      | Evaluate current row or selection.       |
+| Command             | Description                                  |
+|---------------------|----------------------------------------------|
+| `[` / `Ctrl-[`      | Insert a new box and enter it.               |
+| `]` / Mouse Click    | Exit the current box.                       |
+| `Ctrl-f` / `Ctrl-b` | Move cursor forward/backward.                |
+| `Ctrl-p` / `Ctrl-n` | Move cursor up/down.                         |
+| `Ctrl-k`            | Kill line (delete from cursor to end of row).|
+| `Ctrl-d`            | Delete character forward.                    |
+| `Backspace`         | Delete character backward.                   |
+| `|` / `Ctrl-|`      | Evaluate current row or selection.           |
 
 ---
 
