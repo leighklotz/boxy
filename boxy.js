@@ -114,26 +114,29 @@
 // You can use this stable SPI to implement new editor primitive operations (e.g. for keybindings)
 // 
 // #### **Manipulation Functions**
-// - `insertCharAtCursor()`
-// - `insertTextAtCursor()`
-// - `insertNewline()`
 // - `deleteCharAtCursor()`
-// - `insertAndEnterBox()`
-// - `killLine()`
 // - `deleteCurrentBox()`
+// - `insertAndEnterBox()`
+// - `insertBoxAtCursor()`
+// - `insertCharAtCursor()`
+// - `insertNewline()`
+// - `insertTextAtCursor()`
+// - `killLine()`
 // 
 // ### **Cursor Management Functions**
-// - `moveCursorTo()`
-// - `moveCursorToStartOfBox()`
-// - `moveCursorToEndOfBox()`
-// - `moveCursorToStartOfLineInBox()`
-// - `moveCursorToEndOfLineInBox()`
 // - `getCurrentCursorPosition()`
+// - `moveCursorTo()`
+// - `moveCursorToEndOfBox()`
+// - `moveCursorToEndOfLineInBox()`
+// - `moveCursorToStartOfBox()`
+// - `moveCursorToStartOfLineInBox()`
 // - `setCursorPosition()`
 // 
 // ### **Box Operations**
-// - `insertAndEnterBox()`
 // - `deleteCurrentBox()`
+// - `insertAndEnterBox()`
+// - `insertBoxAtCursor()`
+// - `insertTextAtCursor()`
 // - `replaceBoxContent()`
 // - `serializeBox()`
 // 
@@ -298,14 +301,16 @@ function moveCursorToEndOfBox() {
 // EDITOR SPI: Move cursor to start of line in box
 function moveCursorToStartOfLineInBox() {
   console.log('Attempting to move to the start of the current row...');
-  const result = findBeginningOfLine(cursor.previousSibling, 0);
+  const result = findBeginningOfLine(cursor, 0);
   if (result) {
     console.log(`Moving to start of current row at column ${result.offset}.`);
     moveCursorTo(result.node, result.offset);
   }
 }
 
+// EDITOR SPI: Find location of beginning of line
 function findBeginningOfLine(node, offset) {
+  const parentNode = node.parentNode; // Store the parent node upfront
   while (node) {
     if (node.nodeType === Node.TEXT_NODE) {
       const lineBreakIndex = node.textContent.lastIndexOf('\n', offset);
@@ -314,15 +319,15 @@ function findBeginningOfLine(node, offset) {
       }
     }
     node = node.previousSibling;
-    // If moving to the previous sibling, the offset should be the end of the new node's text content
     if (node && node.nodeType === Node.TEXT_NODE) {
       offset = node.textContent.length;
     }
   }
   // If no line break found, return the start of the first node in the parent
-  return { node: node.parentNode.firstChild, offset: 0 };
+  return { node: parentNode.firstChild, offset: 0 };
 }
 
+// EDITOR SPI: Find location of end of line
 function findEndOfLine(node, offset) {
   let currentNode = node;
   let currentOffset = offset;
@@ -355,6 +360,7 @@ function findEndOfLine(node, offset) {
     }
   }
 
+  // todo: If no line break found, return the end of the last node in the parent
   // Return the position at the end of the last valid node
   return { node: currentNode, offset: currentOffset };
 }
@@ -364,19 +370,8 @@ function moveCursorToEndOfLineInBox() {
   console.log('Attempting to move to the end of the current row...');
   const currentBox = cursor.parentElement;
 
-  // Start from the cursor's current position
-  let startNode = cursor.previousSibling;
-  let startOffset = 0;
-
-  if (startNode && startNode.nodeType === Node.TEXT_NODE) {
-    startOffset = startNode.textContent.length;
-  } else {
-    startNode = cursor;
-    startOffset = 0;
-  }
-
   // Find the end of the current line
-  const endOfLine = findEndOfLine(startNode, startOffset);
+  const endOfLine = findEndOfLine(cursor, 0);
 
   // Move the cursor to the end of the line
   if (endOfLine.node) {
@@ -535,6 +530,12 @@ function insertCharAtCursor(char) {
 }
 
 // EDITOR SPI: Insert text at the cursor position
+function insertBoxAtCursor(node) {
+  clearSelection();
+  cursor.parentNode.insertBefore(node, cursor);
+}
+
+// EDITOR SPI: Insert box at the cursor position
 function insertTextAtCursor(text) {
   clearSelection();
   const textNode = document.createTextNode(text);
@@ -591,6 +592,7 @@ function deleteCharAtCursor() {
 }
 
 // EDITOR SPI: Kill line (Ctrl-k) - Delete from cursor to end of line or join if at newline
+// todo: make sure cursor is never removed, or at least add it back at the point
 function killLine() {
   let node = cursor.nextSibling;
 
