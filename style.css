@@ -1,6 +1,6 @@
 <style>
 body { font-family: sans-serif; }
-.box {
+div.box {
     border: 1px solid black;
     padding: 5px;
     margin: 2px;
@@ -12,7 +12,7 @@ body { font-family: sans-serif; }
     cursor: text;
     position: relative;
 }
-.cursor {
+span.cursor {
     background-color: black;
     display: inline-block;
     width: 2px;
@@ -34,5 +34,36 @@ body { font-family: sans-serif; }
     z-index: 1000;
     opacity: 1;
     transition: opacity 2s;
+}
+div.box.think {
+    font-style: italic;
+    ::before {
+        content: "THINK";
+        position: absolute;
+        top: 0;
+        right: 0;
+        color: white;
+        padding: 0 4px;
+        background-color: inherit;
+        border-bottom: 1px solid black;
+        z-index: 1;
+        font-size: 0.8em;
+    }
+}
+div.box.code {
+    font-family: "Lucida Console", Courier, monospace;
+    ::after {
+        content: "CODE";
+        position: absolute;
+        top: 0;
+        right: 0;
+        color: #444;
+        padding: 0 4px;
+        background-color: #f0f0f0;
+        border-bottom: 1px solid #ccc;
+        z-index: 1;
+        font-family: "Lucida Console", Courier, monospace;
+        font-size: 0.8em;
+    }
 }
 </style>

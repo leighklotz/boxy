@@ -903,6 +903,14 @@ function serializeBox(box) {
 
 // Evaluator SPI: Deserialize a box string into DOM nodes
 function deserializeBox(serialized) {
+  // First, handle triple backticks for code blocks
+  const codeBlockRegex = /```([\s\S]*?)```/g;
+  serialized = serialized.replace(codeBlockRegex, '<div class="box code">$1</div>');
+
+  // Then handle regular boxes
+  serialized = serialized.replace('[', '<div class="box">');
+  serialized = serialized.replace(']', '</div>');
+
   const parser = new DOMParser();
   const doc = parser.parseFromString(serialized, 'text/html');
   const box = document.createElement('div');
@@ -911,8 +919,9 @@ function deserializeBox(serialized) {
   // Convert the parsed HTML into DOM nodes
   const children = Array.from(doc.body.childNodes);
   children.forEach(child => {
-    if (child.nodeName === 'BOX') {
-      const newBox = deserializeBox(child.textContent);
+    if (child.nodeName === 'THINK') {
+      const newBox = deserializeBox(child.textContent.trim());
+      newBox.classList.add('think');
       box.appendChild(newBox);
     } else {
       box.appendChild(child);
