@@ -1,9 +1,14 @@
 // boxy.js
 
+//  START model.md
 // # Boxy
 // 
 // Boxy is an interactive text-based interface that allows users to navigate and manipulate a structured document composed of nested "boxes". 
-//
+// 
+// ### **Boxy Model: Overview**
+// The Boxy Model provides a unique way to interact with structured content using nested boxes and Emacs-style navigation. The model combines direct DOM manipulation with high-level scripting capabilities, focusing on ease of navigation and manipulation through keyboard commands.
+// 
+// 
 // ### **DOM Structure**
 // 1. **Editor Container**
 //    - The root of the interface is a `<div>` with the ID `editor` and class `box`.
@@ -16,6 +21,7 @@
 // 3. **Rows and Text**
 //    - Text content is stored in text nodes within boxes.
 //    - Rows are implicitly defined by newline characters (`\n`), which separate lines of text within a box.
+// 
 // ### **Editor Functionality**
 // The editor provides a text-based interface with nested box manipulation capabilities.
 // 1. **Navigation**
@@ -29,6 +35,7 @@
 //    - Boxes can be inserted at the cursor position using `[` or `Ctrl-[`.
 //    - Exiting a box moves the cursor to the position immediately before or after the box, depending on the command used.
 //    - Boxes are serialized as `[...]` in their parent rows, with nested boxes represented recursively.
+// 
 // ### **Evaluator**
 // The evaluator provides a way to process and modify the content of boxes.
 // 1. **Evaluation Workflow**
@@ -42,6 +49,7 @@
 //      - Insert and modify boxes and text.
 //      - Navigate the document hierarchy.
 //      - Access the current cursor position and row content.
+// 
 // ### **Cursor Management**
 // The cursor's position determines the active context within the document.
 // 1. **Movement**
@@ -56,6 +64,7 @@
 //    - `moveCursorToEndOfBox()`: Moves the cursor to the end of the current box.
 //    - `moveCursorToStartOfLineInBox()`: Moves the cursor to the start of the current row.
 //    - `moveCursorToEndOfLineInBox()`: Moves the cursor to the end of the current row.
+// 
 // ### **Key Commands**
 // The editor supports a variety of keyboard shortcuts for navigation and manipulation:
 // 
@@ -71,6 +80,7 @@
 // | `|` / `Ctrl-|`      | Evaluate current row or selection.       |
 // 
 // ---
+// 
 // ### **Implementation Details**
 // 1. **Insertion and Deletion**
 // - Text insertion uses `insertCharAtCursor()` and `insertTextAtCursor()`.
@@ -82,6 +92,7 @@
 // 3. **Text and Box Serialization**
 // - The `gatherEntireBox()` function serializes a box and its contents, including nested boxes.
 // - The `getCurrentRowText()` function collects text from the current row, handling boxes and text nodes appropriately.
+// 
 // ### **Evaluator Integration**
 // The evaluator interacts with the document through high-level functions:
 // 1. **Text Access**
@@ -90,14 +101,18 @@
 // 2. **Manipulation**
 // - The evaluator can insert new content at the cursor position or modify existing boxes.
 // - Results of evaluations are appended to the current row, following a ` | ` separator.
+// 
 // ### **Limitations**
 // 1. **Undo/Redo**: Currently not implemented.
 // 2. **Selection**: Basic selection is not fully supported beyond cursor movement.
 // 3. **Clipboard Operations**: Cut/copy/paste functionality is incomplete.
 // 4. and refine the evaluator's integration with the document structure.
+// 
 // ---
+// 
 // ### Editor SPI
 // You can use this stable SPI to implement new editor primitive operations (e.g. for keybindings)
+// 
 // #### **Manipulation Functions**
 // - `insertCharAtCursor()`
 // - `insertTextAtCursor()`
@@ -106,7 +121,8 @@
 // - `insertAndEnterBox()`
 // - `killLine()`
 // - `deleteCurrentBox()`
-//#### **Cursor Management Functions**
+// 
+// ### **Cursor Management Functions**
 // - `moveCursorTo()`
 // - `moveCursorToStartOfBox()`
 // - `moveCursorToEndOfBox()`
@@ -114,16 +130,18 @@
 // - `moveCursorToEndOfLineInBox()`
 // - `getCurrentCursorPosition()`
 // - `setCursorPosition()`
-//#### **Box Operations**
+// 
+// ### **Box Operations**
 // - `insertAndEnterBox()`
 // - `deleteCurrentBox()`
 // - `replaceBoxContent()`
 // - `serializeBox()`
-
-
+// 
+// 
 // ### Evaluator SPI
 // You can use this stable SPI to implement new evaluator primitive operations (e.g. for functions or keybindings)
-//#### **Text Access Functions**
+// 
+// ### **Text Access Functions**
 // - `getCurrentRowText()`
 //    Retrieves the current row's text content, excluding the cursor.
 // - `getCurrentBoxText()`
@@ -134,13 +152,22 @@
 //    Converts a box and its contents into a string representation enclosed in `[...]`.
 // - `deserializeBox()`
 //    parses a serialized box string back into DOM elements.
-//#### **Utility Functions**
+// 
+// ### **Utility Functions**
 // - `highlightText()`
 //   Applies visual highlighting to specified text.
 // - `getTextBetweenCursors()`
 //   Retrieves text between two cursor positions.
 // - `getCurrentCursorPosition()`  
 //   Returns the cursor's current position within the document.
+// 
+// ### **Limitations**
+// 1. **Undo/Redo**: Currently not implemented.
+// 2. **Selection**: Basic selection is not fully supported beyond cursor movement.
+// 3. **Clipboard Operations**: Cut/copy/paste functionality is incomplete.
+// 4. and refine the evaluator's integration with the document structure.
+// 
+// END model.md
 
 const editor = document.getElementById('editor');
 const cursor = document.querySelector('.cursor');
