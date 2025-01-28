@@ -2,6 +2,8 @@
 
 ## Basic Editor Screenshot
 
+Below is a screenshot showing the editor. Later screenshots show using LLM inference evaluation. Other types of evaluation are possible.
+
 ![docs/editor.png](docs/editor.png)
 
 ## Boxy Mouse Bindings
