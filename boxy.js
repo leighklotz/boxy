@@ -958,6 +958,14 @@ function sanitize_dom(v) {
   return v;
 }
 
+function statusLedOn() {
+  document.getElementById('status-led').classList.add('running');
+}
+
+function statusLedOff() {
+  document.getElementById('status-led').classList.remove('running');
+}
+
 /** A simple ordering function to compare DOM siblings (not always necessary). */
 function currentNodeCompare(a, b) {
   if (a === b) return 0;

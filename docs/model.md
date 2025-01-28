@@ -61,6 +61,9 @@ The cursor's position determines the active context within the document.
    - `moveCursorToEndOfBox()`: Moves the cursor to the end of the current box.
    - `moveCursorToStartOfLineInBox()`: Moves the cursor to the start of the current row.
    - `moveCursorToEndOfLineInBox()`: Moves the cursor to the end of the current row.
+   - `statusLedOn()`: Turns status-led on.
+   - `statusLedOff()`: turns'status-led off.
+
 
 ### **Key Commands**
 The editor supports a variety of keyboard shortcuts for navigation and manipulation:
