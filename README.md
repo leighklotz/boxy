@@ -75,6 +75,9 @@ One inference per box, continued as a chat
 ## Editor Example
 ![docs/editor.png](docs/editor.png)
 
+## Logo Example
+![docs/square-logo.png](docs/square-logo.png)
+
 ## Spec
 - [docs/spec.md](docs/spec.md)
 - [model.md](docs/model.md)
