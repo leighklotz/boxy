@@ -668,11 +668,11 @@ function gatherText(node, isNested = false) {
   return textContent;
 }
 
-// EVALUATOR SPI: same as serializeBox(currentBox())
+// EVALUATOR SPI: same as serializeBox(currentBox()) except in a list?
 // todo: combine implementations
 function getCurrentBoxText() {
   const rowsText = [];
-  let currentNode = editor.firstChild;
+  let currentNode = cursor.parentNode.firstChild; 
   let rowText = [];
   while (currentNode) {
     if (currentNode.nodeType === Node.TEXT_NODE) {
@@ -927,6 +927,27 @@ function setCursorPosition(position) {
   moveCursorTo(position.node, position.offset);
 }
 
+function formatMarkdownBox() {
+  // Get the text content from current box
+  const markdownText = gatherEntireBox(cursor.parentNode);
+
+  // Use marked to parse and format the markdown
+  const formattedHtml = marked.parse(markdownText);
+
+  // Sanitize
+  const sanitizedHtml = sanitize_dom(formattedHtml);
+  
+  // Display the formatted markdown in the box
+  cursor.parentNode.innerHTML = formattedHtml;
+
+  // todo: repair the cursor. probably is is lost.
+  // moveCursorToStartOfBox()
+}
+
+function sanitize_dom(v) {
+  // todo: dom sanitize
+  return v;
+}
 
 /** A simple ordering function to compare DOM siblings (not always necessary). */
 function currentNodeCompare(a, b) {

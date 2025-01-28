@@ -114,7 +114,7 @@ async function llmInfer() {
   ];
 
   try {
-    const response = await callOpenAPI(messages, "chat", 0.7, 1.0, 0.0, 42);
+    const response = await callOpenAPI(messages, "instruct", 0.7, 1.0, 0.0, 42);
     console.log("llmInfer response", JSON.stringify(response));
     insertLlmResponse(response);
   } catch (error) {
