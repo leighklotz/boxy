@@ -11,7 +11,7 @@ let quoteFlag = false;
 /** * Box Commands */
 
 function isBox(node) {
-  return (node.nodeType === Node.ELEMENT_NODE && node.classList?.contains('box'));
+  return (node?.nodeType === Node.ELEMENT_NODE && node.classList?.contains('box'));
 }
 
 function isCursor(node) {
@@ -19,7 +19,7 @@ function isCursor(node) {
 }
 
 function isCha(node) {
-  return (node.nodeType === Node.TEXT_NODE);
+  return (node?.nodeType === Node.TEXT_NODE);
 }
 
 // EDITOR SPI: Insert a box at the cursor position and enter it
@@ -34,7 +34,7 @@ function insertAndEnterBox() {
 // EDITOR SPI: Enter the box immediately after the cursor
 function enterNextBox() {
   const nextNode = cursor.nextSibling;
-  if (nextNode && nextNode.classList.contains('box')) {
+  if (isBox(nextNode)) {
     moveCursorTo(nextNode, 0);
   }
 }
@@ -43,7 +43,7 @@ function enterNextBox() {
 function exitBoxLeft() {
   const parentBox = cursor.parentNode;
   if (parentBox !== editor) {
-    parentBox.parentNode.insertBefore(cursor, parentBox);
+    moveCursorTo(parentBox, 0);
     console.log('Cursor moved before the current box.');
   }
 }
@@ -52,6 +52,7 @@ function exitBoxLeft() {
 function exitBoxRight() {
   const parentBox = cursor.parentNode;
   if (parentBox !== editor) {
+    cursor.remove()
     parentBox.parentNode.insertBefore(cursor, parentBox.nextSibling);
     console.log('Cursor moved after the current box.');
   }
@@ -80,13 +81,16 @@ function moveCursorTo(node, offset = 0) {
     if (offset >= node.textContent.length) {
       // Move to the next sibling or append cursor if at the end of the text node
       if (node.nextSibling) {
+	cursor.remove();
         node.parentNode.insertBefore(cursor, node.nextSibling);
       } else {
+	cursor.remove();
         node.parentNode.appendChild(cursor);
       }
     } else {
       // Split the text node and insert the cursor
       const splitNode = node.splitText(offset);
+      cursor.remove();
       node.parentNode.insertBefore(cursor, splitNode);
     }
     return;
@@ -98,11 +102,13 @@ function moveCursorTo(node, offset = 0) {
       // Insert cursor before the specified child node
       const targetNode = node.childNodes[offset];
       if (targetNode !== cursor) {
+	cursor.remove();
         node.insertBefore(cursor, targetNode);
       }
     } else {
       // Append cursor if offset is beyond child nodes
       if (node !== cursor) {
+	cursor.remove();
         node.appendChild(cursor);
       }
     }
@@ -111,6 +117,7 @@ function moveCursorTo(node, offset = 0) {
 
   // Fallback: insert cursor at the parent of the node if valid
   if (node.parentNode && node !== cursor) {
+    cursor.remove();
     node.parentNode.insertBefore(cursor, node);
   } else {
     console.error('Node has no valid parent or is the cursor itself, cannot move cursor.');
@@ -327,8 +334,13 @@ function getColumnPosition(cursorNode) {
 // EDITOR SPI: Insert character at the cursor position
 function insertCharAtCursor(char) {
   clearSelection();
-  const textNode = document.createTextNode(char);
-  cursor.parentNode.insertBefore(textNode, cursor);
+  let prevNode = cursor.previousSibling;
+  if (isCha(prevNode)) {
+    prevNode.textContent += char;
+  } else {
+    const textNode = document.createTextNode(char);
+    cursor.parentNode.insertBefore(textNode, cursor);
+  }
 }
 
 // EDITOR SPI: Insert text at the cursor position
@@ -340,8 +352,13 @@ function insertBoxAtCursor(node) {
 // EDITOR SPI: Insert box at the cursor position
 function insertTextAtCursor(text) {
   clearSelection();
-  const textNode = document.createTextNode(text);
-  cursor.parentNode.insertBefore(textNode, cursor);
+  let prevNode = cursor.previousSibling;
+  if (isCha(prevNode)) {
+    prevNode.textContent += text;
+  } else {
+    const textNode = document.createTextNode(text);
+    cursor.parentNode.insertBefore(textNode, cursor);
+  }
 }
 
 // EDITOR SPI: Insert a newline at the cursor position

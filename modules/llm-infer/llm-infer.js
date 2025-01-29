@@ -207,47 +207,47 @@ function insertLlmResponse(response) {
 }
 
 function getChatHistory() {
-    const rowsText = [];
-    let currentNode = editor.firstChild;
-    let rowText = [];
+  const rowsText = [];
+  let currentNode = editor.firstChild;
+  let rowText = [];
 
-    while (currentNode) {
-        if (currentNode.nodeType === Node.TEXT_NODE) {
-            rowText.push(currentNode.textContent);
-        } else if (currentNode.classList?.contains('box')) {
-            rowText.push(...gatherText(currentNode));
-        }
-
-        if (currentNode.nodeType === Node.TEXT_NODE && currentNode.textContent.includes('\n')) {
-            rowsText.push(rowText.join(''));
-            rowText = [];
-        }
-
-        currentNode = currentNode.nextSibling;
+  while (currentNode) {
+    if (currentNode.nodeType === Node.TEXT_NODE) {
+      rowText.push(currentNode.textContent);
+    } else if (currentNode.classList?.contains('box')) {
+      rowText.push(...gatherText(currentNode));
     }
 
-    // Add the last row, if any
-    if (rowText.length > 0) {
-        rowsText.push(rowText.join(''));
+    if (currentNode.nodeType === Node.TEXT_NODE && currentNode.textContent.includes('\n')) {
+      rowsText.push(rowText.join(''));
+      rowText = [];
     }
 
-    return rowsText;
+    currentNode = currentNode.nextSibling;
+  }
+
+  // Add the last row, if any
+  if (rowText.length > 0) {
+    rowsText.push(rowText.join(''));
+  }
+
+  return rowsText;
 }
 
 function constructChatHistory(rowsText) {
-    const chatHistory = [];
+  const chatHistory = [];
 
-    rowsText.forEach(row => {
-        if (row.includes('|')) {
-            const [userPart, responsePart] = row.split('|');
-            chatHistory.push({ role: 'user', content: userPart.trim() });
-            chatHistory.push({ role: 'assistant', content: responsePart.trim() });
-        } else {
-            chatHistory.push({ role: 'user', content: row.trim() });
-        }
-    });
+  rowsText.forEach(row => {
+    if (row.includes('|')) {
+      const [userPart, responsePart] = row.split('|');
+      chatHistory.push({ role: 'user', content: userPart.trim() });
+      chatHistory.push({ role: 'assistant', content: responsePart.trim() });
+    } else {
+      chatHistory.push({ role: 'user', content: row.trim() });
+    }
+  });
 
-    return chatHistory;
+  return chatHistory;
 }
 
 function chatTest() {
