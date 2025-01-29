@@ -10,6 +10,10 @@ let quoteFlag = false;
 
 /** * Box Commands */
 
+function isShrunkenBox(node) {
+  return isNode(box) && node.classList?.contains('shrunken');
+}
+
 function isBox(node) {
   return (node?.nodeType === Node.ELEMENT_NODE && node.classList?.contains('box'));
 }
@@ -875,6 +879,19 @@ function deserializeBox(serialized) {
   });
   
   return box;
+}
+
+// EDITOR SPI: Shrinks or expands the current box
+function toggleShrinkBox() {
+  const node = cursor.parentNode;
+  if (node === editor) {
+    console.log('Cannot shrink editor');
+    return;
+  }
+  if (! isBox(node)) {
+    throw new Error(`toggleShrinkBox: not a box: ${node}`);
+  }
+  node.classList.toggle('shrunken')
 }
 
 // EDITOR SPI: Sets the cursor position based on a specified object `{ node, offset }`.

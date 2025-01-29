@@ -12,6 +12,7 @@ div.box {
     cursor: text;
     position: relative;
 }
+
 span.cursor {
     background-color: black;
     display: inline-block;
@@ -19,9 +20,11 @@ span.cursor {
     height: 1em;
     animation: blink 0.7s step-start infinite;
 }
+
 @keyframes blink {
     50% { opacity: 0; }
 }
+
 .alert {
     position: absolute;
     top: 10px;
@@ -35,8 +38,6 @@ span.cursor {
     opacity: 1;
     transition: opacity 2s;
 }
-
-div.box { position: relative }
 
 div.box.think {
     font-style: italic
@@ -55,6 +56,13 @@ div.box.think::after {
     font-size: 0.8em;
 }
 
+div.box.shrunken {
+    background-color: #ccc;
+    overflow: hidden;
+    width: 20px;
+    height: 20px;
+}
+
 div.box.code {
     font-family: "Lucida Console", Courier, monospace;
 }
@@ -65,7 +73,7 @@ div.box.code::after {
     top: 0;
     right: 0;
     color: #444;
-    padding: 0 4px;
+    padding: 0 0px;
     background-color: #f0f0f0;
     border-bottom: 1px solid #ccc;
     z-index: 1;
