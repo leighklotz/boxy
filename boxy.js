@@ -362,6 +362,8 @@ function deleteCharAtCursor() {
   
   let prevNode = cursor.previousSibling;
 
+  if (! prevNode) return;
+
   // Remove any empty text nodes before processing
   while (isCha(prevNode) && prevNode.textContent.length === 0) {
     console.log('Removing empty text node...');
@@ -397,25 +399,28 @@ function deleteCharAtCursor() {
 // todo: make sure cursor is never removed, or at least add it back at the point
 function killLine() {
   let node = cursor.nextSibling;
-
-  while (node) {
-    if (isCha(node)) {
-      const newlineIndex = node.textContent.indexOf('\n');
-      if (newlineIndex !== -1) {
-        // Found a newline, slice it out and stop further processing
-        node.textContent = node.textContent.slice(newlineIndex);
-        break;
+  if (isCha(node) && node.textContent && node.textContent[0] == '\n') {
+    deleteCharForward();
+  } else {
+    while (node) {
+      if (isCha(node)) {
+	const newlineIndex = node.textContent.indexOf('\n');
+	if (newlineIndex !== -1) {
+          // Found a newline, slice it out and stop further processing
+          node.textContent = node.textContent.slice(newlineIndex);
+          break;
+	} else {
+          // Remove the entire text node if no newline
+          const nextNode = node.nextSibling;
+          node.remove();
+          node = nextNode;
+	}
       } else {
-        // Remove the entire text node if no newline
-        const nextNode = node.nextSibling;
-        node.remove();
-        node = nextNode;
+	// Remove non-text nodes and move to the next sibling
+	const nextNode = node.nextSibling;
+	node.remove();
+	node = nextNode;
       }
-    } else {
-      // Remove non-text nodes and move to the next sibling
-      const nextNode = node.nextSibling;
-      node.remove();
-      node = nextNode;
     }
   }
 }
@@ -423,6 +428,8 @@ function killLine() {
 // EDITOR SPI: Delete character forward (Ctrl-d), including newline at EOL
 function deleteCharForward() {
   let node = cursor.nextSibling;
+  if (! node) return;
+
   // If the next node is a text node
   if (isCha(node)) {
     if (node.textContent.length > 0) {
@@ -625,48 +632,6 @@ function getOffsetInNode(node, clientX, clientY) {
   return 0;
 }
 
-/** * Box access functions for evaluator */
-
-// Gather text content from a node, serializing nested boxes inside []
-function gatherText(node, isNested = false) {
-  const textContent = [];
-  if (isCha(node)) {
-    textContent.push(node.textContent);
-  } else if (node.classList?.contains('box')) {
-    if (isNested) textContent.push('['); // Only add brackets for nested boxes
-    Array.from(node.childNodes).forEach(child => textContent.push(...gatherText(child, true)));
-    if (isNested) textContent.push(']');
-  } else {
-    Array.from(node.childNodes).forEach(child => textContent.push(...gatherText(child, isNested)));
-  }
-  return textContent;
-}
-
-// EVALUATOR SPI: same as serializeBox(currentBox()) except in a list?
-// todo: combine implementations
-function getCurrentBoxText() {
-  const rowsText = [];
-  let currentNode = cursor.parentNode.firstChild; 
-  let rowText = [];
-  while (currentNode) {
-    if (isCha(currentNode)) {
-      rowText.push(currentNode.textContent);
-    } else if (currentNode.classList?.contains('box')) {
-      rowText.push(...gatherText(currentNode));
-    }
-    if (isCha(currentNode) && currentNode.textContent.includes('\n')) {
-      rowsText.push(rowText.join(''));
-      rowText = [];
-    }
-    currentNode = currentNode.nextSibling;
-  }
-  // Add the last row, if any
-  if (rowText.length > 0) {
-    rowsText.push(rowText.join(''));
-  }
-  return rowsText;
-}
-
 function findLineStart(cursor) {
   // We'll mimic moveCursorToStartOfLineInBox, but *just return* the node & offset
   // instead of moving the real cursor.
@@ -729,9 +694,9 @@ function findLineEnd(cursor) {
   return { node: cursor.parentNode, offset: 0 };
 }
 
-// EVALUATOR SPI: ???
-// todo: what is this and how is it different from getCurrentBoxText
-function gatherEntireBox(boxElem) {
+/** * Box access functions for evaluator */
+// EVALUATOR SPI: 
+function getBoxText(boxElem, returnRows=false) {
   const parts = [];
   boxElem.childNodes.forEach(child => {
     if (isCursor(child)) {
@@ -741,7 +706,7 @@ function gatherEntireBox(boxElem) {
       parts.push(child.textContent);
     } else if (isBox(child)) {
       // If child is another box, recursively gather it with brackets
-      parts.push('[' + gatherEntireBox(child) + ']');
+      parts.push('[' + getBoxText(child) + ']');
     } else {
       // Throw error for unexpected content
       throw new Error(
@@ -749,7 +714,11 @@ function gatherEntireBox(boxElem) {
       );
     }
   });
-  return parts.join('');
+  if (returnRows) {
+    return parts;
+  } else {
+    return parts.join('');
+  }
 }
 
 // EVALUATOR SPI: Gets text between two cursor positions, useful for selections.
@@ -774,7 +743,7 @@ function getTextBetweenCursors(start, end) {
       }
     } else if (isBox(currentNode)) {
       // Handle boxes by bracketing their entire content
-      parts.push('[' + gatherEntireBox(currentNode) + ']');
+      parts.push('[' + getBoxText(currentNode) + ']');
       // Stop if this is the end node
       if (currentNode === end.node) {
         done = true;
@@ -891,7 +860,7 @@ function setCursorPosition(position) {
 
 function formatMarkdownBox() {
   // Get the text content from current box
-  const markdownText = gatherEntireBox(cursor.parentNode);
+  const markdownText = getBoxText(cursor.parentNode);
 
   // Use marked to parse and format the markdown
   const formattedHtml = marked.parse(markdownText);

@@ -263,10 +263,10 @@ function constructChatHistory(rowsText) {
 }
 
 function chatTest() {
-    let history_raw = getBoxRowsText();
-    let chatHistory = constructChatHistory(history_raw);
+  let history_raw = getBoxRowsText(cursor.parentNode, returnRows=true);
+  let chatHistory = constructChatHistory(history_raw);
 
-    console.log(JSON.stringify(chatHistory));
+  console.log(JSON.stringify(chatHistory));
 }
 
 
