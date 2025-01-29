@@ -12,6 +12,7 @@ const keyMap = {
   'Ctrl-b': moveCursorBackward,
   'Ctrl-a': moveCursorToStartOfLineInBox,
   'Ctrl-d': deleteCharForward,
+  'Delete': deleteCharForward,
   'Ctrl-e': moveCursorToEndOfLineInBox,
   'Ctrl-k': killLine,
   'Ctrl-p': moveCursorUp,
