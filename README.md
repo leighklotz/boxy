@@ -47,7 +47,7 @@ Note that if a text region is selected, any insert or delete commands will delet
 | C-k             | Kill line                             | Delete content from cursor to the end of the line in box   |
 | C-y             | Yank (paste)                          | Paste previously cut or copied text/box at the cursor position. |
 | C-w             | Cut region                            | Cut the selected region of text or box to the clipboard.   |
-| C-c             | Collapse/Expand box                   | Collapse or expand the currently selected box with nested content. |
+| C-c             | Shrink/Expand box                   | Shrink or expand the currently selected box with nested content. |
 | C-leftarrow     | Undo                                  | Undo the last action.                                      |
 | C-rightarrow    | Redo                                  | Redo the last undone action.                               |
 | <printingchar>  | Self insert                           | Insert the character used to invoke this.                  |
