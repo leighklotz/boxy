@@ -42,6 +42,8 @@ Note that if a text region is selected, any insert or delete commands will delet
 | C-n             | Move down                             | Move cursor down one row in box box, preserving goal column          |
 | C-q             | Quote Character                       | Insert the next typed character instead of acting on it.      |
 | Arrow Keys      | Move Up, Down, Left, or Right         | Like Ctrl-P, Ctrl-N, Ctrl-B, Ctrl-F. |
+| Backspace       | Delete char backward                  | Delete the previous character |
+| C-d, Delete     | Delete char forward                   | Delete the next character |
 | C-k             | Kill line                             | Delete content from cursor to the end of the line in box   |
 | C-y             | Yank (paste)                          | Paste previously cut or copied text/box at the cursor position. |
 | C-w             | Cut region                            | Cut the selected region of text or box to the clipboard.   |
