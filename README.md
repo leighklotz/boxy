@@ -1,12 +1,12 @@
 # Boxy - a Boxer-inspired editor
 
-## Basic Editor Screenshot
+## Boxy Editor Screenshot
 
 Below is a screenshot showing the editor using LLM inference evaluation. Other types of evaluation are possible.
 
 ![docs/llm-chat-explain.png](docs/llm-chat-explain.png)
 
-## Spec
+## Boxy Spec
 - [docs/spec.md](docs/spec.md)
 - [model.md](docs/model.md)
 
@@ -62,12 +62,12 @@ Note that if a text region is selected, any insert or delete commands will delet
 | |               | LLM Infer                             | Prompt an LLM with the current line and insert the results in a new box.|
 | Ctrl-|          | LLM Chat                               | Prompt an LLM with the current box and insert the results in a new box.|
 
-### llm-infer
+### llm-infer Module
 One inference per line
 
 ![docs/llm-infer.png](docs/llm-infer.png)
 
-### llm-chat
+### llm-chat Module
 One inference per box, continued as a chat
 
 ![docs/llm-infer.png](docs/llm-chat.png)
@@ -76,10 +76,9 @@ One inference per box, continued as a chat
 
 ![docs/llm-infer.png](docs/llm-chat-longer.png)
 
-## Editor Example
+## More Editor Examples
 ![docs/editor.png](docs/editor.png)
 
-## Logo Example
 ![docs/square-logo.png](docs/square-logo.png)
 
 ## References
