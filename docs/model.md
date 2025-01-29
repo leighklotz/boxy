@@ -66,18 +66,21 @@ The cursor's position determines the active context within the document.
 
 
 ### **Key Commands**
-The editor supports a variety of keyboard shortcuts for navigation and manipulation:
+The editor supports a variety of keyboard shortcuts for navigation and manipulation, in additon to mouse clicks:
 
 | Command             | Description                                  |
 |---------------------|----------------------------------------------|
-| `[` / `Ctrl-[`      | Insert a new box and enter it.               |
-| `]` / Mouse Click    | Exit the current box.                       |
+| `[`                 | Insert a new box and enter it.               |
+| `Ctrl-[`            | Enter box to right.                          |
+| `Ctrl-]`            | Exit box to left.                            |
+| `]` /               | Exit the current box.                        |
 | `Ctrl-f` / `Ctrl-b` | Move cursor forward/backward.                |
 | `Ctrl-p` / `Ctrl-n` | Move cursor up/down.                         |
 | `Ctrl-k`            | Kill line (delete from cursor to end of row).|
 | `Ctrl-d`            | Delete character forward.                    |
 | `Backspace`         | Delete character backward.                   |
-| `|` / `Ctrl-|`      | Evaluate current row or selection.           |
+| `|`                 | Evaluate current row or selection.           |
+| `Ctrl-|`            | Evaluate current box.                        |
 
 ---
 
@@ -130,6 +133,9 @@ You can use this stable SPI to implement new editor primitive operations (e.g. f
 - `moveCursorToEndOfLineInBox()`
 - `getCurrentCursorPosition()`
 - `setCursorPosition()`
+- 'moveCursorBackward()`
+- `moveCursorForward()`
+
 
 ### **Box Operations**
 - `insertAndEnterBox()`

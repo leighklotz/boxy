@@ -210,92 +210,54 @@ function moveCursorToEndOfLineInBox() {
   }
 }
 
-// EDITOR SPI: Move cursor right within box
-function moveCursorRightWithinBox() {
-  console.log('Attempting to move right...');
-  goalColumn = -1; // Reset goal column on explicit horizontal motion
-  let nextNode = cursor.nextSibling;
-
-  // Check if the next node is a box
-  if (nextNode && nextNode.classList?.contains('box')) {
-    console.log('Moving past the nested box...');
-    moveCursorTo(nextNode.nextSibling || cursor.parentNode.nextSibling, 0);
-    return;
-  }
-
-  // If no next node, check if we are at the end of the current box
-  if (!nextNode) {
-    console.log('No next sibling, at the end of the current box.');
-    const parentBox = cursor.parentNode;
-    // Move to the right boundary of the next box, not inside it
-    if (parentBox.nextSibling && parentBox.nextSibling.classList?.contains('box')) {
-      console.log('Moving past the next box...');
-      moveCursorTo(parentBox.nextSibling.nextSibling, 0);
-      return;
-    } else {
-      console.log('Already at the rightmost boundary.');
-      return;
+function moveCursorForward() {
+    console.log('Moving cursor forward...');
+    let nextNode = cursor.nextSibling;
+    
+    while (nextNode) {
+        if (nextNode.classList?.contains('box')) {
+            console.log('Skipping over a box...');
+            let afterBoxNode = nextNode.nextSibling;
+            if (afterBoxNode) {
+                moveCursorTo(afterBoxNode, 0);
+            } else {
+                moveCursorTo(nextNode.parentNode, Array.from(nextNode.parentNode.childNodes).indexOf(nextNode) + 1);
+            }
+            return;
+        }
+        if (nextNode.nodeType === Node.TEXT_NODE && nextNode.textContent.length > 0) {
+            moveCursorTo(nextNode, 1);
+            return;
+        }
+        nextNode = nextNode.nextSibling;
     }
-  }
-
-  // If next node is a text node, move forward one character
-  if (nextNode && nextNode.nodeType === Node.TEXT_NODE) {
-    console.log(`Moving forward within text node. Text length: ${nextNode.textContent.length}`);
-    moveCursorTo(nextNode, 1); // Move to the next character
-  } else {
-    // If the next node is not a text node, stop at the boundary
-    console.log('Next node is not a text node, stopping at the boundary.');
-  }
+    console.log('At the end of the container, placing cursor at end.');
+    moveCursorTo(cursor.parentNode, cursor.parentNode.childNodes.length);
 }
 
-// EDITOR SPI: Move cursor left within box
-function moveCursorLeftWithinBox() {
-  console.log('Attempting to move left...');
-  goalColumn = -1; // Reset goal column on explicit horizontal motion
-  let prevNode = cursor.previousSibling;
-
-  // Check if the previous node is a box
-  if (prevNode && prevNode.classList?.contains('box')) {
-    console.log('Moving past the nested box...');
-    moveCursorTo(prevNode, prevNode.childNodes.length);
-    return;
-  }
-
-  // If no previous node, check if we are at the boundary of the current box
-  if (!prevNode) {
-    console.log('No previous sibling, at the start of the current box.');
-    const parentBox = cursor.parentNode;
-    // Move to the left boundary of the previous box, not inside it
-    if (parentBox.previousSibling && parentBox.previousSibling.classList?.contains('box')) {
-      console.log('Moving past the previous box...');
-      moveCursorTo(parentBox.previousSibling, parentBox.previousSibling.childNodes.length);
-      return;
-    } else {
-      console.log('Already at the leftmost boundary.');
-      return;
+function moveCursorBackward() {
+    console.log('Moving cursor backward...');
+    let prevNode = cursor.previousSibling;
+    
+    while (prevNode) {
+        if (prevNode.classList?.contains('box')) {
+            console.log('Skipping over a box...');
+            let beforeBoxNode = prevNode.previousSibling;
+            if (beforeBoxNode) {
+                moveCursorTo(beforeBoxNode, beforeBoxNode.textContent?.length || 0);
+            } else {
+                moveCursorTo(prevNode.parentNode, Array.from(prevNode.parentNode.childNodes).indexOf(prevNode));
+            }
+            return;
+        }
+        if (prevNode.nodeType === Node.TEXT_NODE && prevNode.textContent.length > 0) {
+            moveCursorTo(prevNode, prevNode.textContent.length - 1);
+            return;
+        }
+        prevNode = prevNode.previousSibling;
     }
-  }
-
-  // If previous node is a text node, move back one character
-  if (prevNode && prevNode.nodeType === Node.TEXT_NODE) {
-    const textLen = prevNode.textContent.length;
-    if (textLen > 0) {
-      console.log(`Moving back within text node. Text length: ${textLen}`);
-      moveCursorTo(prevNode, textLen - 1);
-    } else {
-      console.log('Previous text node is empty, moving to its previous sibling...');
-      cursor.parentNode.insertBefore(cursor, prevNode); // Move cursor before the empty node
-      // Check if there is another previous sibling to continue moving
-      prevNode = prevNode.previousSibling;
-      if (prevNode && prevNode.nodeType === Node.TEXT_NODE) {
-        console.log('Moving to end of previous text node...');
-        moveCursorTo(prevNode, prevNode.textContent.length);
-      }
-    }
-  } else {
-    // If the previous node is not a text node, stop at the boundary
-    console.log('Previous node is not a text node, stopping at the boundary.');
-  }
+    console.log('At the beginning of the container, placing cursor at start.');
+    moveCursorTo(cursor.parentNode, 0);
 }
 
 // EDITOR SPI: move cursor up within the current box, maintaining goal column

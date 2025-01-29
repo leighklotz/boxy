@@ -122,7 +122,7 @@ async function llmInfer() {
   } catch (error) {
     console.error("Error during inference:", error);
     statusLedOff();
-    throw new Exception("Failed to get LLM response. Please try again.", error);
+    throw new Error("Failed to get LLM response. Please try again.", error);
   }
 
 }
