@@ -206,13 +206,6 @@ function insertLlmResponse(response) {
   exitBoxRight();
 }
 
-function llmDuplicateTest() {
-  killResponse()
-  let text = getCurrentRowText();
-  console.log("llmDuplicateTest getCurrentRowText", text);
-  insertLlmResponse(text)
-}
-
 function getChatHistory() {
     const rowsText = [];
     let currentNode = editor.firstChild;
@@ -264,9 +257,5 @@ function chatTest() {
   console.log(JSON.stringify(chatHistory));
 }
 
-
-
 keyMap['Ctrl-|'] = llmChat;
 keyMap['|'] = llmInfer;
-keyMap['Tab'] = llmDuplicateTest
-// keyMap['Tab'] = chatTest
