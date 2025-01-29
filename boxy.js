@@ -23,10 +23,15 @@ function isCha(node) {
 }
 
 // EDITOR SPI: Insert a box at the cursor position and enter it
-function insertAndEnterBox() {
+function insertAndEnterCodeBox() {
+  insertAndEnterBox(boxtype='code');
+}
+
+function insertAndEnterBox(boxtype='') {
   clearSelection();
   const newBox = document.createElement('div');
   newBox.classList.add('box');
+  if (boxtype) newBox.classList.add(boxtype);
   cursor.parentNode.insertBefore(newBox, cursor);
   moveCursorTo(newBox, 0);
 }
@@ -259,7 +264,7 @@ function moveCursorBackward() {
   let prevNode = cursor.previousSibling;
   
   while (prevNode) {
-    if (prevNode.classList?.contains('box')) {
+    if (isBox(prevNode)) {
       console.log('Skipping over a box...');
       let beforeBoxNode = prevNode.previousSibling;
       if (beforeBoxNode) {
@@ -580,7 +585,7 @@ function moveCursorToClickedPosition(range) {
   // Check if the clicked node is inside a box
   let parentBox = node;
   while (parentBox && parentBox !== editor) {
-    if (parentBox.classList?.contains('box')) {
+    if (isBox(parentBox)) {
       console.log('Clicked inside a box, placing cursor inside...');
       moveCursorTo(parentBox, offset);
       return;
@@ -846,8 +851,10 @@ function deserializeBox(serialized) {
   const codeBlockRegex = /```([\s\S]*?)```/g;
   serialized = serialized.replaceAll(codeBlockRegex, '<div class="box code">$1</div>');
 
-  // Then handle regular boxes
+  // Then handle regular boxes 
   serialized = serialized.replaceAll('[', '<div class="box">');
+  serialized = serialized.replaceAll(']', '</div>');
+  serialized = serialized.replaceAll('(', '<div class="box code">');
   serialized = serialized.replaceAll(']', '</div>');
 
   const parser = new DOMParser();

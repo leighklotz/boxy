@@ -1,7 +1,7 @@
 // Key map for commands
 const keyMap = {
   '[': insertAndEnterBox,
-  '(': insertAndEnterBox,
+  '(': insertAndEnterCodeBox,
   ']': exitBoxRight,
   ')': exitBoxRight,
   'Ctrl-[': enterNextBox,
