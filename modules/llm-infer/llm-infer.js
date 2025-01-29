@@ -196,18 +196,13 @@ function findPipeIndex() {
 
 // insert ' | ' and LLM response.
 // delete prior responses before calling
-function insertLlmResponse(response, literal=false) {
+function insertLlmResponse(response) {
   // Move to the end of the line
   moveCursorToEndOfLineInBox();
   insertTextAtCursor(' | ');
   // Insert the LLM response in a new context box
-  if (literal) {
-    insertAndEnterBox();
-    insertTextAtCursor(response.trim());
-  } else {
-    // todo: is cursor at the right spot after?
-    insertBoxAtCursor(deserializeBox(response.trim()));
-  }
+  // todo: is cursor at the right spot after?
+  insertBoxAtCursor(deserializeBox(response.trim()));
   exitBoxRight();
 }
 

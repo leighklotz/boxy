@@ -827,11 +827,11 @@ function serializeBox(box) {
 function deserializeBox(serialized) {
   // First, handle triple backticks for code blocks
   const codeBlockRegex = /```([\s\S]*?)```/g;
-  serialized = serialized.replace(codeBlockRegex, '<div class="box code">$1</div>');
+  serialized = serialized.replaceAll(codeBlockRegex, '<div class="box code">$1</div>');
 
   // Then handle regular boxes
-  serialized = serialized.replace('[', '<div class="box">');
-  serialized = serialized.replace(']', '</div>');
+  serialized = serialized.replaceAll('[', '<div class="box">');
+  serialized = serialized.replaceAll(']', '</div>');
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(serialized, 'text/html');
