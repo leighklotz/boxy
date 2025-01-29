@@ -6,6 +6,10 @@ Below is a screenshot showing the editor using LLM inference evaluation. Other t
 
 ![docs/llm-chat-explain.png](docs/llm-chat-explain.png)
 
+## Spec
+- [docs/spec.md](docs/spec.md)
+- [model.md](docs/model.md)
+
 ## Boxy Mouse Bindings
 | **Mouse**  | **Action** -| **Description**                              |
 |------------|-------------|----------------------------------------------|
@@ -77,10 +81,6 @@ One inference per box, continued as a chat
 
 ## Logo Example
 ![docs/square-logo.png](docs/square-logo.png)
-
-## Spec
-- [docs/spec.md](docs/spec.md)
-- [model.md](docs/model.md)
 
 ## References
 - https://klotz.me/thesis.pdf
