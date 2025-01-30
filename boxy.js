@@ -14,6 +14,10 @@ function isShrunkenBox(node) {
   return isBox(node) && node.classList?.contains('shrunken');
 }
 
+function isCodeBox(node) {
+  return isBox(node) && node.classList?.contains('code');
+}
+
 function isBox(node) {
   return (node?.nodeType === Node.ELEMENT_NODE && node.classList?.contains('box'));
 }
@@ -743,13 +747,22 @@ function findLineEnd(cursor) {
 
 /** * Box access functions for evaluator */
 // EVALUATOR SPI: 
+function getCurrentBoxText() {
+  return getBoxText(cursor.parentNode);
+}
+
+// EVALUATOR SPI: 
+function getCurrentBoxRowsText() {
+  return getBoxRowsText(cursor.parentNode);
+}
+
 function getBoxText(boxElem) {
-  const rows = getBoxTextRows(boxElem);
+  const rows = getBoxRowsText(boxElem);
   return rows.join('');
 }
 
 // EVALUATOR SPI: 
-function getBoxTextRows(boxElem) {
+function getBoxRowsText(boxElem) {
   const parts = [];
   boxElem.childNodes.forEach(child => {
     if (isCursor(child)) {
@@ -791,15 +804,17 @@ function getTextBetweenCursors(start, end) {
       if (currentNode === end.node) {
         done = true;
       }
+    } else if (isCodeBox(currentNode)) {
+      parts.push('(' + getBoxText(currentNode) + ')');
+      if (currentNode === end.node) {
+        done = true;
+      }
     } else if (isBox(currentNode)) {
-      // Handle boxes by bracketing their entire content
       parts.push('[' + getBoxText(currentNode) + ']');
-      // Stop if this is the end node
       if (currentNode === end.node) {
         done = true;
       }
     } else {
-      // Throw error for unexpected node types
       throw new Error(`Unexpected node type in line: ${currentNode.nodeType}`);
     }
 
@@ -859,6 +874,7 @@ function deleteCurrentBox() {
 }
 
 // EDITOR SPI: Returns a text serialization of the box.
+// todo: shrunken boxes?
 function serializeBox(box) {
   const parts = [];
   box.childNodes.forEach(child => {
@@ -866,6 +882,8 @@ function serializeBox(box) {
       parts.push(child.textContent);
     } else if (isBox(child)) {
       parts.push(`[${serializeBox(child)}]`);
+    } else if (isCodeBox(child)) {
+      parts.push(`(${serializeBox(child)})`);
     } else {
       throw new Error(`Unexpected node type ${child.nodeType} in line: ${child}`);
     }
@@ -883,7 +901,7 @@ function deserializeBox(serialized) {
   serialized = serialized.replaceAll('[', '<div class="box">');
   serialized = serialized.replaceAll(']', '</div>');
   serialized = serialized.replaceAll('(', '<div class="box code">');
-  serialized = serialized.replaceAll(']', '</div>');
+  serialized = serialized.replaceAll(')', '</div>');
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(serialized, 'text/html');
