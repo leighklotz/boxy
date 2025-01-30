@@ -23,7 +23,7 @@ Note that if a text region is selected, any insert or delete commands will delet
 | **Key Binding** | **Action**                            | **Description**                                          |
 |-----------------|---------------------------------------|----------------------------------------------------------|
 | [               | Insert and enter box                  | Insert a box at the point and enter it.                  |
-| (               | Insert and enter box                  | Insert a box at the point and enter it.                  |
+| (               | Insert and enter box                  | Insert a code box at the point and enter it.                  |
 | ]               | Exit box                              | Exit current box and put pouint after it.                |
 | )               | Exit box                              | Exit current box and put pouint after it.                |
 | C-[             | Enter box                             | Enter box after point                  |
