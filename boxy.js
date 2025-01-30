@@ -593,6 +593,7 @@ function moveCursorToClickedPosition(range) {
   }
 
   // Avoid entering shrunken boxes
+  // todo: we can still erroneously enter nested shrunken boxes if you click just right
   if (isShrunkenBox(node)) {
     console.log(`Cannot enter shrunken box ${node}`)
     return;

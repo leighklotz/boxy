@@ -58,7 +58,7 @@ div.box.think::after {
 }
 
 div.box.shrunken {
-    background-color: #ccc; color: #444;
+    background-color: #ccc; color: #ccc;
     overflow: hidden;
     width: 20px;
     height: 20px;
