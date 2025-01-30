@@ -140,14 +140,14 @@ function moveCursorTo(node, offset = 0) {
 
 // EDITOR SPI: Move cursor to start of box
 function moveCursorToStartOfBox() {
-  console.log('Attempting to move to the start of the current box...');
+  console.log('Attempting to move to the start of the current box.');
   // Move the cursor to the start of the first child of the current box
   moveCursorTo(cursor.parentNode.firstChild, 0);
 }
 
 // EDITOR SPI: Move cursor to end of box
 function moveCursorToEndOfBox() {
-  console.log('Attempting to move to the end of the current box...');
+  console.log('Attempting to move to the end of the current box.');
   const currentBox = cursor.parentNode;
   const lastChild = currentBox.lastChild;
   if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
@@ -161,7 +161,7 @@ function moveCursorToEndOfBox() {
 
 // EDITOR SPI: Move cursor to start of line in box
 function moveCursorToStartOfLineInBox() {
-  console.log('Attempting to move to the start of the current row...');
+  console.log('Attempting to move to the start of the current row.');
   const result = findBeginningOfLine(cursor, 0);
   if (result) {
     console.log(`Moving to start of current row at column ${result.offset}.`);
@@ -228,7 +228,7 @@ function findEndOfLine(node, offset) {
 
 // EDITOR SPI: Move cursor to end of line in box
 function moveCursorToEndOfLineInBox() {
-  console.log('Attempting to move to the end of the current row...');
+  console.log('Attempting to move to the end of the current row.');
   const currentBox = cursor.parentElement;
 
   // Find the end of the current line
@@ -244,12 +244,12 @@ function moveCursorToEndOfLineInBox() {
 }
 
 function moveCursorForward() {
-  console.log('Moving cursor forward...');
+  console.log('Moving cursor forward.');
   let nextNode = cursor.nextSibling;
   
   while (nextNode) {
     if (isBox(nextNode)) {
-      console.log('Skipping over a box...');
+      console.log('Skipping over a box.');
       let afterBoxNode = nextNode.nextSibling;
       if (afterBoxNode) {
         moveCursorTo(afterBoxNode, 0);
@@ -269,12 +269,12 @@ function moveCursorForward() {
 }
 
 function moveCursorBackward() {
-  console.log('Moving cursor backward...');
+  console.log('Moving cursor backward.');
   let prevNode = cursor.previousSibling;
   
   while (prevNode) {
     if (isBox(prevNode)) {
-      console.log('Skipping over a box...');
+      console.log('Skipping over a box.');
       let beforeBoxNode = prevNode.previousSibling;
       if (beforeBoxNode) {
         moveCursorTo(beforeBoxNode, beforeBoxNode.textContent?.length || 0);
@@ -295,7 +295,7 @@ function moveCursorBackward() {
 
 // EDITOR SPI: move cursor up within the current box, maintaining goal column
 function moveCursorUp() {
-  console.log('Attempting to move up...');
+  console.log('Attempting to move up.');
   const currentColumn = getColumnPosition(cursor);
   if (goalColumn === -1 || currentColumn !== goalColumn) {
     goalColumn = currentColumn;
@@ -317,7 +317,7 @@ function moveCursorUp() {
 
 // EDITOR SPI: move cursor down within the current box, maintaining goal column
 function moveCursorDown() {
-  console.log('Attempting to move down...');
+  console.log('Attempting to move down.');
   const currentColumn = getColumnPosition(cursor);
   if (goalColumn === -1 || currentColumn !== goalColumn) {
     goalColumn = currentColumn;
@@ -389,7 +389,7 @@ function insertQuotedChar() {
 
 // EDITOR SPI: Delete character at the cursor position (Backspace)
 function deleteCharAtCursor() {
-  console.log('Attempting to delete character...');
+  console.log('Attempting to delete character.');
   
   let prevNode = cursor.previousSibling;
 
@@ -397,7 +397,7 @@ function deleteCharAtCursor() {
 
   // Remove any empty text nodes before processing
   while (isCha(prevNode) && prevNode.textContent.length === 0) {
-    console.log('Removing empty text node...');
+    console.log('Removing empty text node.');
     prevNode.remove();
     prevNode = cursor.previousSibling;
   }
@@ -411,7 +411,7 @@ function deleteCharAtCursor() {
       
       // If the text node becomes empty, remove it and move the cursor before it
       if (prevNode.textContent.length === 0) {
-        console.log('Previous text node is now empty, removing it...');
+        console.log('Previous text node is now empty, removing it.');
         prevNode.remove();
       }
     } else {
@@ -419,7 +419,7 @@ function deleteCharAtCursor() {
     }
   } else if (prevNode) {
     // If the previous node is not a text node, remove it entirely
-    console.log('Deleting non-text node...');
+    console.log('Deleting non-text node.');
     prevNode.remove();
   } else {
     console.log('No previous node to delete.');
@@ -550,7 +550,7 @@ function handleDoubleClick(event) {
   
 // Handle mouse clicks for cursor movement, allowing movement between boxes
 function handleClick(event, dbl=false) {
-  console.log('Handling mouse click...');
+  console.log('Handling mouse click.');
   // Get the element under the click
   const element = document.elementFromPoint(event.clientX, event.clientY);
   console.log('Element under click:', element);
@@ -564,7 +564,7 @@ function handleClick(event, dbl=false) {
   } else {
     // Check if the element is within the editor
     if (element && editor.contains(element)) {
-      console.log('Element is within editor, proceeding...');
+      console.log('Element is within editor, proceeding.');
       // Create a range at the click position
       const range = document.caretRangeFromPoint(event.clientX, event.clientY);
       if (range) {
@@ -593,7 +593,8 @@ function moveCursorToClickedPosition(range) {
   }
 
   // Avoid entering shrunken boxes
-  // todo: we can still erroneously enter nested shrunken boxes if you click just right
+  // todo: user can still erroneously enter nested shrunken boxes if you click just inside one
+  //       could use a boxtop to display over a shrunken box, once we have boxtops.
   if (isShrunkenBox(node)) {
     console.log(`Cannot enter shrunken box ${node}`)
     return;
@@ -601,8 +602,8 @@ function moveCursorToClickedPosition(range) {
 
   // Check if the clicked node is the editor box or contains text
   if (isBox(node)) {
-    console.log('Clicked a box, placing cursor inside...');
-    moveCursorTo(node, 0); // Place cursor at the start of the box
+    console.log('Clicked a box; placing cursor inside start of box.');
+    moveCursorTo(node, 0);
     return;
   }
 
@@ -610,7 +611,7 @@ function moveCursorToClickedPosition(range) {
   let parentBox = node;
   while (parentBox && parentBox !== editor) {
     if (isBox(parentBox)) {
-      console.log('Clicked inside a box, placing cursor inside...');
+      console.log('Clicked inside a box; placing cursor nested box.');
       moveCursorTo(parentBox, offset);
       return;
     }
@@ -631,7 +632,7 @@ function moveCursorToClickedPosition(range) {
 
 // Helper function to find the nearest parent or sibling text node
 function findParentOrSiblingTextNode(element) {
-  console.log('Finding nearest parent or sibling text node...');
+  console.log('Finding nearest parent or sibling text node.');
   // If the element is already a text node, return it
   if (isCha(element)) {
     return element;
@@ -652,7 +653,7 @@ function findParentOrSiblingTextNode(element) {
 function getOffsetInNode(node, clientX, clientY) {
   console.log('Calculating offset in text node:', node);
   if (isCha(node)) {
-    console.log('Node is a text node. Calculating offset...');
+    console.log('Node is a text node. Calculating offset.');
     // Calculate character offset for text nodes
     const range = document.createRange();
     range.setStart(node, 0);
@@ -704,7 +705,7 @@ function findLineStart(cursor) {
 }
 
 function findLineEnd(cursor) {
-  console.log('Attempting to find the end of the current line...');
+  console.log('Attempting to find the end of the current line.');
   let currentNode = cursor;
   let offset = 0;
 
