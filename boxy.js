@@ -743,7 +743,13 @@ function findLineEnd(cursor) {
 
 /** * Box access functions for evaluator */
 // EVALUATOR SPI: 
-function getBoxText(boxElem, returnRows=false) {
+function getBoxText(boxElem) {
+  const rows = getBoxTextRows(boxElem);
+  return rows.join('');
+}
+
+// EVALUATOR SPI: 
+function getBoxTextRows(boxElem) {
   const parts = [];
   boxElem.childNodes.forEach(child => {
     if (isCursor(child)) {
@@ -761,11 +767,8 @@ function getBoxText(boxElem, returnRows=false) {
       );
     }
   });
-  if (returnRows) {
-    return parts;
-  } else {
-    return parts.join('');
-  }
+
+  return parts;
 }
 
 // EVALUATOR SPI: Gets text between two cursor positions, useful for selections.
