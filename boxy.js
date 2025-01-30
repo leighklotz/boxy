@@ -11,7 +11,7 @@ let quoteFlag = false;
 /** * Box Commands */
 
 function isShrunkenBox(node) {
-  return isNode(box) && node.classList?.contains('shrunken');
+  return isBox(node) && node.classList?.contains('shrunken');
 }
 
 function isBox(node) {
@@ -72,6 +72,11 @@ function exitBoxRight() {
 function moveCursorTo(node, offset = 0) {
   if (!node) {
     console.error('Invalid node, cannot move cursor.');
+    return;
+  }
+
+  if (isShrunkenBox(node)) {
+    console.log(`Cannot enter shrunken box ${node}`)
     return;
   }
 
@@ -538,15 +543,25 @@ function handleKeydown(event) {
   }
 }
 
+// Handle mouse double clicks
+function handleDoubleClick(event) {
+  return handleClick(event, dbl=true);
+}
+  
 // Handle mouse clicks for cursor movement, allowing movement between boxes
-function handleClick(event) {
+function handleClick(event, dbl=false) {
   console.log('Handling mouse click...');
   // Get the element under the click
   const element = document.elementFromPoint(event.clientX, event.clientY);
   console.log('Element under click:', element);
 
   // if it's the cursor, do not do processing, just clear selection range
-  if (element !== cursor) {
+  if (element === cursor) {
+    console.log('Clicked on cursor.');
+  } else if (dbl && isShrunkenBox(element)) {
+    unshrinkBox(element);
+    handleClick(event, dbl=false);
+  } else {
     // Check if the element is within the editor
     if (element && editor.contains(element)) {
       console.log('Element is within editor, proceeding...');
@@ -562,8 +577,6 @@ function handleClick(event) {
     } else {
       console.log('Clicked element is not within the editor.');
     }
-  } else {
-      console.log('Clicked on cursor.');
   }
 
   selectionRange = null; // Clear any existing selection
@@ -576,6 +589,12 @@ function moveCursorToClickedPosition(range) {
 
   // If we clicked in the same spot, do nothing.
   if (node === cursor) {
+    return;
+  }
+
+  // Avoid entering shrunken boxes
+  if (isShrunkenBox(node)) {
+    console.log(`Cannot enter shrunken box ${node}`)
     return;
   }
 
@@ -881,18 +900,32 @@ function deserializeBox(serialized) {
   return box;
 }
 
-// EDITOR SPI: Shrinks or expands the current box
-function toggleShrinkBox() {
+// EDITOR SPI: Shrinks current box
+function shrinkBox() {
   const node = cursor.parentNode;
   if (node === editor) {
     console.log('Cannot shrink editor');
     return;
   }
   if (! isBox(node)) {
-    throw new Error(`toggleShrinkBox: not a box: ${node}`);
+    throw new Error(`shrinkBox: not a box: ${node}`);
   }
-  node.classList.toggle('shrunken')
+  node.classList.add('shrunken')
+  exitBoxRight()
 }
+
+function unshrinkBox(node) {
+  if (node === editor) {
+    console.log('Cannot unshrink editor');
+    return;
+  }
+  if (! isBox(node)) {
+    throw new Error(`shrinkBox: not a box: ${node}`);
+  }
+  node.classList.remove('shrunken')
+  exitBoxRight()
+}
+
 
 // EDITOR SPI: Sets the cursor position based on a specified object `{ node, offset }`.
 function setCursorPosition(position) {
@@ -944,6 +977,7 @@ function currentNodeCompare(a, b) {
 // Add event listeners
 editor.addEventListener('keydown', handleKeydown);
 editor.addEventListener('click', handleClick);
+editor.addEventListener('dblclick', handleDoubleClick);
 
 // Set initial focus
 editor.focus();

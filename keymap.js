@@ -11,7 +11,7 @@ const keyMap = {
   'Ctrl-f': moveCursorForward,
   'Ctrl-b': moveCursorBackward,
   'Ctrl-a': moveCursorToStartOfLineInBox,
-  'Ctrl-c': toggleShrinkBox,
+  'Ctrl-c': shrinkBox,
   'Ctrl-d': deleteCharForward,
   'Delete': deleteCharForward,
   'Ctrl-e': moveCursorToEndOfLineInBox,
