@@ -1,0 +1,172 @@
+Write fib in python, iteratively | [(python
+def fib(n):
+    a, b = 0, 1
+    for _ in range(n):
+        a, b = b, a + b
+    return a
+)]
+Compile to CARDIAC instruction set | [Compiling a Python function like the Fibonacci sequence to the CARDIAC (Cardiac Arithmetic and Logic Instruction ACcumulator) instruction set is quite complex because CARDIAC is a very simple educational model computer. It has a 100-word memory, 10 registers (0-9), and a very limited instruction set.
+
+Here’s a simplified version of how you might approach this:
+
+1. **Initialize Variables:** We need to store the variables `a`, `b`, and the loop counter.
+2. **Iterate:** We need to perform the loop to calculate the Fibonacci sequence.
+3. **Store Results:** Store the final result in a register or memory location.
+
+Below is a simplified version of what the CARDIAC assembly code might look like for calculating the nth Fibonacci number. This is a conceptual translation and may not directly correspond to a real-world implementation due to the constraints of the CARDIAC.
+
+(assembly
+; Initialize registers
+0000    INP     ; Input n (number of Fibonacci numbers to calculate)
+0001    STA  19 ; Store n in memory location 19
+0002    LDA    0 ; Load 0 into accumulator (a)
+0003    STA    1 ; Store 0 in memory location 1 (a)
+0004    LDA    1 ; Load 1 into accumulator (b)
+0005    STA    2 ; Store 1 in memory location 2 (b)
+0006    LDA    0 ; Initialize loop counter to 0
+0007    STA    3 ; Store loop counter in memory location 3
+
+; Loop to calculate Fibonacci numbers
+0008    LDA    3 ; Load loop counter
+0009    SUB    19; Subtract n from loop counter
+0010    BRZ    17; If loop counter == n, branch to end
+0011    LDA    2 ; Load b into accumulator
+0012    STA    1 ; Store b in memory location 1 (new a)
+0013    LDA    1 ; Load a into accumulator
+0014    ADD    2 ; Add b to a
+0015    STA    2 ; Store a+b in memory location 2 (new b)
+0016    INC    3 ; Increment loop counter
+0017    BRP    08; Branch back to loop start
+
+; Output result
+0018    LDA    2 ; Load final Fibonacci number into accumulator
+0019    OUT     ; Output the result
+0020    HLT     ; Halt the program
+)
+
+**Explanation:**
+- `INP`: Input the number of Fibonacci numbers to calculate.
+- `STA`: Store the accumulator into a specified memory location.
+- `LDA`: Load a value from memory into the accumulator.
+- `SUB`: Subtract the value in a specified memory location from the accumulator.
+- `BRZ`: Branch to a specified instruction if the accumulator is zero.
+- `ADD`: Add the value in a specified memory location to the accumulator.
+- `INC`: Increment the value in a specified memory location.
+- `BRP`: Branch to a specified instruction.
+- `OUT`: Output the value in the accumulator.
+- `HLT`: Halt the program.
+
+This is a high-level translation and assumes a simplified model of the CARDIAC. The actual implementation may vary based on the specific details and constraints of the CARDIAC model you are working with.]
+
+Write a CARDIAC emulator cli program that will be able to execute the above. You will also need an assembler, but it is ok to put it inside the emulator. | [Creating a CARDIAC emulator with an assembler integrated into it is a great project! Below is a simple implementation in Python that can assemble and execute the CARDIAC assembly code you provided.
+
+(python
+class CARDIAC:
+    def __init__(self):
+        self.memory = [0] * 100
+        self.accumulator = 0
+        self.instruction_pointer = 0
+        self.input_buffer = []
+        self.output_buffer = []
+        self.running = False
+
+    def assemble(self, code):
+        labels = {}
+        instructions = code.split('\n')
+        assembled_code = []
+        line_number = 0
+
+        for line in instructions:
+            line = line.strip()
+            if not line or line.startswith(';'):
+                continue
+
+            parts = line.split()
+            if len(parts) == 1:
+                labels[parts[0]] = line_number
+            else:
+                opcode = parts[0]
+                operand = parts[1] if len(parts) > 1 else None
+
+                if operand and operand.startswith('[']:
+                    operand = operand[1:-1]
+                if operand and operand in labels:
+                    operand = labels[operand]
+
+                assembled_code.append((opcode, operand))
+                line_number += 1
+
+        return assembled_code
+
+    def execute(self, assembled_code):
+        self.running = True
+        while self.running and self.instruction_pointer < len(assembled_code):
+            opcode, operand = assembled_code[self.instruction_pointer]
+            self.instruction_pointer += 1
+
+            if opcode == 'INP':
+                self.accumulator = self.input_buffer.pop(0)
+            elif opcode == 'STA':
+                self.memory[int(operand)] = self.accumulator
+            elif opcode == 'LDA':
+                self.accumulator = self.memory[int(operand)]
+            elif opcode == 'SUB':
+                self.accumulator -= self.memory[int(operand)]
+            elif opcode == 'BRZ':
+                if self.accumulator == 0:
+                    self.instruction_pointer = int(operand)
+            elif opcode == 'ADD':
+                self.accumulator += self.memory[int(operand)]
+            elif opcode == 'INC':
+                self.memory[int(operand)] += 1
+            elif opcode == 'BRP':
+                self.instruction_pointer = int(operand)
+            elif opcode == 'OUT':
+                self.output_buffer.append(self.accumulator)
+            elif opcode == 'HLT':
+                self.running = False
+
+    def run(self, code, inputs):
+        self.input_buffer = inputs
+        assembled_code = self.assemble(code)
+        self.execute(assembled_code)
+        return self.output_buffer
+
+if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) < 3:
+        print("Usage: python cardiac_emulator.py assembly_code input")
+        sys.exit(1)
+
+    assembly_code = sys.argv[1]
+    input_value = int(sys.argv[2])
+
+    cardiac = CARDIAC()
+    output = cardiac.run(assembly_code, [input_value])
+    print("Output:", output)
+)
+
+### How to Use the Emulator
+
+1. **Save the Emulator Code:**
+   Save the above code to a file named `cardiac_emulator.py`.
+
+2. **Save the Assembly Code:**
+   Save the CARDIAC assembly code you provided to a file named `fibonacci.cardiac`.
+
+3. **Run the Emulator:**
+   Open a terminal and run the following command:
+   (sh
+   python cardiac_emulator.py fibonacci.cardiac 10
+   )
+
+   This will run the Fibonacci sequence calculation for the 10th Fibonacci number and print the output.
+
+### Notes
+
+- **Input Handling:** The emulator reads the input from the command line argument and stores it in the `input_buffer`.
+- **Output Handling:** The emulator outputs the final Fibonacci number to the `output_buffer` and prints it.
+- **Error Handling:** This is a basic implementation and does not include comprehensive error handling. You may want to add error checks for invalid instructions, memory out of bounds, etc.
+
+This should give you a good starting point for working with the CARDIAC emulator and running the Fibonacci sequence calculation.)]

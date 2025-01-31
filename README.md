@@ -93,7 +93,7 @@ Example:
 ```
 
 ### Save:
-tbd
+Put the cursor in a boxy box and press `Ctrl-^`. The box text will download.
 
 ## identity module
 | **Key Binding** | **Action**                            | **Description**                                                         |
