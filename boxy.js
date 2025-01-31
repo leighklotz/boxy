@@ -71,7 +71,6 @@ function exitBoxRight() {
   }
 }
 
-/** * Cursor Management */
 // EDITOR SPI: Move cursor to specified node and offset
 function moveCursorTo(node, offset = 0) {
   if (!node) {
@@ -347,8 +346,6 @@ function getColumnPosition(cursorNode) {
     return prevText ? prevText.textContent.length : 0;
 }
 
-/** * Inserting and Deleting */
-
 // EDITOR SPI: Insert character at the cursor position
 function insertCharAtCursor(char) {
   clearSelection();
@@ -494,7 +491,6 @@ function clearSelection() {
   selectionRange = null;
 }
 
-/** * Key Binding and Executions */
 // Function to display an alert for unbound keys
 function showUnboundKeyAlert(key) {
   alertBox.textContent = `"${key}" is undefined`;
@@ -745,7 +741,6 @@ function findLineEnd(cursor) {
   return { node: cursor.parentNode, offset: 0 };
 }
 
-/** * Box access functions for evaluator */
 // EVALUATOR SPI: 
 function getCurrentBoxText() {
   return getBoxText(cursor.parentNode);
@@ -949,7 +944,6 @@ function unshrinkBox(node) {
   exitBoxRight()
 }
 
-
 // EDITOR SPI: Sets the cursor position based on a specified object `{ node, offset }`.
 function setCursorPosition(position) {
   moveCursorTo(position.node, position.offset);
@@ -983,18 +977,6 @@ function statusLedOn() {
 
 function statusLedOff() {
   document.getElementById('status-led').classList.remove('running');
-}
-
-/** A simple ordering function to compare DOM siblings (not always necessary). */
-function currentNodeCompare(a, b) {
-  if (a === b) return 0;
-  // Otherwise, we can see if a is before b in the sibling chain
-  let node = a;
-  while (node) {
-    if (node === b) return -1; // a is before b
-    node = node.nextSibling;
-  }
-  return 1; // didn't find b, so presumably a is after
 }
 
 // Add event listeners
