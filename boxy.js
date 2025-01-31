@@ -751,6 +751,7 @@ function getCurrentBoxRowsText() {
   return getBoxRowsText(cursor.parentNode);
 }
 
+// EVALUATOR SPI: 
 function getBoxText(boxElem) {
   const rows = getBoxRowsText(boxElem);
   return rows.join('');
@@ -886,6 +887,12 @@ function serializeBox(box) {
   return parts.join('');
 }
 
+// Evaluator SPI: Sanitize dom (todo)
+function sanitize_dom(v) {
+  // todo: dom sanitize
+  return v;
+}
+
 // Evaluator SPI: Deserialize a box string into DOM nodes
 function deserializeBox(serialized) {
   // First, handle triple backticks for code blocks
@@ -906,15 +913,16 @@ function deserializeBox(serialized) {
   // Convert the parsed HTML into DOM nodes
   const children = Array.from(doc.body.childNodes);
   children.forEach(child => {
-    if (child.nodeName === 'THINK') {
+    const node_name = child.nodeName.toLowerCase();
+    if (node_name === 'think' || node_name === 'code') {
       const newBox = deserializeBox(child.textContent.trim());
-      newBox.classList.add('think');
+      newBox.classList.add('node_name');
       box.appendChild(newBox);
     } else {
       box.appendChild(child);
     }
   });
-  
+
   return box;
 }
 
@@ -947,28 +955,6 @@ function unshrinkBox(node) {
 // EDITOR SPI: Sets the cursor position based on a specified object `{ node, offset }`.
 function setCursorPosition(position) {
   moveCursorTo(position.node, position.offset);
-}
-
-function formatMarkdownBox() {
-  // Get the text content from current box
-  const markdownText = getBoxText(cursor.parentNode);
-
-  // Use marked to parse and format the markdown
-  const formattedHtml = marked.parse(markdownText);
-
-  // Sanitize
-  const sanitizedHtml = sanitize_dom(formattedHtml);
-  
-  // Display the formatted markdown in the box
-  cursor.parentNode.innerHTML = formattedHtml;
-
-  // todo: repair the cursor. probably is is lost.
-  // moveCursorToStartOfBox()
-}
-
-function sanitize_dom(v) {
-  // todo: dom sanitize
-  return v;
 }
 
 function statusLedOn() {
