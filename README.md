@@ -23,12 +23,12 @@ $ cd boxy
 The first way is to visit the URL `file:///home/klotz/wip/boxy/boxy.html` (or whever your have this repository).
 You cannot save or load boxes with his method, but it requires no setup.
 
-2. The second way is to run a local HTTP server and visit that URL.
+3. The second way is to run a local HTTP server and visit that URL.
 ```bash
 $ ./run.sh
 ```
 
-Then visit <a href="http://localhost:8080">http://localhost:8080</a>.
+Then visit <a href="http://localhost:8080">http://localhost:8080/boxy.html</a>.
 
 ## Boxy Mouse Bindings
 | **Mouse**  | **Action** -| **Description**                              |
