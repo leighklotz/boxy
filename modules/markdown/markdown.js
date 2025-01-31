@@ -2,7 +2,7 @@
 
 marked.setOptions({
   gfm: true,
-  newlines: false
+  breaks: false
 });
 
 function formatMarkdownBoxKey() {

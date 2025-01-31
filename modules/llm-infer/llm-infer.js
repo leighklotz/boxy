@@ -198,8 +198,13 @@ function insertLlmResponse(response) {
   insertTextAtCursor(' | ');
   // Insert the LLM response in a new context box
   // todo: is cursor at the right spot after?
-  let response_box = deserializeBox(response.trim());
-  insertBoxAtCursor(response_box);
+  let rawtext = response.trim();
+  let response_box = deserializeBox(rawtext);
+  if (rawtext.includes('\n')) {
+    insertBoxAtCursor(response_box);
+  } else {
+    insertBoxContentsAtCursor(response_box);
+  }
   if (true) {
     console.log("formatting response_box as markdown");
     formatMarkdownBox(response_box);

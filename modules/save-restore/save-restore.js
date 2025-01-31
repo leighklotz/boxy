@@ -34,9 +34,13 @@ function loadBoxFromString() {
     })
 }
 
-function downloadSerializedBox() {
+function downloadSerializedBoxy() {
+  downloadSerializedBox(editor);
+}
+
+function downloadSerializedBox(box) {
   // Serialize the box
-  const serializedString = serializeBox(cursor.parentNode);
+  const serializedString = serializeBox(box);
 
   // Create a Blob from the serialized string
   const blob = new Blob([serializedString], {type: 'text/plain'});
@@ -60,4 +64,5 @@ function downloadSerializedBox() {
 
 
 keyMap['Ctrl-o'] = loadBoxFromString
-keyMap['Ctrl-^'] = downloadSerializedBox
+keyMap['Ctrl-%'] = downloadSerializedBox
+keyMap['Ctrl-^'] = downloadSerializedBoxy

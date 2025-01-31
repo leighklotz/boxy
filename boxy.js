@@ -115,7 +115,6 @@ function moveCursorTo(node, offset = 0) {
     return;
   }
 
-  // Handle element nodes
   if (node.nodeType === Node.ELEMENT_NODE) {
     if (offset < node.childNodes.length) {
       // Insert cursor before the specified child node
@@ -248,6 +247,7 @@ function moveCursorToEndOfLineInBox() {
   }
 }
 
+// EDITOR SPI: Move cursor forward
 function moveCursorForward() {
   console.log('Moving cursor forward.');
   let nextNode = cursor.nextSibling;
@@ -273,6 +273,7 @@ function moveCursorForward() {
   moveCursorTo(cursor.parentNode, cursor.parentNode.childNodes.length);
 }
 
+// EDITOR SPI: Move cursor backward
 function moveCursorBackward() {
   console.log('Moving cursor backward.');
   let prevNode = cursor.previousSibling;
@@ -360,11 +361,21 @@ function insertCharAtCursor(char) {
   }
 }
 
-// EDITOR SPI: Insert text at the cursor position
+// EDITOR SPI: Insert box at the cursor position
 function insertBoxAtCursor(node) {
   clearSelection();
   cursor.parentNode.insertBefore(node, cursor);
 }
+
+// EDITOR SPI: Insert box contents at the cursor position
+function insertBoxContentsAtCursor(box) {
+  clearSelection();
+  let boxText = serializeBox(box);
+  insertTextAtCursor(boxText);
+  // cursor.parentNode.insertBefore(node, cursor);
+}
+
+
 
 // EDITOR SPI: Insert box at the cursor position
 function insertTextAtCursor(text) {
