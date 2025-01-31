@@ -375,8 +375,6 @@ function insertBoxContentsAtCursor(box) {
   // cursor.parentNode.insertBefore(node, cursor);
 }
 
-
-
 // EDITOR SPI: Insert box at the cursor position
 function insertTextAtCursor(text) {
   clearSelection();
@@ -406,7 +404,6 @@ function deleteCharAtCursor() {
   console.log('Attempting to delete character.');
   
   let prevNode = cursor.previousSibling;
-
   if (! prevNode) return;
 
   // Remove any empty text nodes before processing
@@ -471,7 +468,7 @@ function killLine() {
 }
 
 // EDITOR SPI: Delete character forward (Ctrl-d), including newline at EOL
-function deleteCharForward() {
+function deleteCharForward(){
   let node = cursor.nextSibling;
   if (! node) return;
 
