@@ -653,36 +653,6 @@ function moveCursorToClickedPosition(range) {
   }
 }
 
-// Helper function to calculate offset within a text node based on click position
-function getOffsetInNode(node, clientX, clientY) {
-  console.log('Calculating offset in text node:', node);
-  if (isCha(node)) {
-    console.log('Node is a text node. Calculating offset.');
-    // Calculate character offset for text nodes
-    const range = document.createRange();
-    range.setStart(node, 0);
-    range.collapse(true);
-    let offset = 0;
-    let rects = range.getClientRects();
-    while (offset < node.textContent?.length && rects.length > 0) {
-      const rect = rects[0];
-      console.log(`Offset: ${offset}, Rect:`, rect);
-      if (clientX < rect.right && clientY < rect.bottom) {
-        console.log('Cursor position found within rect.');
-        break;
-      }
-      offset++;
-      range.setStart(node, offset);
-      range.collapse(true);
-      rects = range.getClientRects();
-    }
-    console.log('Final offset:', offset);
-    return offset;
-  }
-  // Default to 0 if not a text node
-  return 0;
-}
-
 function findLineStart(cursor) {
   // We'll mimic moveCursorToStartOfLineInBox, but *just return* the node & offset
   // instead of moving the real cursor.
