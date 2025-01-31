@@ -85,10 +85,16 @@ Note that if a text region is selected, any insert or delete commands will delet
 | Ctrl-o          | Restore                               | Read the URL on the line, fetch the box, and insert the results.|
 
 ### Restore:
-- Put the URL of a boxy box to load into a box and press `Ctrl-o`
+Put the URL of a boxy box to load into a box and press `Ctrl-o`
+
+Example:
+<div style="border: 1px solid black;">
+ boxes/cardiac-fib.box &lt;Ctrl-o&gt;
+</div>
+
 
 ### Save:
-- tbd
+tbd
 
 ## identity module
 | **Key Binding** | **Action**                            | **Description**                                                         |
