@@ -502,6 +502,17 @@ function showUnboundKeyAlert(key) {
   }, 500);
 }
 
+// Function to display a general Error alert
+function showError(msg) {
+  alertBox.textContent = msg;
+  alertBox.style.display = 'block';
+  alertBox.style.opacity = 1;
+  setTimeout(() => { alertBox.style.opacity = 0; }, 1000);
+  setTimeout(() => {
+    alertBox.style.display = 'none';
+  }, 1000);
+}
+
 function handleKeydown(event) {
   // Avoid intercepting the Mac "Command" key
   if (event.metaKey) return;
@@ -773,7 +784,9 @@ function getBoxRowsText(boxElem) {
       parts.push(child.textContent);
     } else if (isBox(child)) {
       // If child is another box, recursively gather it with brackets
-      parts.push('[' + getBoxText(child) + ']');
+      let left_delim = isCodeBox(child) ? '(' : '[';
+      let right_delim = isCodeBox(child) ? ')' : ']';
+      parts.push(left_delim + getBoxText(child) + right_delim);
     } else {
       // Throw error for unexpected content
       throw new Error(
@@ -811,7 +824,9 @@ function getTextBetweenCursors(start, end) {
         done = true;
       }
     } else if (isBox(currentNode)) {
-      parts.push('[' + getBoxText(currentNode) + ']');
+      let left_delim = isCodeBox(child) ? '(' : '[';
+      let right_delim = isCodeBox(child) ? ')' : ']';
+      parts.push(left_delim + getBoxText(currentNode) + right_delim);
       if (currentNode === end.node) {
         done = true;
       }
@@ -879,12 +894,14 @@ function deleteCurrentBox() {
 function serializeBox(box) {
   const parts = [];
   box.childNodes.forEach(child => {
-    if (isCha(child.nodeType)) {
+    if (isCursor(child)) {
+      // skip
+    } else if (isCha(child)) {
       parts.push(child.textContent);
-    } else if (isBox(child)) {
-      parts.push(`[${serializeBox(child)}]`);
     } else if (isCodeBox(child)) {
       parts.push(`(${serializeBox(child)})`);
+    } else if (isBox(child)) {
+      parts.push(`[${serializeBox(child)}]`);
     } else {
       throw new Error(`Unexpected node type ${child.nodeType} in line: ${child}`);
     }

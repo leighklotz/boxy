@@ -10,6 +10,24 @@ Below is a screenshot showing the editor using LLM inference evaluation. Other t
 - [docs/spec.md](docs/spec.md)
 - [model.md](docs/model.md)
 
+## Starting Boxy
+There are two ways to run Boxy in your browser after step 1:
+
+1. Clone this repository
+```bash
+$ git clone https://github.com/leighklotz/boxy
+$ cd boxy
+```
+
+2. Open File in Browser
+The first way is to visit the URL `file:///home/klotz/wip/boxy/boxy.html` (or whever your have this repository).
+You cannot save or load boxes with his method, but it requires no setup.
+
+2. The second way is to run a local HTTP server and visit that URL.
+```bash
+$ python -m http.serve 8080 .
+```
+
 ## Boxy Mouse Bindings
 | **Mouse**  | **Action** -| **Description**                              |
 |------------|-------------|----------------------------------------------|
@@ -59,20 +77,40 @@ Note that if a text region is selected, any insert or delete commands will delet
 
 ## Modules
 
-## llm-infer
+## save-restore module
+| **Key Binding** | **Action**                            | **Description**                                                         |
+|-----------------|---------------------------------------|-------------------------------------------------------------------------|
+| Ctrl-o          | Restore                               | Read the URL on the line, fetch the box, and insert the results.|
+
+### Restore:
+- Put the URL of a boxy box to load into a box and press `Ctrl-o`
+
+### Save:
+- tbd
+
+## identity module
+| **Key Binding** | **Action**                            | **Description**                                                         |
+|-----------------|---------------------------------------|-------------------------------------------------------------------------|
+| Tab          | Duplicate                               | Duplicate the box on the line and insert the results.|
+
+### Restore:
+- Put the URL of a boxy box to load into a box and press `Ctrl-o`
+
+### Save:
+- tbd
+
+## llm-infer module
 
 | **Key Binding** | **Action**                            | **Description**                                                         |
 |-----------------|---------------------------------------|-------------------------------------------------------------------------|
 | |               | LLM Infer                             | Prompt an LLM with the current line and insert the results in a new box.|
 | Ctrl-|          | LLM Chat                               | Prompt an LLM with the current box and insert the results in a new box.|
 
-### llm-infer Module
-One inference per line
+### One inference per line
 
 ![docs/llm-infer.png](docs/llm-infer.png)
 
-### llm-chat Module
-One inference per box, continued as a chat
+### One inference per box, continued as a chat
 
 ![docs/llm-infer.png](docs/llm-chat.png)
 
@@ -80,12 +118,11 @@ One inference per box, continued as a chat
 
 ![docs/llm-infer.png](docs/llm-chat-longer.png)
 
-## More Editor Examples
+## More Screenshots
 ![docs/editor.png](docs/editor.png)
 
 ![docs/square-logo.png](docs/square-logo.png)
 
-## Graphics Examples
 ![docs/canadian-flag.png](docs/canadian-flag.png)
 
 ## References
