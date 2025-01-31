@@ -36,7 +36,7 @@ function loadBoxFromString() {
 
 function downloadSerializedBox() {
   // Serialize the box
-  const serializedString = getCurrentBoxText();
+  const serializedString = serializeBox(cursor.parentNode);
 
   // Create a Blob from the serialized string
   const blob = new Blob([serializedString], {type: 'text/plain'});

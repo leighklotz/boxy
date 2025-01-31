@@ -769,18 +769,12 @@ function findLineEnd(cursor) {
 
 // EVALUATOR SPI: 
 function getCurrentBoxText() {
-  return getBoxText(cursor.parentNode);
+  return serializeBox(cursor.parentNode);
 }
 
 // EVALUATOR SPI: 
-function getCurrentBoxRowsText() {
-  return getBoxRowsText(cursor.parentNode);
-}
-
-// EVALUATOR SPI: 
-function getBoxText(boxElem) {
-  const rows = getBoxRowsText(boxElem);
-  return rows.join('');
+function serializeBox(boxElem) {
+  return getBoxRowsText(boxElem).join('');
 }
 
 // EVALUATOR SPI: 
@@ -796,7 +790,7 @@ function getBoxRowsText(boxElem) {
       // If child is another box, recursively gather it with brackets
       let left_delim = isCodeBox(child) ? '(' : '[';
       let right_delim = isCodeBox(child) ? ')' : ']';
-      parts.push(left_delim + getBoxText(child) + right_delim);
+      parts.push(left_delim + serializeBox(child) + right_delim);
     } else {
       // Throw error for unexpected content
       throw new Error(
@@ -823,25 +817,14 @@ function getTextBetweenCursors(start, end) {
       const fromIdx = (currentNode === start.node) ? start.offset : 0;
       const toIdx = (currentNode === end.node) ? end.offset : text.length;
       parts.push(text.slice(fromIdx, toIdx));
-
-      // Stop if this is the end node
-      if (currentNode === end.node) {
-        done = true;
-      }
-    } else if (isCodeBox(currentNode)) {
-      parts.push('(' + getBoxText(currentNode) + ')');
-      if (currentNode === end.node) {
-        done = true;
-      }
     } else if (isBox(currentNode)) {
-      let left_delim = isCodeBox(currentNode) ? '(' : '[';
-      let right_delim = isCodeBox(currentNode) ? ')' : ']';
-      parts.push(left_delim + getBoxText(currentNode) + right_delim);
-      if (currentNode === end.node) {
-        done = true;
-      }
+      parts.push(serializeBox(currentNode));
     } else {
       throw new Error(`Unexpected node type in line: ${currentNode.nodeType}`);
+    }
+
+    if (currentNode === end.node) {
+      done = true;
     }
 
     // Move to the next sibling if not done
@@ -855,11 +838,7 @@ function getTextBetweenCursors(start, end) {
 
 // EVALUATOR SPI: Returns Serialized text of row as a string.
 function getCurrentRowText() {
-  // 1. Find the start of the line
-  // 2. Find the end of the line
-  // 3. Gather text from start to end
   const text = getTextBetweenCursors(findLineStart(cursor), findLineEnd(cursor));
-  // 4. trim
   return text.trim()
 }
 
@@ -920,26 +899,6 @@ function deleteCurrentBox() {
   parentBox.removeChild(box);
   moveCursorTo(node, offset);
   return box;
-}
-
-// EDITOR SPI: Returns a text serialization of the box.
-// todo: shrunken boxes?
-function serializeBox(box) {
-  const parts = [];
-  box.childNodes.forEach(child => {
-    if (isCursor(child)) {
-      // skip
-    } else if (isCha(child)) {
-      parts.push(child.textContent);
-    } else if (isCodeBox(child)) {
-      parts.push(`(${serializeBox(child)})`);
-    } else if (isBox(child)) {
-      parts.push(`[${serializeBox(child)}]`);
-    } else {
-      throw new Error(`Unexpected node type ${child.nodeType} in line: ${child}`);
-    }
-  });
-  return parts.join('');
 }
 
 // Evaluator SPI: Sanitize dom (todo)
@@ -1004,8 +963,8 @@ function unshrinkBox(node) {
 function explodeBox() {
   notInEditor('Cannot explode');
   let box = deleteCurrentBox();
-  // todo: there shoulkd be a variant of getBoxText that returns the delims as part of the text
-  let boxText = getBoxText(box);
+  // todo: there shoulkd be a variant of serializeBox that returns the delims as part of the text
+  let boxText = serializeBox(box);
   let left_delim = isCodeBox(box) ? '(' : '[';
   let right_delim = isCodeBox(box) ? ')' : ']';
   insertTextAtCursor(left_delim);

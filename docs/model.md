@@ -150,14 +150,8 @@ You can use this stable SPI to implement new evaluator primitive operations (e.g
 ### **Text Access Functions**
 - `getCurrentRowText()`
    Retrieves the current row's text content, excluding the cursor.
-- `getBoxText(boxElem)`
+- `serializeBox(boxElem)`
    Retrieves the specfied box's text content, excluding the cursor.
-- `getCurrentBoxText()`
-  Returns the current box's text, including nested boxes.
-- `getCurrentBoxTextRows()`
-  Returns the current box's text as rows, including nested boxes.
-- `serializeBox()`  
-   Converts a box and its contents into a string representation enclosed in `[...]`.
 - `deserializeBox()`
    parses a serialized box string back into DOM elements.
 

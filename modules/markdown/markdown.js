@@ -18,7 +18,7 @@ function formatMarkdownBox(box) {
     return;
   }
   // Get the text content from current box
-  const markdownText = getBoxText(box);
+  const markdownText = serializeBox(box);
 
   // Use marked to parse and format the markdown
   const formattedHtml = marked.parse(markdownText);

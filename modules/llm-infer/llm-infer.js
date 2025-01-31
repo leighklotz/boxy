@@ -130,7 +130,7 @@ async function llmInfer() {
 // todo: use open api chat history instead of just string concat
 async function llmChat() {
   statusLedOn();
-  let history_raw = getCurrentBoxRowsText();
+  let history_raw = getBoxRowsText(cursor.parentNode);
   console.log("llmChat history_raw", JSON.stringify(history_raw));
   let chatHistory = constructChatHistory(history_raw);
   console.log("llmChat chatHistory", JSON.stringify(chatHistory));
@@ -253,7 +253,7 @@ function constructChatHistory(rowsText) {
 }
 
 function chatTest() {
-  let history_raw = getCurrentBoxRowsText();
+  let history_raw = getBoxRowsText(cursor.parentNode);
   let chatHistory = constructChatHistory(history_raw);
 
   console.log(JSON.stringify(chatHistory));
