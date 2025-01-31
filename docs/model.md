@@ -121,7 +121,6 @@ You can use this stable SPI to implement new editor primitive operations (e.g. f
 - `insertTextAtCursor()`
 - `insertNewline()`
 - `deleteCharAtCursor()`
-- `insertAndEnterBox()`
 - `killLine()`
 - `deleteCurrentBox()`
 
