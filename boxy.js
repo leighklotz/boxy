@@ -10,6 +10,14 @@ let quoteFlag = false;
 
 /** * Box Commands */
 
+function isBox(node) {
+  return (node?.nodeType === Node.ELEMENT_NODE && node.classList?.contains('box'));
+}
+
+function isCha(node) {
+  return (node?.nodeType === Node.TEXT_NODE);
+}
+
 function isShrunkenBox(node) {
   return isBox(node) && node.classList?.contains('shrunken');
 }
@@ -18,17 +26,14 @@ function isCodeBox(node) {
   return isBox(node) && node.classList?.contains('code');
 }
 
-function isBox(node) {
-  return (node?.nodeType === Node.ELEMENT_NODE && node.classList?.contains('box'));
-}
-
 function isCursor(node) {
   return (node === cursor);
 }
 
-function isCha(node) {
-  return (node?.nodeType === Node.TEXT_NODE);
+function isEditor(node) {
+  return (node === editor);
 }
+
 
 // EDITOR SPI: Insert a box at the cursor position and enter it
 function insertAndEnterCodeBox() {
@@ -880,6 +885,25 @@ function findCursorPositionInBox(box) {
   return { node: currentNode, offset: position };
 }
 
+function findBoxPosition(box) {
+  let position = 0;
+  let inbox = box.parentNode;
+  let currentNode = inbox.firstChild;
+  let previousSibling = currentNode;
+  while (currentNode !== box) {
+    if (isCha(currentNode)) {
+      position += currentNode.textContent.length;
+    } else if (isBox(currentNode)) {
+      position++;
+    } else {
+      throw new Error(`findBoxPosition: cannot parse ${currentNode}`);
+    }
+    previousSibling = currentNode;
+    currentNode = currentNode.nextSibling;
+  }
+  return { node: previousSibling, offset: position };
+}
+
 // EDITOR SPI: Replaces the content of a box with the specified text, handling nested boxes.
 function setBoxContent(box, newText) {
   clearBoxContent(box);
@@ -887,11 +911,15 @@ function setBoxContent(box, newText) {
 }
 
 // EDITOR SPI: Deletes the current box and moves the cursor to the parent box's boundary.
+// Returns the removed box
 function deleteCurrentBox() {
-  const parentBox = cursor.parentNode.parentNode;
-  const boxIndex = Array.from(parentBox.children).indexOf(cursor.parentNode);
-  parentBox.removeChild(cursor.parentNode);
-  moveCursorTo(parentBox, boxIndex);
+  notInEditor("deleteCurrentBox");
+  const box = cursor.parentNode;
+  const parentBox = box.parentNode;
+  const { node: node, offset: offset } = findBoxPosition(box);
+  parentBox.removeChild(box);
+  moveCursorTo(node, offset);
+  return box;
 }
 
 // EDITOR SPI: Returns a text serialization of the box.
@@ -956,10 +984,7 @@ function deserializeBox(serialized) {
 // EDITOR SPI: Shrinks current box
 function shrinkBox() {
   const node = cursor.parentNode;
-  if (node === editor) {
-    console.log('Cannot shrink editor');
-    return;
-  }
+  notInEditor('Cannot shrink');
   if (! isBox(node)) {
     throw new Error(`shrinkBox: not a box: ${node}`);
   }
@@ -968,15 +993,30 @@ function shrinkBox() {
 }
 
 function unshrinkBox(node) {
-  if (node === editor) {
-    console.log('Cannot unshrink editor');
-    return;
-  }
+  notInEditor('Cannot unshrink');
   if (! isBox(node)) {
     throw new Error(`shrinkBox: not a box: ${node}`);
   }
   node.classList.remove('shrunken')
   exitBoxRight()
+}
+
+function explodeBox() {
+  notInEditor('Cannot explode');
+  let box = deleteCurrentBox();
+  // todo: there shoulkd be a variant of getBoxText that returns the delims as part of the text
+  let boxText = getBoxText(box);
+  let left_delim = isCodeBox(box) ? '(' : '[';
+  let right_delim = isCodeBox(box) ? ')' : ']';
+  insertTextAtCursor(left_delim);
+  insertTextAtCursor(boxText);
+  insertTextAtCursor(right_delim);
+}
+
+function notInEditor(msg) {
+  if (isEditor(cursor.parentNode)) {
+    throw new Error(`Toplevel box: ${msg}`);
+  }
 }
 
 // EDITOR SPI: Sets the cursor position based on a specified object `{ node, offset }`.
