@@ -5,15 +5,14 @@ marked.setOptions({
   newlines: false
 });
 
-function formatMarkdownBox() {
+function formatMarkdownBoxKey() {
   let box = cursor.parentNode;
   // Cursor will be lost
   exitBoxRight();
-  formatMarkdownBox1(box)
+  formatMarkdownBox(box)
 }
 
-// todo: rename this function
-function formatMarkdownBox1(box) {
+function formatMarkdownBox(box) {
   // Get the text content from current box
   const markdownText = getBoxText(box);
 
@@ -46,5 +45,5 @@ function formatMarkdownBox1(box) {
   box.innerHTML = formattedHtml;
 }
 
-keyMap['Ctrl-*'] = formatMarkdownBox;
+keyMap['Ctrl-*'] = formatMarkdownBoxKey;
 

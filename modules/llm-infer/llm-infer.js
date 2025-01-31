@@ -205,7 +205,8 @@ function insertLlmResponse(response) {
   let response_box = deserializeBox(response.trim());
   insertBoxAtCursor(response_box);
   if (true) {
-    formatMarkdownBox1(response_box);
+    console.log("formatting response_box as markdown");
+    formatMarkdownBox(response_box);
   } else {
     exitBoxRight();
   }
