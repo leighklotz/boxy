@@ -519,8 +519,24 @@ function handleKeydown(event) {
     return;
   }
 
-  // Determine the key pressed (with or without Ctrl)
-  const key = event.ctrlKey ? `Ctrl-${event.key.toLowerCase()}` : event.key;
+  let key = '';
+
+  if (event.ctrlKey) key += 'Ctrl-';
+  const shiftedKeys = {
+    'Digit8': '*',  // Ctrl-Shift-8 -> Ctrl-*
+    'Digit5': '%',  // Ctrl-Shift-5 -> Ctrl-%
+    'Digit6': '^',  // Ctrl-Shift-6 -> Ctrl-^
+    'Digit7': '&',  // Ctrl-Shift-7 -> Ctrl-&
+    'Digit9': '(',  // Ctrl-Shift-9 -> Ctrl-(
+    'Digit0': ')',  // Ctrl-Shift-0 -> Ctrl-)
+  };
+
+  let mainKey = event.key;
+  if (event.ctrlKey && event.shiftKey && shiftedKeys[event.code]) {
+    mainKey = shiftedKeys[event.code];
+  }
+  key += mainKey;
+  console.log('Pressed key:', key);
 
   // Check if the key is in the key map
   if (keyMap[key]) {
