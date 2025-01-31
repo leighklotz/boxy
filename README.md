@@ -100,6 +100,12 @@ Put the cursor in a boxy box and press `Ctrl-^`. The box text will download.
 |-----------------|---------------------------------------|-------------------------------------------------------------------------|
 | Tab          | Duplicate                               | Duplicate the box on the line and insert the results.|
 
+## markdown module
+
+| **Key Binding** | **Action**                            | **Description**                                                         |
+|-----------------|---------------------------------------|-------------------------------------------------------------------------|
+| Ctrl-\          | Markdown                              | Visualize the markdown in the current box. Enter box to edit md text.   |
+
 ## llm-infer module
 
 | **Key Binding** | **Action**                            | **Description**                                                         |

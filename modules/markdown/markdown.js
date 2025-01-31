@@ -45,5 +45,5 @@ function formatMarkdownBox(box) {
   box.innerHTML = formattedHtml;
 }
 
-keyMap['Ctrl-*'] = formatMarkdownBoxKey;
+keyMap['Ctrl-\\'] = formatMarkdownBoxKey;
 
