@@ -88,10 +88,9 @@ Note that if a text region is selected, any insert or delete commands will delet
 Put the URL of a boxy box to load into a box and press `Ctrl-o`
 
 Example:
-<div style="border: 1px solid black;">
- boxes/cardiac-fib.box &lt;Ctrl-o&gt;
-</div>
-
+```
+ boxes/cardiac-fib.box *Ctrl-o*
+```
 
 ### Save:
 tbd
