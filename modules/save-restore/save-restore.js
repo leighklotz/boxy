@@ -38,6 +38,10 @@ function downloadSerializedBoxy() {
   downloadSerializedBox(editor);
 }
 
+function downloadSerializedCurrentBox() {
+  return downloadSerializedBox(cursor.parentNode);
+}
+
 function downloadSerializedBox(box) {
   // Serialize the box
   const serializedString = serializeBox(box);
@@ -64,5 +68,5 @@ function downloadSerializedBox(box) {
 
 
 keyMap['Ctrl-o'] = loadBoxFromString
-keyMap['Ctrl-%'] = downloadSerializedBox
+keyMap['Ctrl-%'] = downloadSerializedCurrentBox
 keyMap['Ctrl-^'] = downloadSerializedBoxy
