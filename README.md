@@ -25,8 +25,10 @@ You cannot save or load boxes with his method, but it requires no setup.
 
 2. The second way is to run a local HTTP server and visit that URL.
 ```bash
-$ python -m http.serve 8080 .
+$ ./run.sh
 ```
+
+Then visit <a href="http://localhost:8080">http://localhost:8080</a>.
 
 ## Boxy Mouse Bindings
 | **Mouse**  | **Action** -| **Description**                              |
