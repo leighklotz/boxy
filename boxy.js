@@ -478,21 +478,21 @@ function deleteCharForward() {
   // If the next node is a text node
   if (isCha(node)) {
     if (node.textContent.length > 0) {
-      // Delete one character forward
-      node.textContent = node.textContent.slice(1);
-      // If the text node becomes empty, remove it
-      if (node.textContent.length === 0) {
-        node.remove();
+      // If the text node starts with a newline, remove it and join lines
+      if (node.textContent.startsWith('\n')) {
+        node.textContent = node.textContent.slice(1); // Remove the newline
+      } else {
+        // Delete one character forward
+        node.textContent = node.textContent.slice(1);
       }
-    } else {
-      node.remove(); // If empty, just remove the node
+    } 
+    // If the text node becomes empty, remove it
+    if (node.textContent.length === 0) {
+      node.remove();
     }
-  }
-  // If the next node is a newline, delete and join lines
-  if (node && node.textContent.startsWith('\n')) {
-    node.textContent = node.textContent.slice(1); // Remove the newline
-  } else if (node) {
-    node.remove(); // If non-text node, remove it
+  } else {
+    // If non-text node, remove it
+    node.remove();
   }
 }
 
