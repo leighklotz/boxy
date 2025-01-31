@@ -169,13 +169,9 @@ function moveCursorToEndOfLine(parentNode) {
   }
 }
 
-// todo: use findBeginningOfLine(node, offset) and function findEndOfLine(node, offset)
-//       as bounds for the search. call them each as `fun(cursor,0)`
 function findPipeIndex() {
   const bol = findBeginningOfLine(cursor, 0);
   const eol = findEndOfLine(cursor, 0);
-  const text = getTextBetweenCursors(bol, eol);
-  console.log(`findPipeIndex1 text=${text}`);
 
   curr = bol
   while (curr.node) {

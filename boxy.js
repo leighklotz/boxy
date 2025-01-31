@@ -514,59 +514,64 @@ function showError(msg) {
 }
 
 function handleKeydown(event) {
-  // Avoid intercepting the Mac "Command" key
-  if (event.metaKey) return;
+  try {
+    // Avoid intercepting the Mac "Command" key
+    if (event.metaKey) return;
 
-  // Check if a modifier key is pressed alone
-  if (event.key === "Control" || event.key === "Alt" || event.key === "Shift" || event.key === "Meta") {
-    return;
-  }
+    // Check if a modifier key is pressed alone
+    if (event.key === "Control" || event.key === "Alt" || event.key === "Shift" || event.key === "Meta") {
+      return;
+    }
 
-  // if quote, just insert the key
-  if (quoteFlag) {
-    insertCharAtCursor(event.key);
-    event.preventDefault();
-    quoteFlag = false;
-    return;
-  }
+    // if quote, just insert the key
+    if (quoteFlag) {
+      insertCharAtCursor(event.key);
+      event.preventDefault();
+      quoteFlag = false;
+      return;
+    }
 
-  let key = '';
+    let key = '';
 
-  if (event.ctrlKey) key += 'Ctrl-';
-  const shiftedKeys = {
-    'Digit8': '*',  // Ctrl-Shift-8 -> Ctrl-*
-    'Digit5': '%',  // Ctrl-Shift-5 -> Ctrl-%
-    'Digit6': '^',  // Ctrl-Shift-6 -> Ctrl-^
-    'Digit7': '&',  // Ctrl-Shift-7 -> Ctrl-&
-    'Digit9': '(',  // Ctrl-Shift-9 -> Ctrl-(
-    'Digit0': ')',  // Ctrl-Shift-0 -> Ctrl-)
-  };
+    if (event.ctrlKey) key += 'Ctrl-';
+    const shiftedKeys = {
+      'Digit8': '*',  // Ctrl-Shift-8 -> Ctrl-*
+      'Digit5': '%',  // Ctrl-Shift-5 -> Ctrl-%
+      'Digit6': '^',  // Ctrl-Shift-6 -> Ctrl-^
+      'Digit7': '&',  // Ctrl-Shift-7 -> Ctrl-&
+      'Digit9': '(',  // Ctrl-Shift-9 -> Ctrl-(
+      'Digit0': ')',  // Ctrl-Shift-0 -> Ctrl-)
+    };
 
-  let mainKey = event.key;
-  if (event.ctrlKey && event.shiftKey && shiftedKeys[event.code]) {
-    mainKey = shiftedKeys[event.code];
-  }
-  key += mainKey;
-  console.log('Pressed key:', key);
+    let mainKey = event.key;
+    if (event.ctrlKey && event.shiftKey && shiftedKeys[event.code]) {
+      mainKey = shiftedKeys[event.code];
+    }
+    key += mainKey;
+    console.log('Pressed key:', key);
 
-  // Check if the key is in the key map
-  if (keyMap[key]) {
-    keyMap[key](); // Execute the mapped function
-    event.preventDefault();
-  } else if (event.ctrlKey) {
-    // Handle unbound Ctrl combinations
-    console.log(`Unbound Ctrl combination: ${key}`);
-    showUnboundKeyAlert(key);
-    event.preventDefault();
-  } else if (/^[\x20-\x7E\t]$/.test(event.key)) {
-    // Handle self-inserting characters (printable ASCII including space and tab)
-    insertCharAtCursor(event.key);
-    event.preventDefault();
-  } else {
-    // Show alert for other unbound special keys
-    console.log(`Unbound key: ${key}`);
-    showUnboundKeyAlert(key);
-    event.preventDefault();
+    // Check if the key is in the key map
+    if (keyMap[key]) {
+      keyMap[key](); // Execute the mapped function
+      event.preventDefault();
+    } else if (event.ctrlKey) {
+      // Handle unbound Ctrl combinations
+      console.log(`Unbound Ctrl combination: ${key}`);
+      showUnboundKeyAlert(key);
+      event.preventDefault();
+    } else if (/^[\x20-\x7E\t]$/.test(event.key)) {
+      // Handle self-inserting characters (printable ASCII including space and tab)
+      insertCharAtCursor(event.key);
+      event.preventDefault();
+    } else {
+      // Show alert for other unbound special keys
+      console.log(`Unbound key: ${key}`);
+      showUnboundKeyAlert(key);
+      event.preventDefault();
+    }
+  } catch (e) {
+    showError(e.message);
+    throw e;
   }
 }
 
@@ -824,8 +829,8 @@ function getTextBetweenCursors(start, end) {
         done = true;
       }
     } else if (isBox(currentNode)) {
-      let left_delim = isCodeBox(child) ? '(' : '[';
-      let right_delim = isCodeBox(child) ? ')' : ']';
+      let left_delim = isCodeBox(currentNode) ? '(' : '[';
+      let right_delim = isCodeBox(currentNode) ? ')' : ']';
       parts.push(left_delim + getBoxText(currentNode) + right_delim);
       if (currentNode === end.node) {
         done = true;

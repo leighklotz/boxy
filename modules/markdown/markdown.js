@@ -13,6 +13,10 @@ function formatMarkdownBoxKey() {
 }
 
 function formatMarkdownBox(box) {
+  if (box === editor) {
+    showError("Cannot format toplevel box as markdown");
+    return;
+  }
   // Get the text content from current box
   const markdownText = getBoxText(box);
 
