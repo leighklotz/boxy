@@ -21,7 +21,6 @@ const keyMap = {
   'Ctrl-q': insertQuotedChar,
   'Ctrl-,': moveCursorToStartOfBox,
   'Ctrl-.': moveCursorToEndOfBox,
-  'Ctrl-*': formatMarkdownBox,
   'ArrowLeft': moveCursorBackward,
   'ArrowRight': moveCursorForward,
   'ArrowUp': moveCursorUp,

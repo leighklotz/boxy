@@ -5,14 +5,8 @@
     <title>Boxy Editor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mousetrap@1.6.5/mousetrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-      marked.setOptions({
-	gfm: true,
-	newlines: false
-      });
-    </script>
-
 </head>
 
 <body>
@@ -32,6 +26,7 @@
 
     <!-- more stuff implemented in modules -->
     <script src="modules/identity/identity.js"> </script>
+    <script src="modules/markdown/markdown.js"> </script>
     <script src="modules/llm-infer/llm-infer.js"> </script>
 
   </body>

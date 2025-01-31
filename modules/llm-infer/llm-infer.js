@@ -202,8 +202,13 @@ function insertLlmResponse(response) {
   insertTextAtCursor(' | ');
   // Insert the LLM response in a new context box
   // todo: is cursor at the right spot after?
-  insertBoxAtCursor(deserializeBox(response.trim()));
-  exitBoxRight();
+  let response_box = deserializeBox(response.trim());
+  insertBoxAtCursor(response_box);
+  if (true) {
+    formatMarkdownBox1(response_box);
+  } else {
+    exitBoxRight();
+  }
 }
 
 function getChatHistory() {
