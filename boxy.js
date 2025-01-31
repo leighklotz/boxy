@@ -653,25 +653,6 @@ function moveCursorToClickedPosition(range) {
   }
 }
 
-// Helper function to find the nearest parent or sibling text node
-function findParentOrSiblingTextNode(element) {
-  console.log('Finding nearest parent or sibling text node.');
-  // If the element is already a text node, return it
-  if (isCha(element)) {
-    return element;
-  }
-  // Try finding a sibling text node
-  let sibling = element.nextSibling || element.previousSibling;
-  while (sibling) {
-    if (isCha(sibling)) {
-      return sibling;
-    }
-    sibling = sibling.nextSibling || sibling.previousSibling;
-  }
-  // If no sibling text node is found, move up to the parent
-  return element.parentNode ? findParentOrSiblingTextNode(element.parentNode) : null;
-}
-
 // Helper function to calculate offset within a text node based on click position
 function getOffsetInNode(node, clientX, clientY) {
   console.log('Calculating offset in text node:', node);
