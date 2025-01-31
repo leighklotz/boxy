@@ -8,8 +8,6 @@ let clipboard = ""; // For cut/copy/paste operations
 let selectionRange = null;
 let quoteFlag = false;
 
-/** * Box Commands */
-
 function isBox(node) {
   return (node?.nodeType === Node.ELEMENT_NODE && node.classList?.contains('box'));
 }
@@ -33,7 +31,6 @@ function isCursor(node) {
 function isEditor(node) {
   return (node === editor);
 }
-
 
 // EDITOR SPI: Insert a box at the cursor position and enter it
 function insertAndEnterCodeBox() {
