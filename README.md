@@ -100,12 +100,6 @@ tbd
 |-----------------|---------------------------------------|-------------------------------------------------------------------------|
 | Tab          | Duplicate                               | Duplicate the box on the line and insert the results.|
 
-### Restore:
-- Put the URL of a boxy box to load into a box and press `Ctrl-o`
-
-### Save:
-- tbd
-
 ## llm-infer module
 
 | **Key Binding** | **Action**                            | **Description**                                                         |
