@@ -623,17 +623,6 @@ function moveCursorToClickedPosition(range) {
     return;
   }
 
-  // Check if the clicked node is inside a box
-  let parentBox = node;
-  while (parentBox && parentBox !== editor) {
-    if (isBox(parentBox)) {
-      console.log('Clicked inside a box; placing cursor nested box.');
-      moveCursorTo(parentBox, offset);
-      return;
-    }
-    parentBox = parentBox.parentNode;
-  }
-
   // Adjust the offset to avoid unexpected jumps
   offset = Math.max(0, Math.min(offset, node.textContent?.length ?? 0));
 
