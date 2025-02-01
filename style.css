@@ -1,4 +1,3 @@
-<style>
 body { font-family: sans-serif; }
 div.box {
     border: 1px solid black;
@@ -92,4 +91,7 @@ div.box.code::after {
 #status-led.running {
   background-color: green;
 }
-</style>
+
+div.box li::marker {
+    content: "■ " !important;
+}
