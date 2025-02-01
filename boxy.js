@@ -56,9 +56,10 @@ function enterNextBox() {
 
 // EDITOR SPI: Move the cursor out of the current box to the left and position it before the box
 function exitBoxLeft() {
-  const parentBox = cursor.parentNode;
-  if (parentBox !== editor) {
-    moveCursorTo(parentBox, 0);
+  const box = cursor.parentNode;
+  if (box !== editor) {
+    exitBoxRight();
+    moveCursorBackward();
     console.log('Cursor moved before the current box.');
   }
 }
@@ -142,11 +143,38 @@ function moveCursorTo(node, offset = 0) {
   }
 }
 
+
 // EDITOR SPI: Move cursor to start of box
 function moveCursorToStartOfBox() {
   console.log('Attempting to move to the start of the current box.');
   // Move the cursor to the start of the first child of the current box
   moveCursorTo(cursor.parentNode.firstChild, 0);
+}
+
+
+// EDITOR SPI: Move cursor to the beginning of the current line
+// hacky implementation
+function moveCursorToStartOfLineInBox() {
+  console.log('Moving cursor to start of line.');
+  
+  while (true) {
+    let prevChar = getPreviousCharNode(cursor);
+    
+    if (!prevChar) {
+      console.log('Reached beginning of buffer.');
+      break;
+    }
+
+    let { node, offset } = prevChar;
+    
+    // Stop if we encounter a newline character
+    if (node.nodeType === Node.TEXT_NODE && node.textContent[offset] === '\n') {
+      console.log('Reached beginning of line.');
+      break;
+    }
+
+    moveCursorBackward();
+  }
 }
 
 // EDITOR SPI: Move cursor to end of box
@@ -163,36 +191,6 @@ function moveCursorToEndOfBox() {
   }
 }
 
-// EDITOR SPI: Move cursor to start of line in box
-function moveCursorToStartOfLineInBox() {
-  console.log('Attempting to move to the start of the current row.');
-  const result = findBeginningOfLine(cursor, 0);
-  if (result) {
-    console.log(`Moving to start of current row at column ${result.offset}.`);
-    moveCursorTo(result.node, result.offset);
-  }
-}
-
-// EDITOR SPI: Find location of beginning of line
-function findBeginningOfLine(node, offset) {
-  const parentNode = node.parentNode; // Store the parent node upfront
-  while (node) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const lineBreakIndex = node.textContent.lastIndexOf('\n', offset);
-      if (lineBreakIndex !== -1) {
-        return { node: node, offset: lineBreakIndex + 1 };
-      }
-    }
-    node = node.previousSibling;
-    if (node && node.nodeType === Node.TEXT_NODE) {
-      offset = node.textContent.length;
-    }
-  }
-  // If no line break found, return the start of the first node in the parent
-  return { node: parentNode.firstChild, offset: 0 };
-}
-
-// EDITOR SPI: Find location of end of line
 function findEndOfLine(node, offset) {
   let currentNode = node;
   let currentOffset = offset;
@@ -230,6 +228,19 @@ function findEndOfLine(node, offset) {
   return { node: lastChild, offset: offset };
 }
 
+// EDITOR SPI: Move cursor to the start of the current box
+function moveCursorToStartOfBox() {
+  console.log('Attempting to move to the start of the current box.');
+  let firstChild = cursor.parentNode.firstChild;
+
+  if (isBox(firstChild)) {
+    // If first child is a box, place cursor before it instead of inside
+    cursor.parentNode.insertBefore(cursor, firstChild);
+  } else {
+    moveCursorTo(firstChild, 0);
+  }
+}
+
 // EDITOR SPI: Move cursor to end of line in box
 function moveCursorToEndOfLineInBox() {
   console.log('Attempting to move to the end of the current row.');
@@ -250,53 +261,95 @@ function moveCursorToEndOfLineInBox() {
 // EDITOR SPI: Move cursor forward
 function moveCursorForward() {
   console.log('Moving cursor forward.');
-  let nextNode = cursor.nextSibling;
-  
-  while (nextNode) {
-    if (isBox(nextNode)) {
-      console.log('Skipping over a box.');
-      let afterBoxNode = nextNode.nextSibling;
-      if (afterBoxNode) {
-        moveCursorTo(afterBoxNode, 0);
-      } else {
-        moveCursorTo(nextNode.parentNode, Array.from(nextNode.parentNode.childNodes).indexOf(nextNode) + 1);
-      }
-      return;
+  let nextChar = getNextCharNode(cursor);
+
+  if (!nextChar) {
+    console.log('Cursor is at the end.');
+    return;
+  }
+
+  let { node, offset } = nextChar;
+  cursor.parentNode.removeChild(cursor); // Remove cursor from current position
+
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    // If the next node is a box, move cursor after the box
+    node.parentNode.insertBefore(cursor, node.nextSibling);
+  } else {
+    // If the next node is a text node, insert cursor at the correct offset
+    if (offset >= node.textContent.length) {
+      node.parentNode.insertBefore(cursor, node.nextSibling);
+    } else {
+      let splitNode = node.splitText(offset + 1);
+      node.parentNode.insertBefore(cursor, splitNode);
     }
-    if (isCha(nextNode) && nextNode.textContent.length > 0) {
-      moveCursorTo(nextNode, 1);
-      return;
+  }
+}
+
+function getPreviousCharNode(node) {
+  let prevNode = node.previousSibling;
+  let offset = 0;
+
+  while (prevNode) {
+    if (prevNode.nodeType === Node.ELEMENT_NODE) {
+      if (prevNode.classList.contains('box')) {
+        return { node: prevNode, offset: 0 }; // Treat the entire box as a single character
+      }
+    } else if (prevNode.nodeType === Node.TEXT_NODE) {
+      if (prevNode.textContent.length > 0) {
+        return { node: prevNode, offset: prevNode.textContent.length - 1 }; // Move to the end of the text node
+      }
+    }
+    prevNode = prevNode.previousSibling;
+  }
+
+  return null; // No previous character found
+}
+
+function getNextCharNode(node) {
+  let nextNode = node.nextSibling;
+  let offset = 0;
+
+  while (nextNode) {
+    if (nextNode.nodeType === Node.ELEMENT_NODE) {
+      if (nextNode.classList.contains('box')) {
+        return { node: nextNode, offset: 0 }; // Treat the entire box as a single character
+      }
+    } else if (nextNode.nodeType === Node.TEXT_NODE) {
+      if (nextNode.textContent.length > 0) {
+        return { node: nextNode, offset: 0 }; // Move to the start of the text node
+      }
     }
     nextNode = nextNode.nextSibling;
   }
-  console.log('At the end of the container, placing cursor at end.');
-  moveCursorTo(cursor.parentNode, cursor.parentNode.childNodes.length);
+
+  return null; // No next character found
 }
 
 // EDITOR SPI: Move cursor backward
 function moveCursorBackward() {
   console.log('Moving cursor backward.');
-  let prevNode = cursor.previousSibling;
-  
-  while (prevNode) {
-    if (isBox(prevNode)) {
-      console.log('Skipping over a box.');
-      let beforeBoxNode = prevNode.previousSibling;
-      if (beforeBoxNode) {
-        moveCursorTo(beforeBoxNode, beforeBoxNode.textContent?.length || 0);
-      } else {
-        moveCursorTo(prevNode.parentNode, Array.from(prevNode.parentNode.childNodes).indexOf(prevNode));
-      }
-      return;
-    }
-    if (isCha(prevNode) && prevNode.textContent.length > 0) {
-      moveCursorTo(prevNode, prevNode.textContent.length - 1);
-      return;
-    }
-    prevNode = prevNode.previousSibling;
+  let prevChar = getPreviousCharNode(cursor);
+
+  if (!prevChar) {
+    console.log('Cursor is at the start.');
+    return;
   }
-  console.log('At the beginning of the container, placing cursor at start.');
-  moveCursorTo(cursor.parentNode, 0);
+
+  let { node, offset } = prevChar;
+  cursor.parentNode.removeChild(cursor); // Remove cursor from current position
+
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    // If the previous node is a box, place cursor before the box
+    node.parentNode.insertBefore(cursor, node);
+  } else {
+    // If the previous node is a text node, insert cursor at the correct offset
+    if (offset < 0) {
+      node.parentNode.insertBefore(cursor, node);
+    } else {
+      let splitNode = node.splitText(offset);
+      node.parentNode.insertBefore(cursor, splitNode);
+    }
+  }
 }
 
 // EDITOR SPI: move cursor up within the current box, maintaining goal column
