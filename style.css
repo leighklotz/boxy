@@ -81,6 +81,14 @@ div.box.code::after {
     font-size: 0.4em;
 }
 
+div.box p { margin: 0; }
+
+div.box ul { margin: 0 }
+
+div.box li::marker {
+    content: "■ " !important;
+}
+
 #status-led {
   width: 12px;
   height: 12px;
@@ -92,6 +100,3 @@ div.box.code::after {
   background-color: green;
 }
 
-div.box li::marker {
-    content: "■ " !important;
-}
