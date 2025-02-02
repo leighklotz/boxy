@@ -28,11 +28,8 @@ function formatMarkdownBox(box) {
   // Get the text content from current box
   const markdownText = serializeBox(box);
 
-  // Jimmy the text
-  const jimmiedText = markdownText.replace(/\n\n/g, '\n').trim();
-
   // Use marked to parse and format the markdown
-  const formattedHtml = marked.parse(jimmiedText);
+  const formattedHtml = marked.parse(markdownText);
 
   // Sanitize
   const sanitizedHtml = sanitize_dom(formattedHtml);
