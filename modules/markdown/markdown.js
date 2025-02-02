@@ -17,6 +17,14 @@ function formatMarkdownBox(box) {
     showError("Cannot format toplevel box as markdown");
     return;
   }
+
+  // Claim the 'markdown' class
+  if (box.classList.contains('markdown')) {
+    showError("Box is already markdown");
+    return;
+  }
+  box.classList.add('markdown');
+
   // Get the text content from current box
   const markdownText = serializeBox(box);
 
@@ -34,6 +42,7 @@ function formatMarkdownBox(box) {
   // Create a function that will revert the content and then remove the event listener
   const restoreAndRemoveListener = () => {
     box.innerHTML = priorContent;
+    box.classList.remove('markdown');
     box.removeEventListener('click', restoreAndRemoveListener);
   };
 
@@ -56,26 +65,32 @@ function formatMarkdownBox(box) {
 }
 
 function removeWhitespaceBetweenListItems(box) {
-  if (! box) return;
-  const uls = box.querySelectorAll('ul');
+  if (!box) return; // Check if the box element exists
+  const uls = box.querySelectorAll('ul'); // Find all <ul> elements inside the box
+  
   uls.forEach(ul => {
+    // Remove whitespace inside the <ul>
     let currentNode = ul.firstChild;
     while (currentNode) {
-      const nextNode = currentNode.nextSibling;
-      // Check for text nodes with only whitespace
+      const nextNode = currentNode.nextSibling; // Cache the next sibling
       if (currentNode.nodeType === Node.TEXT_NODE && currentNode.nodeValue.trim() === '') {
-        ul.removeChild(currentNode);
-      }
-      // Check for whitespace after the last <li> in the <ul>
-      else if (currentNode.nodeName === 'LI' && nextNode && nextNode.nodeType === Node.TEXT_NODE && nextNode.nodeValue.trim() === '') {
-        ul.removeChild(nextNode);
+        ul.removeChild(currentNode); // Remove whitespace text nodes
       }
       currentNode = nextNode;
+    }
+
+    // Remove whitespace after the <ul>
+    let nextNode = ul.nextSibling;
+    while (nextNode && nextNode.nodeType === Node.TEXT_NODE && nextNode.nodeValue.trim() === '') {
+      const nodeToRemove = nextNode;
+      nextNode = nextNode.nextSibling; // Cache the next sibling
+      ul.parentNode.removeChild(nodeToRemove); // Remove the text node
     }
   });
 }
 
 // Execute the function after the DOM is fully loaded
+// todo: why?
 window.addEventListener('DOMContentLoaded', (event) => {
   removeWhitespaceBetweenListItems();
 });
