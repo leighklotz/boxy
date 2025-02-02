@@ -54,19 +54,19 @@ function formatMarkdownBox(box) {
   removeWhitespaceBetweenListItems(box);
 }
 
-// function removeWhitespaceBetweenListItems(box) {
-//   const uls = box.querySelectorAll('ul');
-//   uls.forEach(ul => {
-//     let currentNode = ul.firstChild;
-//     while (currentNode) {
-//       const nextNode = currentNode.nextSibling;
-//       if (currentNode.nodeType === Node.TEXT_NODE && currentNode.nodeValue.trim() === '') {
-//         ul.removeChild(currentNode);
-//       }
-//       currentNode = nextNode;
-//     }
-//   });
-// }
+function removeWhitespaceBetweenListItems(box) {
+  const uls = box.querySelectorAll('ul');
+  uls.forEach(ul => {
+    let currentNode = ul.firstChild;
+    while (currentNode) {
+      const nextNode = currentNode.nextSibling;
+      if (currentNode.nodeType === Node.TEXT_NODE && currentNode.nodeValue.trim() === '') {
+        ul.removeChild(currentNode);
+      }
+      currentNode = nextNode;
+    }
+  });
+}
 
 // Execute the function after the DOM is fully loaded
 window.addEventListener('DOMContentLoaded', (event) => {
