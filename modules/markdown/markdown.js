@@ -76,15 +76,57 @@ function removeWhitespaceBetweenListItems(box) {
       currentNode = nextNode;
     }
 
-    // Remove whitespace after the <ul>
+    // Remove whitespace after the <ul> only if there's no other content until the end of the parent
     let nextNode = ul.nextSibling;
-    while (nextNode && nextNode.nodeType === Node.TEXT_NODE && nextNode.nodeValue.trim() === '') {
-      const nodeToRemove = nextNode;
-      nextNode = nextNode.nextSibling; // Cache the next sibling
-      ul.parentNode.removeChild(nodeToRemove); // Remove the text node
+    let shouldRemoveWhitespace = true;
+
+    // Traverse the siblings after the <ul> to check for non-whitespace content
+    while (nextNode) {
+      if (nextNode.nodeType === Node.TEXT_NODE && nextNode.nodeValue.trim() === '') {
+        nextNode = nextNode.nextSibling; // Skip whitespace nodes
+      } else {
+        shouldRemoveWhitespace = false; // Found non-whitespace content
+        break;
+      }
+    }
+
+    // If no non-whitespace content exists, remove the whitespace nodes after <ul>
+    if (shouldRemoveWhitespace) {
+      nextNode = ul.nextSibling; // Start from the first node after <ul> again
+      while (nextNode && nextNode.nodeType === Node.TEXT_NODE && nextNode.nodeValue.trim() === '') {
+        const nodeToRemove = nextNode;
+        nextNode = nextNode.nextSibling; // Cache the next sibling
+        ul.parentNode.removeChild(nodeToRemove); // Remove the text node
+      }
     }
   });
 }
+
+// 
+// function removeWhitespaceBetweenListItems(box) {
+//   if (!box) return; // Check if the box element exists
+//   const uls = box.querySelectorAll('ul'); // Find all <ul> elements inside the box
+//   
+//   uls.forEach(ul => {
+//     // Remove whitespace inside the <ul>
+//     let currentNode = ul.firstChild;
+//     while (currentNode) {
+//       const nextNode = currentNode.nextSibling; // Cache the next sibling
+//       if (currentNode.nodeType === Node.TEXT_NODE && currentNode.nodeValue.trim() === '') {
+//         ul.removeChild(currentNode); // Remove whitespace text nodes
+//       }
+//       currentNode = nextNode;
+//     }
+// 
+//     // Remove whitespace after the <ul>
+//     let nextNode = ul.nextSibling;
+//     while (nextNode && nextNode.nodeType === Node.TEXT_NODE && nextNode.nodeValue.trim() === '') {
+//       const nodeToRemove = nextNode;
+//       nextNode = nextNode.nextSibling; // Cache the next sibling
+//       ul.parentNode.removeChild(nodeToRemove); // Remove the text node
+//     }
+//   });
+// }
 
 // Execute the function after the DOM is fully loaded
 // todo: why?

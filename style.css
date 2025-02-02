@@ -81,11 +81,13 @@ div.box.code::after {
     font-size: 0.4em;
 }
 
-div.box p { margin: 0; }
+div.box.markdown p { margin: 0; }
 
-div.box ul { margin: 0 }
+div.box.markdown ul { margin: 0; padding-left: 1em; }
 
-div.box li::marker {
+div.box.markdown li { margin: 0; }
+
+div.box.markdown li::marker {
     content: "■ " !important;
 }
 
