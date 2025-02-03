@@ -650,22 +650,22 @@ function handleKeydown(event) {
 
     // Check if the key is in the key map
     if (keyMap[key]) {
-      keyMap[key](); // Execute the mapped function
       event.preventDefault();
+      keyMap[key](); // Execute the mapped function
     } else if (event.ctrlKey) {
       // Handle unbound Ctrl combinations
+      event.preventDefault();
       console.log(`Unbound Ctrl combination: ${key}`);
       showUnboundKeyAlert(key);
-      event.preventDefault();
     } else if (/^[\x20-\x7E\t]$/.test(event.key)) {
       // Handle self-inserting characters (printable ASCII including space and tab)
-      insertCharAtCursor(event.key);
       event.preventDefault();
+      insertCharAtCursor(event.key);
     } else {
       // Show alert for other unbound special keys
+      event.preventDefault();
       console.log(`Unbound key: ${key}`);
       showUnboundKeyAlert(key);
-      event.preventDefault();
     }
   } catch (e) {
     showError(e.message);
