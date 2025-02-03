@@ -98,7 +98,19 @@ div.box.markdown li::marker {
   background-color: transparent;
 }
 
-#status-led.running {
+#status-led.running.llm {
   background-color: green;
+}
+
+#status-led.running.livescript {
+  background-color: yellow;
+}
+
+#status-led.running.llm:hover::after {
+  content: "LLM";
+}
+
+#status-led.running.livescript:hover::after {
+  content: "Livescript";
 }
 

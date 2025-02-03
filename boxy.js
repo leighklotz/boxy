@@ -1027,12 +1027,14 @@ function setCursorPosition(position) {
   moveCursorTo(position.node, position.offset);
 }
 
-function statusLedOn() {
+function statusLedOn(engine_name = null) {
   document.getElementById('status-led').classList.add('running');
+  if (engine_name) document.getElementById('status-led').classList.add(engine_name);
 }
 
-function statusLedOff() {
+function statusLedOff(engine_name = null) {
   document.getElementById('status-led').classList.remove('running');
+  if (engine_name) document.getElementById('status-led').classList.remove(engine_name);
 }
 
 // Add event listeners
