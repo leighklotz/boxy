@@ -2,6 +2,12 @@
 
 // evaluate box as JavaScript and stick results in a context.
 // Security Risks: human-preview the script in the box before pressing the execute button.
+// todo: make the sandbox explicit: when you press the key, open the sandbox visually and put the code in it.
+// todo: what about return results in sanbox?
+// todo: can we separate the evaluation from the sandbox? like maybe code goes in the sandbox and when you close the sandbox it does the definitions
+
+
+// modules/livescript/livescript.js
 
 // 1. Create a sandbox that optionally inherits from a parent sandbox.
 function BoxSandbox(parentSandbox) {
@@ -10,18 +16,40 @@ function BoxSandbox(parentSandbox) {
 }
 
 // 2. Locate the nearest ancestor box with an existing sandbox.
-// Assumes your box elements have the CSS class "box".
+//    Assumes your box elements have the CSS class "box".
 function getParentSandbox(box) {
   let parent = box.parentNode;
   while (parent) {
-    if (parent.classList &&
-        parent.classList.contains('box') &&
-        parent.sandbox) {
+    if (
+      parent.classList &&
+      parent.classList.contains('box') &&
+      parent.sandbox
+    ) {
       return parent.sandbox;
     }
     parent = parent.parentNode;
   }
   return null;
+}
+
+// Re-thread the sandbox chain from the current box upward.
+// This function walks upward in the DOM from the given box and, for every
+// box element (i.e. an element with the class "box") that has a sandbox,
+// it recalculates its parent sandbox (via getParentSandbox) and then resets
+// its sandbox’s prototype accordingly.
+function threadParentSandboxesFrom(box) {
+  let current = box;
+  while (current && current.nodeType === 1) {
+    if (current.classList && current.classList.contains('box')) {
+      // Recalculate what the parent sandbox should be.
+      const newParentSandbox = getParentSandbox(current);
+      if (current.sandbox) {
+        // Update the prototype of the current box's sandbox to the newly computed parent.
+        Object.setPrototypeOf(current.sandbox, newParentSandbox);
+      }
+    }
+    current = current.parentNode;
+  }
 }
 
 // 3. Evaluate code in a temporary iframe and capture all new global bindings.
@@ -52,7 +80,7 @@ function evaluateCodeInSandbox(code, sandbox) {
   // Clean up by removing the iframe.
   document.body.removeChild(iframe);
 
-  // return result
+  // Return the evaluation result.
   return result;
 }
 
@@ -70,6 +98,7 @@ function addMethodsToObj(box, sandbox) {
 //    - If the box already has a sandbox, reuse it.
 //    - Otherwise, create a new sandbox (with a link to its parent's sandbox).
 //    - Then, evaluate the code and capture any new bindings.
+//    - Finally, re-thread the sandbox hierarchy from this box upward.
 function evaluateBox(box) {
   if (!box || !box.textContent.trim()) return;
   statusLedOn('livescript');
@@ -82,6 +111,9 @@ function evaluateBox(box) {
     // Reuse the existing sandbox if available; otherwise, create a new one.
     if (!box.sandbox) {
       box.sandbox = new BoxSandbox(parentSandbox);
+    } else {
+      // If the sandbox already exists, update its prototype in case the DOM changed.
+      Object.setPrototypeOf(box.sandbox, parentSandbox);
     }
 
     // Retrieve the code from the box element.
@@ -90,8 +122,12 @@ function evaluateBox(box) {
     // Evaluate the code in a temporary iframe, copying new bindings into box.sandbox.
     result = evaluateCodeInSandbox(code, box.sandbox);
 
-    // Copy functions from the sandbox to the box element for easy access.
+    // Attach functions from the sandbox to the box element for easy access.
     addMethodsToObj(box, box.sandbox);
+
+    // NEW: Thread (update) the sandbox chain from the current box upward,
+    // so that each box in the hierarchy uses the current parent's sandbox.
+    threadParentSandboxesFrom(box);
   } catch (err) {
     console.error("Error evaluating box:", err);
   } finally {
