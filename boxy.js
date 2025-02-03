@@ -650,22 +650,22 @@ function handleKeydown(event) {
 
     // Check if the key is in the key map
     if (keyMap[key]) {
-      keyMap[key](); // Execute the mapped function
       event.preventDefault();
+      keyMap[key](); // Execute the mapped function
     } else if (event.ctrlKey) {
       // Handle unbound Ctrl combinations
+      event.preventDefault();
       console.log(`Unbound Ctrl combination: ${key}`);
       showUnboundKeyAlert(key);
-      event.preventDefault();
     } else if (/^[\x20-\x7E\t]$/.test(event.key)) {
       // Handle self-inserting characters (printable ASCII including space and tab)
-      insertCharAtCursor(event.key);
       event.preventDefault();
+      insertCharAtCursor(event.key);
     } else {
       // Show alert for other unbound special keys
+      event.preventDefault();
       console.log(`Unbound key: ${key}`);
       showUnboundKeyAlert(key);
-      event.preventDefault();
     }
   } catch (e) {
     showError(e.message);
@@ -1027,12 +1027,14 @@ function setCursorPosition(position) {
   moveCursorTo(position.node, position.offset);
 }
 
-function statusLedOn() {
+function statusLedOn(engine_name = null) {
   document.getElementById('status-led').classList.add('running');
+  if (engine_name) document.getElementById('status-led').classList.add(engine_name);
 }
 
-function statusLedOff() {
+function statusLedOff(engine_name = null) {
   document.getElementById('status-led').classList.remove('running');
+  if (engine_name) document.getElementById('status-led').classList.remove(engine_name);
 }
 
 // Add event listeners
