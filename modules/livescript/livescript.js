@@ -130,6 +130,7 @@ function evaluateBox(box) {
     threadParentSandboxesFrom(box);
   } catch (err) {
     console.error("Error evaluating box:", err);
+    statusLedOn('error');
   } finally {
     statusLedOff('livescript');
   }
@@ -138,6 +139,7 @@ function evaluateBox(box) {
 
 // 6. Evaluate the box containing the current cursor.
 function evaluateCurrentBox() {
+  killResponse();
   let response = evaluateBox(cursor.parentNode);
   exitBoxRight();
   insertLlmResponse(response);

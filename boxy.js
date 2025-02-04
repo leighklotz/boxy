@@ -1080,6 +1080,7 @@ function setCursorPosition(position) {
 function statusLedOn(engine_name = null) {
   document.getElementById('status-led').classList.add('running');
   if (engine_name) document.getElementById('status-led').classList.add(engine_name);
+  if (engine_name !== 'error') statusLedOff('error')  
 }
 
 function statusLedOff(engine_name = null) {

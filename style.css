@@ -106,11 +106,19 @@ div.box.markdown li::marker {
   background-color: yellow;
 }
 
+#status-led.error {
+  background-color: red;
+}
+
 #status-led.running.llm:hover::after {
   content: "LLM";
 }
 
 #status-led.running.livescript:hover::after {
   content: "Livescript";
+}
+
+#status-led.error:hover::after {
+  content: "ERROR";
 }
 

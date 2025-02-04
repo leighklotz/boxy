@@ -70,25 +70,33 @@ async function llmInfer() {
     const response = await callOpenAPI(messages, "instruct", 0.7, 1.0, 0.0, 42);
     console.log("llmInfer response", JSON.stringify(response));
     insertLlmResponse(response, applyMarkdown=true);
-    statusLedOff('llm')
   } catch (error) {
     console.error("Error during inference:", error);
-    statusLedOff('llm');        // todo red to fade
+    statusLedOn('error')
     throw new Error("Failed to get LLM response. Please try again.", error);
+  } finally {
+    statusLedOff('llm');
   }
 }
 
 // todo: use open api chat history instead of just string concat
 async function llmChat() {
   statusLedOn('llm');
-  let history_raw = getBoxRowsText(cursor.parentNode);
-  console.log("llmChat history_raw", JSON.stringify(history_raw));
-  let chatHistory = constructChatHistory(history_raw);
-  console.log("llmChat chatHistory", JSON.stringify(chatHistory));
-  const response = await callOpenAPI(chatHistory, "chat", 0.7, 1.0, 0.0, 42);
-  console.log("llmChat response", JSON.stringify(response));
-  insertLlmResponse(response, applyMarkdown=true);
-  statusLedOff('llm');
+  try {
+    let history_raw = getBoxRowsText(cursor.parentNode);
+    console.log("llmChat history_raw", JSON.stringify(history_raw));
+    let chatHistory = constructChatHistory(history_raw);
+    console.log("llmChat chatHistory", JSON.stringify(chatHistory));
+    const response = await callOpenAPI(chatHistory, "chat", 0.7, 1.0, 0.0, 42);
+    console.log("llmChat response", JSON.stringify(response));
+    insertLlmResponse(response, applyMarkdown=true);
+  } catch (error) {
+    console.error("Error during chat:", error);
+    statusLedOn('error')
+    throw new Error("Failed to get LLM response. Please try again.", error);
+  } finally {
+    statusLedOff('llm');
+  }
 }
 
 function getChatHistory() {
