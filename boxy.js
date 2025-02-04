@@ -24,6 +24,27 @@ function isCodeBox(node) {
   return isBox(node) && node.classList?.contains('code');
 }
 
+// parse out code_* class
+function codeType(node) {
+  if (! isBox(node)) return "";
+
+  if (node.classList) {
+    for (let i = 0; i < node.classList.length; i++) {
+      const className = node.classList[i];
+      if (className.indexOf("code_") === 0) {
+        return className.substring(5); // may be empty string
+      }
+    }
+  }
+
+  return false;
+}
+
+
+function isMarkdownBox(node) {
+  return isBox(node) && node.classList?.contains('markdown');
+}
+
 function isCursor(node) {
   return (node === cursor);
 }
@@ -101,10 +122,10 @@ function moveCursorTo(node, offset = 0) {
     if (offset >= node.textContent.length) {
       // Move to the next sibling or append cursor if at the end of the text node
       if (node.nextSibling) {
-	cursor.remove();
+        cursor.remove();
         node.parentNode.insertBefore(cursor, node.nextSibling);
       } else {
-	cursor.remove();
+        cursor.remove();
         node.parentNode.appendChild(cursor);
       }
     } else {
@@ -121,13 +142,13 @@ function moveCursorTo(node, offset = 0) {
       // Insert cursor before the specified child node
       const targetNode = node.childNodes[offset];
       if (targetNode !== cursor) {
-	cursor.remove();
+        cursor.remove();
         node.insertBefore(cursor, targetNode);
       }
     } else {
       // Append cursor if offset is beyond child nodes
       if (node !== cursor) {
-	cursor.remove();
+        cursor.remove();
         node.appendChild(cursor);
       }
     }
@@ -234,15 +255,15 @@ function findEndOfLine(node, offset) {
   while (currentNode) {
     if (isCursor(currentNode)) {
       if (currentNode.nextSibling === null) {
-	console.log(`reached cursor and no next sibling; lastChild=${lastChild}`);
-	return { node: lastChild, offset: 0 };
+        console.log(`reached cursor and no next sibling; lastChild=${lastChild}`);
+        return { node: lastChild, offset: 0 };
       }
     } else if (isBox(currentNode)) {
       if (currentNode.nextSibling === null) {
-	// workaround: if there is no text after the box at the end insert a space
-	currentNode.insertAdjacentText('afterend', ' ');
-	const textNode = currentNode.nextSibling;
-	console.log(`reached box and no nextsibling; currentNode=${currentNode} textNode=${textNode}`);
+        // workaround: if there is no text after the box at the end insert a space
+        currentNode.insertAdjacentText('afterend', ' ');
+        const textNode = currentNode.nextSibling;
+        console.log(`reached box and no nextsibling; currentNode=${currentNode} textNode=${textNode}`);
         return { node: textNode, offset: 0 };
       }
     } else if (isCha(currentNode)) {
@@ -534,22 +555,22 @@ function killLine() {
   } else {
     while (node) {
       if (isCha(node)) {
-	const newlineIndex = node.textContent.indexOf('\n');
-	if (newlineIndex !== -1) {
+        const newlineIndex = node.textContent.indexOf('\n');
+        if (newlineIndex !== -1) {
           // Found a newline, slice it out and stop further processing
           node.textContent = node.textContent.slice(newlineIndex);
           break;
-	} else {
+        } else {
           // Remove the entire text node if no newline
           const nextNode = node.nextSibling;
           node.remove();
           node = nextNode;
-	}
+        }
       } else {
-	// Remove non-text nodes and move to the next sibling
-	const nextNode = node.nextSibling;
-	node.remove();
-	node = nextNode;
+        // Remove non-text nodes and move to the next sibling
+        const nextNode = node.nextSibling;
+        node.remove();
+        node = nextNode;
       }
     }
   }
@@ -822,26 +843,38 @@ function serializeBox(boxElem) {
 }
 
 // EVALUATOR SPI: 
+// todo: tidy up differences in model wrt code boxes, markdown boxes, markdown language, code language, () and [] and ```
 function getBoxRowsText(boxElem) {
   const parts = [];
-  boxElem.childNodes.forEach(child => {
+  const children = Array.from(boxElem.childNodes);
+
+  for (const child of children) {
     if (isCursor(child)) {
       // Skip cursor
     } else if (isCha(child)) {
-      // Collect text nodes (including newlines)
-      parts.push(child.textContent);
+      // Collect text nodes (including indentation and newlines, but not empty nodes)
+      if (child.textContent !== '') {
+        parts.push(child.textContent);
+      }
     } else if (isBox(child)) {
       // If child is another box, recursively gather it with brackets
-      let left_delim = isCodeBox(child) ? '(' : '[';
-      let right_delim = isCodeBox(child) ? ')' : ']';
-      parts.push(left_delim + serializeBox(child) + right_delim);
+      let leftDelim, rightDelim;
+      if (isMarkdownBox(child)) {
+        leftDelim = "```" + codeType(child) + "\n";
+        rightDelim = "\n```\n";
+      } else {
+        leftDelim = isCodeBox(child) ? '(' : '[';
+        rightDelim = isCodeBox(child) ? ')' : ']';
+      }
+      const ser = (leftDelim + serializeBox(child).trim() + rightDelim);
+      parts.push(ser);
     } else {
       // Throw error for unexpected content
       throw new Error(
-        `Unexpected content <${child.tagName.toLowerCase()}> inside a box (id=${child.id || 'no-id'}).`
+        `Unexpected content <${child.tagName.toLowerCase()}> (id=${child.id || 'no-id'}) inside a box (box id=${boxElem.id || 'no-id'}).`
       );
     }
-  });
+  }
 
   return parts;
 }
@@ -954,14 +987,22 @@ function sanitize_dom(v) {
 // Evaluator SPI: Deserialize a box string into DOM nodes
 function deserializeBox(serialized) {
   // First, handle triple backticks for code blocks
-  const codeBlockRegex = /```([\s\S]*?)```/g;
-  serialized = serialized.replaceAll(codeBlockRegex, '<div class="box code">$1</div>');
+  const markdown_regex = /^```/;
+  const extract_markdown_regex = /```(\w*)\s*\n([\s\S]*?)\s*```/g;
 
-  // Then handle regular boxes 
-  serialized = serialized.replaceAll('[', '<div class="box">');
-  serialized = serialized.replaceAll(']', '</div>');
-  serialized = serialized.replaceAll('(', '<div class="box code">');
-  serialized = serialized.replaceAll(')', '</div>');
+  if (markdown_regex.test(serialized)) {
+    // skip []() inside backquotes
+    serialized = serialized.replaceAll(extract_markdown_regex, '<div class="box code markdown code_$1">$2</div>');
+  } else {
+    // handle []() inside regular boxes
+    serialized = serialized.replaceAll('[', '<div class="box">');
+    serialized = serialized.replaceAll(']', '</div>');
+    if (false) {
+      // since have not yet picked 'native' code type, let's leave () used for now
+      serialized = serialized.replaceAll('(', '<div class="box code">');
+      serialized = serialized.replaceAll(')', '</div>');
+    }
+  }
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(serialized, 'text/html');
@@ -974,7 +1015,7 @@ function deserializeBox(serialized) {
     const node_name = child.nodeName.toLowerCase();
     if (node_name === 'think' || node_name === 'code') {
       const newBox = deserializeBox(child.textContent.trim());
-      newBox.classList.add('node_name');
+      newBox.classList.add(node_name);
       box.appendChild(newBox);
     } else {
       box.appendChild(child);
@@ -1009,11 +1050,11 @@ function explodeBox() {
   let box = deleteCurrentBox();
   // todo: there shoulkd be a variant of serializeBox that returns the delims as part of the text
   let boxText = serializeBox(box);
-  let left_delim = isCodeBox(box) ? '(' : '[';
-  let right_delim = isCodeBox(box) ? ')' : ']';
-  insertTextAtCursor(left_delim);
+  let leftDelim = isCodeBox(box) ? '(' : '[';
+  let rightDelim = isCodeBox(box) ? ')' : ']';
+  insertTextAtCursor(leftDelim);
   insertTextAtCursor(boxText);
-  insertTextAtCursor(right_delim);
+  insertTextAtCursor(rightDelim);
 }
 
 function notInEditor(msg) {
