@@ -1,10 +1,10 @@
 // boxy.js
 
+const clipboard = document.getElementById('clipboard');
 const editor = document.getElementById('editor');
 const cursor = document.getElementById('cursor');
 const alertBox = document.getElementById('alert-box');
 let goalColumn = -1; // Initialize goal column
-let clipboard = ""; // For cut/copy/paste operations
 let selectionRange = null;
 let quoteFlag = false;
 
@@ -536,8 +536,13 @@ function deleteCharAtCursor() {
     } else {
       console.log('Previous text node is already empty.');
     }
+  } else if (isBox(prevNode)) {
+    // If box node, remove it and prepend to clipboard
+    console.log('Deleting box node and clipping.');
+    prevNode.remove();
+    clipboard.insertBefore(node, clipboard.firstChild);
   } else if (prevNode) {
-    // If the previous node is not a text node, remove it entirely
+    // If the previous node is not a text node or a box node, remove it entirely
     console.log('Deleting non-text node.');
     prevNode.remove();
   } else {
@@ -545,37 +550,38 @@ function deleteCharAtCursor() {
   }
 }
 
-// EDITOR SPI: Kill line (Ctrl-k) - Delete from cursor to end of line or join if at newline
-// todo: make sure cursor is never removed, or at least add it back at the point
+// EDITOR SPI: Delete rest of line and put in clipboard.
 function killLine() {
-  let node = cursor.nextSibling;
-  if (isCha(node) && node.textContent && node.textContent[0] == '\n') {
-    deleteCharForward();
-  } else {
-    while (node) {
-      if (isCha(node)) {
-        const newlineIndex = node.textContent.indexOf('\n');
-        if (newlineIndex !== -1) {
-          // Found a newline, slice it out and stop further processing
-          node.textContent = node.textContent.slice(newlineIndex);
-          break;
-        } else {
-          // Remove the entire text node if no newline
-          const nextNode = node.nextSibling;
-          node.remove();
-          node = nextNode;
-        }
-      } else {
-        // Remove non-text nodes and move to the next sibling
-        const nextNode = node.nextSibling;
-        node.remove();
-        node = nextNode;
-      }
+  const clipboard = document.getElementById('clipboard');
+  const lineEnd = findEndOfLine(cursor, 0);
+  const newBox = document.createElement('div');
+  newBox.classList.add('box');
+  
+  while (cursor.nextSibling !== null) {
+    const node = cursor.nextSibling;
+    if (node === lineEnd.node) {
+      newBox.insertBefore(document.createTextNode(node.textContent.slice(0, lineEnd.offset)), null);
+      node.textContent = node.textContent.slice(lineEnd.offset);
+      break;
     }
+    node.remove();
+    newBox.insertBefore(node, null);
+  }
+  clipboard.insertBefore(newBox, clipboard.firstChild);  
+}
+
+// EDITOR SPI: Pop clipboard and insert at cursor
+function yank() {
+  const clipboard = document.getElementById('clipboard');
+  if (clipboard.firstChild) {
+    const clipBox = clipboard.firstChild;
+    clipboard.removeChild(clipBox);
+    insertBoxAtCursor(clipBox);
   }
 }
 
 // EDITOR SPI: Delete character forward (Ctrl-d), including newline at EOL
+//             If it was a box, prepend to clipboard
 function deleteCharForward(){
   let node = cursor.nextSibling;
   if (! node) return;
@@ -595,6 +601,11 @@ function deleteCharForward(){
     if (node.textContent.length === 0) {
       node.remove();
     }
+  } else if (isBox(node)) {
+    // If box node, remove it and prepend to clipboard
+    console.log('Deleting box node and clipping.');
+    node.remove();
+    clipboard.InsertBefore(node, clipboard.firstChild);
   } else {
     // If non-text node, remove it
     node.remove();

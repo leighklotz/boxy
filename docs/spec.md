@@ -99,9 +99,10 @@ Note that if a text region is selected, any insert or delete commands will delet
 | C-n             | Move down                             | Move cursor down one row in box box, preserving goal column          |
 | Arrow Keys      | Move Up, Down, Left, or Right         | Like Ctrl-P, Ctrl-N, Ctrl-B, Ctrl-F. |
 | C-k             | Kill line                             | Delete content from cursor to the end of the line in box   |
-| C-y             | Yank (paste)                          | Paste previously cut or copied text/box at the cursor position. |
-| C-w             | Cut region                            | Cut the selected region of text or box to the clipboard.   |
-| C-c             | Collapse/Expand box                   | Collapse or expand the currently selected box with nested content. |
+| C-y             | Yank (paste)                          | Paste previously cut or copied text/box at the cursor position. Remove from clipboard.|
+| C-w             | Cut region                            | Cut the selected region or current box to the clipboard.   |
+| C-c             | Copy Region                           | Copy the selected region or current box to the clipboard.   |
+| C-Shift-C       | Collapse/Expand box                   | Collapse or expand the currently selected box with nested content. |
 | C-leftarrow     | Undo                                  | Undo the last action.                                      |
 | C-rightarrow    | Redo                                  | Redo the last undone action.                               |
 | <printingchar>  | Self insert                           | Insert the character used to invoke this.                  |
@@ -194,6 +195,8 @@ Boxy Evaluate is not yet implemented.
    - **Cursor Handling:**
      - The cursor is represented as a distinct element.
      - Cursor behaves according to Emacs-like principles, without creating residual empty nodes or spaces.
+   - **Clipboard Canvas:**
+	- A line above the editor that shows clipboard items. You cannot click into them.
 
 ## 2. **Emacs-style Cursor Movement**
    - **Vertical Movement (C-p, C-n):**
@@ -242,8 +245,9 @@ Boxy Evaluate is not yet implemented.
 | C-a             | Move to beginning of line in box      | Move to the start of the current line in box.            |
 | C-e             | Move to end of line in box            | Move to the end of the current line in box.              |
 | C-k             | Kill line                             | Delete content from cursor to end of line in box.        |
-| C-y             | Yank (paste)                          | Paste cut/copied text or box at the cursor position.     |
-| C-w             | Cut region                            | Cut selected region of text or box to the clipboard.     |
+| C-y             | Yank (paste)                          | Paste cut/copied text or current box at the cursor position. |
+| C-w             | Cut region                            | Cut selected region of text or current box to the clipboard. |
+| C-c             | Copy Region                           | Copy the selection region or current box with nested content. |
 | C-c             | Collapse/Expand box                   | Collapse/expand the current box with nested content.     |
 | <printingchar>  | Self insert                           | Insert the character typed.                              |
 | <return>        | Newline                               | Insert a new line and move cursor to beginning.          |

@@ -1,4 +1,9 @@
 body { font-family: sans-serif; }
+
+#clipboard {
+    float:right;
+}
+
 div.box {
     border: 1px solid black;
     padding: 5px;
