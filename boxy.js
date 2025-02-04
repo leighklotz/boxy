@@ -481,7 +481,6 @@ function insertBoxContentsAtCursor(box) {
   clearSelection();
   let boxText = serializeBox(box);
   insertTextAtCursor(boxText);
-  // cursor.parentNode.insertBefore(node, cursor);
 }
 
 // EDITOR SPI: Insert box at the cursor position
