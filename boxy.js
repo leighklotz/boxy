@@ -985,36 +985,44 @@ function sanitize_dom(v) {
 
 // Evaluator SPI: Deserialize a box string into DOM nodes
 function deserializeBox(serialized) {
-  // First, handle triple backticks for code blocks
-  const markdown_regex = /^```/;
-  const extract_markdown_regex = /```(\w*)\s*\n([\s\S]*?)\s*```/g;
+  // Extract markdown code blocks and replace them with temporary placeholders
+  const markdownBlocks = [];
+  const extractMarkdownRegex = /```(\w*)\s*\n([\s\S]*?)\s*```/g;
+  const placeholderRegex = /<MARKDOWN_(\d+)>/g;
 
-  if (markdown_regex.test(serialized)) {
-    // skip []() inside backquotes
-    serialized = serialized.replaceAll(extract_markdown_regex, '<div class="box code markdown code_$1">$2</div>');
-  } else {
-    // handle []() inside regular boxes
-    serialized = serialized.replaceAll('[', '<div class="box">');
-    serialized = serialized.replaceAll(']', '</div>');
-    if (false) {
-      // since have not yet picked 'native' code type, let's leave () used for now
-      serialized = serialized.replaceAll('(', '<div class="box code">');
-      serialized = serialized.replaceAll(')', '</div>');
-    }
-  }
+  // Replace markdown blocks with placeholders
+  const tempSerialized = serialized.replace(extractMarkdownRegex, (match, lang, code) => {
+    const index = markdownBlocks.length;
+    markdownBlocks.push({ lang, code });
+    return `<MARKDOWN_${index}>`;
+  });
 
+  // Process non-markdown parts for boxes
+  tempSerialized
+    .replaceAll('[', '<div class="box">')
+    .replaceAll(']', '</div>');
+  // leave code boxes for a future time
+  // .replaceAll('(', '<div class="box code">').replaceAll(')', '</div>')
+
+  // Restore markdown blocks
+  const finalSerialized = tempSerialized.replace(placeholderRegex, (match, index) => {
+    const { lang, code } = markdownBlocks[index];
+    return `<div class="box code markdown code_${lang}">${code}</div>`;
+  });
+
+  // Convert to DOM nodes
   const parser = new DOMParser();
-  const doc = parser.parseFromString(serialized, 'text/html');
+  const doc = parser.parseFromString(finalSerialized, 'text/html');
   const box = document.createElement('div');
   box.classList.add('box');
-  
-  // Convert the parsed HTML into DOM nodes
+
+  // Process children
   const children = Array.from(doc.body.childNodes);
   children.forEach(child => {
-    const node_name = child.nodeName.toLowerCase();
-    if (node_name === 'think' || node_name === 'code') {
+    const nodeName = child.nodeName.toLowerCase();
+    if (nodeName === 'think' || nodeName === 'code') {
       const newBox = deserializeBox(child.textContent.trim());
-      newBox.classList.add(node_name);
+      newBox.classList.add(nodeName);
       box.appendChild(newBox);
     } else {
       box.appendChild(child);
@@ -1023,6 +1031,8 @@ function deserializeBox(serialized) {
 
   return box;
 }
+
+
 
 // EDITOR SPI: Shrinks current box
 function shrinkBox() {
