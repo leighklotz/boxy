@@ -996,9 +996,8 @@ function deleteCurrentBox() {
   notInEditor("deleteCurrentBox");
   const box = cursor.parentNode;
   const parentBox = box.parentNode;
-  const { node: node, offset: offset } = findBoxPosition(box);
+  exitBoxRight();
   parentBox.removeChild(box);
-  moveCursorTo(node, offset);
   return box;
 }
 
@@ -1082,12 +1081,12 @@ function unshrinkBox(node) {
 function explodeBox() {
   notInEditor('Cannot explode');
   let box = deleteCurrentBox();
-  // todo: there shoulkd be a variant of serializeBox that returns the delims as part of the text
+  // todo: there should be a variant of serializeBox that returns the delims as part of the text
   let boxText = serializeBox(box);
   let leftDelim = isCodeBox(box) ? '(' : '[';
   let rightDelim = isCodeBox(box) ? ')' : ']';
   insertTextAtCursor(leftDelim);
-  insertTextAtCursor(boxText);
+  insertBoxContentsAtCursor(box); // fixme: this inserts the serialized text, not the box contents
   insertTextAtCursor(rightDelim);
 }
 
