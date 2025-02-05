@@ -102,13 +102,22 @@ function moveCursorTo(node, offset = 0) {
     return;
   }
 
+  // todo: figure out why moveCursorTo moves cursor to beginning of box/line if
+  //       node===cursor, when it should do nothing.
+  // Workaround here:
+  if (node === cursor) {
+    console.log("moveCursorTo: cursor is node, skipping");
+    return;
+  }
+
   if (isShrunkenBox(node)) {
+    // todo: need to check if it is inside a shrunken box, not just toplevel
     console.log(`Cannot enter shrunken box ${node}`)
     return;
   }
 
   // Handle empty text nodes: remove them and continue
-  if (node.nodeType === Node.TEXT_NODE && node.textContent === "") {
+  if (node.nodeType === Node.TEXT_NODE && node.textContent === "" && !isCursor(node)) {
     const parentNode = node.parentNode;
     if (parentNode) {
       parentNode.removeChild(node); // Remove the empty text node
