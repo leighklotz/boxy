@@ -454,8 +454,34 @@ function moveCursorDown() {
 
 // Get the current column position of the cursor
 function getColumnPosition(cursorNode) {
-    const prevText = cursorNode.previousSibling;
-    return prevText ? prevText.textContent.length : 0;
+  // Ensure the cursorNode is valid
+  if (!cursorNode || !cursorNode.parentNode) {
+    console.error('Invalid cursor node.');
+    return 0;
+  }
+
+  let column = 0;
+
+  // Traverse all siblings before the cursor to calculate the column position
+  let currentNode = cursorNode.parentNode.firstChild;
+  while (currentNode && currentNode !== cursorNode) {
+    if (isCha(currentNode)) {
+      // Add the length of the text node
+      column += currentNode.textContent.length;
+    } else if (isBox(currentNode)) {
+      // Treat each box as a single character for column calculation
+      column += 1;
+    }
+    currentNode = currentNode.nextSibling;
+  }
+
+  // If the cursor is inside a text node, add the offset within that text node
+  if (isCha(cursorNode.previousSibling)) {
+    const prevTextNode = cursorNode.previousSibling;
+    column += prevTextNode.textContent.length;
+  }
+
+  return column;
 }
 
 // EDITOR SPI: Insert character at the cursor position
