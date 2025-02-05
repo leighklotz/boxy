@@ -19,6 +19,7 @@ const keyMap = {
   'Ctrl-p': moveCursorUp,
   'Ctrl-n': moveCursorDown,
   'Ctrl-q': insertQuotedChar,
+  'Ctrl-R': () => { window.location.reload() },
   'Ctrl-y': yank,
   'Ctrl-,': moveCursorToStartOfBox,
   'Ctrl-.': moveCursorToEndOfBox,
