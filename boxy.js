@@ -116,16 +116,6 @@ function moveCursorTo(node, offset = 0) {
     return;
   }
 
-  // Handle empty text nodes: remove them and continue
-  if (node.nodeType === Node.TEXT_NODE && node.textContent === "" && !isCursor(node)) {
-    const parentNode = node.parentNode;
-    if (parentNode) {
-      parentNode.removeChild(node); // Remove the empty text node
-      moveCursorTo(parentNode, offset); // Retry with the parent node
-    }
-    return;
-  }
-
   // Handle valid text nodes
   if (node.nodeType === Node.TEXT_NODE) {
     if (offset >= node.textContent.length) {
@@ -222,37 +212,82 @@ function moveCursorToEndOfBox() {
 }
 
 // todo: write this function
+// function findBeginningOfLine(node, offset) {
+//   let currentNode = node;
+//   let currentOffset = offset;
+// 
+//   while (currentNode) {
+//     if (isCursor(currentNode)) {
+//       currentNode = currentNode.previousSibling;
+//     } else if (isCha(currentNode)) {
+//       // If the current node is a text node, search backward for a newline character
+//       const newlineIndex = currentNode.textContent.lastIndexOf('\n', currentOffset - 1);
+//       if (newlineIndex !== -1) {
+//         // Found a newline character, the beginning of the line is just after this newline
+//         return { node: currentNode, offset: newlineIndex + 1 };
+//       } else {
+//         // No newline found in this text node, continue to the previous sibling
+//         if (currentNode.previousSibling) {
+//           currentOffset = currentNode.previousSibling.textContent.length;
+//           currentNode = currentNode.previousSibling;
+//         } else {
+//           // If there are no previous siblings, the beginning of the line is at the start of this text node
+//           return { node: currentNode, offset: 0 };
+//         }
+//       }
+//     } else if (isBox(currentNode)) {
+//       currentNode = currentNode.previousSibling;
+//     } else {
+//       currentNode = currentNode.previousSibling;
+//     }
+//   }
+// 
+//   // If we reach here, the beginning of the line is at the start of the parent box
+//   return { node: node.parentNode, offset: 0 };
+// }
+
 function findBeginningOfLine(node, offset) {
   let currentNode = node;
   let currentOffset = offset;
 
   while (currentNode) {
-    if (isCha(currentNode)) {
-      // If the current node is a text node, search backward for a newline character
+    if (isCursor(currentNode)) {
+      currentNode = currentNode.previousSibling;
+    } else if (isCha(currentNode)) {
+      // Search backward for a newline character
       const newlineIndex = currentNode.textContent.lastIndexOf('\n', currentOffset - 1);
       if (newlineIndex !== -1) {
-        // Found a newline character, the beginning of the line is just after this newline
         return { node: currentNode, offset: newlineIndex + 1 };
       } else {
-        // No newline found in this text node, continue to the previous sibling
+        // No newline found, continue to the previous sibling
         if (currentNode.previousSibling) {
           currentOffset = currentNode.previousSibling.textContent.length;
           currentNode = currentNode.previousSibling;
         } else {
-          // If there are no previous siblings, the beginning of the line is at the start of this text node
+          // If no previous siblings, the beginning is at the start of this node
           return { node: currentNode, offset: 0 };
         }
       }
     } else if (isBox(currentNode)) {
-      // If the current node is a box, the beginning of the line is at the start of the box
-      return { node: currentNode, offset: 0 };
+      // Move to the previous sibling if it exists, otherwise we are at beginning of box
+      // so return { currentNode, offset: none}
+      if (currentNode.previousSibling) {
+	currentNode = currentNode.previousSibling;
+      } else {
+	return { node: currentNode, offset: null };
+      }
     } else {
-      // If the node is neither a text node nor a box, continue to the previous sibling
+      // Handle unexpected node types
       currentNode = currentNode.previousSibling;
+    }
+
+    // Check for null or undefined to avoid infinite loops
+    if (!currentNode) {
+      break;
     }
   }
 
-  // If we reach here, the beginning of the line is at the start of the parent box
+  // If no previous sibling or valid start found, return the parent node with offset 0
   return { node: node.parentNode, offset: 0 };
 }
 
@@ -1070,14 +1105,15 @@ function deserializeBox(serialized) {
   });
 
   // Process non-markdown parts for boxes
-  tempSerialized
+  const boxSerialized = tempSerialized
     .replaceAll('[', '<div class="box">')
     .replaceAll(']', '</div>');
+
   // leave code boxes for a future time
   // .replaceAll('(', '<div class="box code">').replaceAll(')', '</div>')
 
   // Restore markdown blocks
-  const finalSerialized = tempSerialized.replace(placeholderRegex, (match, index) => {
+  const finalSerialized = boxSerialized.replace(placeholderRegex, (match, index) => {
     const { lang, code } = markdownBlocks[index];
     return `<div class="box code markdown code_${lang}">${code}</div>`;
   });
@@ -1149,9 +1185,9 @@ function setCursorPosition(position) {
 }
 
 function statusLedOn(engine_name = null) {
+  if (engine_name !== 'error') statusLedOff('error')  
   document.getElementById('status-led').classList.add('running');
   if (engine_name) document.getElementById('status-led').classList.add(engine_name);
-  if (engine_name !== 'error') statusLedOff('error')  
 }
 
 function statusLedOff(engine_name = null) {
