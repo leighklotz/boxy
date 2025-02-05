@@ -11,7 +11,7 @@ const keyMap = {
   'Ctrl-f': moveCursorForward,
   'Ctrl-b': moveCursorBackward,
   'Ctrl-a': moveCursorToStartOfLineInBox,
-  'Ctrl-c': shrinkBox,
+  'Ctrl-Shift-C': shrinkBox,
   'Ctrl-d': deleteCharForward,
   'Delete': deleteCharForward,
   'Ctrl-e': moveCursorToEndOfLineInBox,
@@ -20,6 +20,7 @@ const keyMap = {
   'Ctrl-n': moveCursorDown,
   'Ctrl-q': insertQuotedChar,
   'Ctrl-x': deleteCurrentBox,	// placeholder
+  'Ctrl-y': yank,
   'Ctrl-,': moveCursorToStartOfBox,
   'Ctrl-.': moveCursorToEndOfBox,
   'Ctrl-*': explodeBox,

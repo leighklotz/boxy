@@ -165,6 +165,6 @@ You can use this stable SPI to implement new evaluator primitive operations (e.g
 ### **Limitations**
 1. **Undo/Redo**: Currently not implemented.
 2. **Selection**: Basic selection is not fully supported beyond cursor movement.
-3. **Clipboard Operations**: Cut/copy/paste functionality is incomplete.
+3. **Clipboard Operations**: Only ctrl-k and ctrl-y are implemented. No styling.
 4. and refine the evaluator's integration with the document structure.
 

@@ -1,10 +1,11 @@
 // boxy.js
 
+const clipboard = document.getElementById('clipboard');
 const editor = document.getElementById('editor');
 const cursor = document.getElementById('cursor');
 const alertBox = document.getElementById('alert-box');
+const MAX_CLIPBOARD_SIZE = 20;
 let goalColumn = -1; // Initialize goal column
-let clipboard = ""; // For cut/copy/paste operations
 let selectionRange = null;
 let quoteFlag = false;
 
@@ -22,6 +23,26 @@ function isShrunkenBox(node) {
 
 function isCodeBox(node) {
   return isBox(node) && node.classList?.contains('code');
+}
+
+// parse out code_* class
+function codeType(node) {
+  if (! isBox(node)) return "";
+
+  if (node.classList) {
+    for (let i = 0; i < node.classList.length; i++) {
+      const className = node.classList[i];
+      if (className.indexOf("code_") === 0) {
+        return className.substring(5); // may be empty string
+      }
+    }
+  }
+
+  return false;
+}
+
+function isMarkdownBox(node) {
+  return isBox(node) && node.classList?.contains('markdown');
 }
 
 function isCursor(node) {
@@ -101,10 +122,10 @@ function moveCursorTo(node, offset = 0) {
     if (offset >= node.textContent.length) {
       // Move to the next sibling or append cursor if at the end of the text node
       if (node.nextSibling) {
-	cursor.remove();
+        cursor.remove();
         node.parentNode.insertBefore(cursor, node.nextSibling);
       } else {
-	cursor.remove();
+        cursor.remove();
         node.parentNode.appendChild(cursor);
       }
     } else {
@@ -121,13 +142,13 @@ function moveCursorTo(node, offset = 0) {
       // Insert cursor before the specified child node
       const targetNode = node.childNodes[offset];
       if (targetNode !== cursor) {
-	cursor.remove();
+        cursor.remove();
         node.insertBefore(cursor, targetNode);
       }
     } else {
       // Append cursor if offset is beyond child nodes
       if (node !== cursor) {
-	cursor.remove();
+        cursor.remove();
         node.appendChild(cursor);
       }
     }
@@ -234,15 +255,15 @@ function findEndOfLine(node, offset) {
   while (currentNode) {
     if (isCursor(currentNode)) {
       if (currentNode.nextSibling === null) {
-	console.log(`reached cursor and no next sibling; lastChild=${lastChild}`);
-	return { node: lastChild, offset: 0 };
+        console.log(`reached cursor and no next sibling; lastChild=${lastChild}`);
+        return { node: lastChild, offset: 0 };
       }
     } else if (isBox(currentNode)) {
       if (currentNode.nextSibling === null) {
-	// workaround: if there is no text after the box at the end insert a space
-	currentNode.insertAdjacentText('afterend', ' ');
-	const textNode = currentNode.nextSibling;
-	console.log(`reached box and no nextsibling; currentNode=${currentNode} textNode=${textNode}`);
+        // workaround: if there is no text after the box at the end insert a space
+        currentNode.insertAdjacentText('afterend', ' ');
+        const textNode = currentNode.nextSibling;
+        console.log(`reached box and no nextsibling; currentNode=${currentNode} textNode=${textNode}`);
         return { node: textNode, offset: 0 };
       }
     } else if (isCha(currentNode)) {
@@ -460,7 +481,6 @@ function insertBoxContentsAtCursor(box) {
   clearSelection();
   let boxText = serializeBox(box);
   insertTextAtCursor(boxText);
-  // cursor.parentNode.insertBefore(node, cursor);
 }
 
 // EDITOR SPI: Insert box at the cursor position
@@ -516,8 +536,13 @@ function deleteCharAtCursor() {
     } else {
       console.log('Previous text node is already empty.');
     }
+  } else if (isBox(prevNode)) {
+    // If box node, remove it and prepend to clipboard
+    console.log('Deleting box node and clipping.');
+    prevNode.remove();
+    addToClipboard(prevNode);
   } else if (prevNode) {
-    // If the previous node is not a text node, remove it entirely
+    // If the previous node is not a text node or a box node, remove it entirely
     console.log('Deleting non-text node.');
     prevNode.remove();
   } else {
@@ -525,37 +550,52 @@ function deleteCharAtCursor() {
   }
 }
 
-// EDITOR SPI: Kill line (Ctrl-k) - Delete from cursor to end of line or join if at newline
-// todo: make sure cursor is never removed, or at least add it back at the point
+// EDITOR SPI: Delete rest of line and put in clipboard.
 function killLine() {
-  let node = cursor.nextSibling;
-  if (isCha(node) && node.textContent && node.textContent[0] == '\n') {
-    deleteCharForward();
-  } else {
-    while (node) {
-      if (isCha(node)) {
-	const newlineIndex = node.textContent.indexOf('\n');
-	if (newlineIndex !== -1) {
-          // Found a newline, slice it out and stop further processing
-          node.textContent = node.textContent.slice(newlineIndex);
-          break;
-	} else {
-          // Remove the entire text node if no newline
-          const nextNode = node.nextSibling;
-          node.remove();
-          node = nextNode;
-	}
-      } else {
-	// Remove non-text nodes and move to the next sibling
-	const nextNode = node.nextSibling;
-	node.remove();
-	node = nextNode;
-      }
+  const lineEnd = findEndOfLine(cursor, 0);
+  const newBox = document.createElement('div');
+  newBox.classList.add('box');
+  
+  while (cursor.nextSibling !== null) {
+    const node = cursor.nextSibling;
+    if (node === lineEnd.node) {
+      newBox.insertBefore(document.createTextNode(node.textContent.slice(0, lineEnd.offset)), null);
+      node.textContent = node.textContent.slice(lineEnd.offset);
+      break;
     }
+    node.remove();
+    newBox.insertBefore(node, null);
+  }
+  addToClipboard(newBox);
+}
+
+function addToClipboard(node) {
+  if (node?.children.length === 0 && node?.textContent.length === 0) return;
+
+  const clipboard = document.getElementById('clipboard');
+  clipboard.insertBefore(node, clipboard.firstChild);
+
+  // Check if clipboard exceeds the maximum size
+  if (clipboard.children.length > MAX_CLIPBOARD_SIZE) {
+    // Remove the oldest item from the clipboard
+    console.log(`Removing item from clipboard: ${clipboard.lastChild}`);
+    clipboard.removeChild(clipboard.lastChild);
+  }
+}
+
+
+// EDITOR SPI: Pop clipboard and insert at cursor
+function yank() {
+  const clipboard = document.getElementById('clipboard');
+  if (clipboard.firstChild) {
+    const clipBox = clipboard.firstChild;
+    clipboard.removeChild(clipBox);
+    insertBoxAtCursor(clipBox);
   }
 }
 
 // EDITOR SPI: Delete character forward (Ctrl-d), including newline at EOL
+//             If it was a box, prepend to clipboard
 function deleteCharForward(){
   let node = cursor.nextSibling;
   if (! node) return;
@@ -575,6 +615,11 @@ function deleteCharForward(){
     if (node.textContent.length === 0) {
       node.remove();
     }
+  } else if (isBox(node)) {
+    // If box node, remove it and prepend to clipboard
+    console.log('Deleting box node and clipping.');
+    node.remove();
+    addToClipboard(node);
   } else {
     // If non-text node, remove it
     node.remove();
@@ -822,26 +867,38 @@ function serializeBox(boxElem) {
 }
 
 // EVALUATOR SPI: 
+// todo: tidy up differences in model wrt code boxes, markdown boxes, markdown language, code language, () and [] and ```
 function getBoxRowsText(boxElem) {
   const parts = [];
-  boxElem.childNodes.forEach(child => {
+  const children = Array.from(boxElem.childNodes);
+
+  for (const child of children) {
     if (isCursor(child)) {
       // Skip cursor
     } else if (isCha(child)) {
-      // Collect text nodes (including newlines)
-      parts.push(child.textContent);
+      // Collect text nodes (including indentation and newlines, but not empty nodes)
+      if (child.textContent !== '') {
+        parts.push(child.textContent);
+      }
     } else if (isBox(child)) {
       // If child is another box, recursively gather it with brackets
-      let left_delim = isCodeBox(child) ? '(' : '[';
-      let right_delim = isCodeBox(child) ? ')' : ']';
-      parts.push(left_delim + serializeBox(child) + right_delim);
+      let leftDelim, rightDelim;
+      if (isMarkdownBox(child)) {
+        leftDelim = "```" + codeType(child) + "\n";
+        rightDelim = "\n```\n";
+      } else {
+        leftDelim = isCodeBox(child) ? '(' : '[';
+        rightDelim = isCodeBox(child) ? ')' : ']';
+      }
+      const ser = (leftDelim + serializeBox(child).trim() + rightDelim);
+      parts.push(ser);
     } else {
       // Throw error for unexpected content
       throw new Error(
-        `Unexpected content <${child.tagName.toLowerCase()}> inside a box (id=${child.id || 'no-id'}).`
+        `Unexpected content <${child.tagName.toLowerCase()}> (id=${child.id || 'no-id'}) inside a box (box id=${boxElem.id || 'no-id'}).`
       );
     }
-  });
+  }
 
   return parts;
 }
@@ -953,28 +1010,44 @@ function sanitize_dom(v) {
 
 // Evaluator SPI: Deserialize a box string into DOM nodes
 function deserializeBox(serialized) {
-  // First, handle triple backticks for code blocks
-  const codeBlockRegex = /```([\s\S]*?)```/g;
-  serialized = serialized.replaceAll(codeBlockRegex, '<div class="box code">$1</div>');
+  // Extract markdown code blocks and replace them with temporary placeholders
+  const markdownBlocks = [];
+  const extractMarkdownRegex = /```(\w*)\s*\n([\s\S]*?)\s*```/g;
+  const placeholderRegex = /<MARKDOWN_(\d+)>/g;
 
-  // Then handle regular boxes 
-  serialized = serialized.replaceAll('[', '<div class="box">');
-  serialized = serialized.replaceAll(']', '</div>');
-  serialized = serialized.replaceAll('(', '<div class="box code">');
-  serialized = serialized.replaceAll(')', '</div>');
+  // Replace markdown blocks with placeholders
+  const tempSerialized = serialized.replace(extractMarkdownRegex, (match, lang, code) => {
+    const index = markdownBlocks.length;
+    markdownBlocks.push({ lang, code });
+    return `<MARKDOWN_${index}>`;
+  });
 
+  // Process non-markdown parts for boxes
+  tempSerialized
+    .replaceAll('[', '<div class="box">')
+    .replaceAll(']', '</div>');
+  // leave code boxes for a future time
+  // .replaceAll('(', '<div class="box code">').replaceAll(')', '</div>')
+
+  // Restore markdown blocks
+  const finalSerialized = tempSerialized.replace(placeholderRegex, (match, index) => {
+    const { lang, code } = markdownBlocks[index];
+    return `<div class="box code markdown code_${lang}">${code}</div>`;
+  });
+
+  // Convert to DOM nodes
   const parser = new DOMParser();
-  const doc = parser.parseFromString(serialized, 'text/html');
+  const doc = parser.parseFromString(finalSerialized, 'text/html');
   const box = document.createElement('div');
   box.classList.add('box');
-  
-  // Convert the parsed HTML into DOM nodes
+
+  // Process children
   const children = Array.from(doc.body.childNodes);
   children.forEach(child => {
-    const node_name = child.nodeName.toLowerCase();
-    if (node_name === 'think' || node_name === 'code') {
+    const nodeName = child.nodeName.toLowerCase();
+    if (nodeName === 'think' || nodeName === 'code') {
       const newBox = deserializeBox(child.textContent.trim());
-      newBox.classList.add('node_name');
+      newBox.classList.add(nodeName);
       box.appendChild(newBox);
     } else {
       box.appendChild(child);
@@ -983,6 +1056,8 @@ function deserializeBox(serialized) {
 
   return box;
 }
+
+
 
 // EDITOR SPI: Shrinks current box
 function shrinkBox() {
@@ -1009,11 +1084,11 @@ function explodeBox() {
   let box = deleteCurrentBox();
   // todo: there shoulkd be a variant of serializeBox that returns the delims as part of the text
   let boxText = serializeBox(box);
-  let left_delim = isCodeBox(box) ? '(' : '[';
-  let right_delim = isCodeBox(box) ? ')' : ']';
-  insertTextAtCursor(left_delim);
+  let leftDelim = isCodeBox(box) ? '(' : '[';
+  let rightDelim = isCodeBox(box) ? ')' : ']';
+  insertTextAtCursor(leftDelim);
   insertTextAtCursor(boxText);
-  insertTextAtCursor(right_delim);
+  insertTextAtCursor(rightDelim);
 }
 
 function notInEditor(msg) {
@@ -1030,6 +1105,7 @@ function setCursorPosition(position) {
 function statusLedOn(engine_name = null) {
   document.getElementById('status-led').classList.add('running');
   if (engine_name) document.getElementById('status-led').classList.add(engine_name);
+  if (engine_name !== 'error') statusLedOff('error')  
 }
 
 function statusLedOff(engine_name = null) {

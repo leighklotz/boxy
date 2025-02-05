@@ -4,7 +4,7 @@ function llmDuplicateTest() {
   killResponse()
   let text = getCurrentRowText();
   console.log("llmDuplicateTest getCurrentRowText", text);
-  insertLlmResponse(text)
+  insertResponse(text)
 }
 
 keyMap['Tab'] = llmDuplicateTest

@@ -1,4 +1,17 @@
 body { font-family: sans-serif; }
+
+#clipboard {
+    float:right;
+    font-size: 6px;    
+}
+
+#clipboard .box {
+    max-width: 20px;
+    max-height: 1em;
+    text-overflow: clip;
+    overflow: hidden;
+}
+
 div.box {
     border: 1px solid black;
     padding: 5px;
@@ -106,11 +119,19 @@ div.box.markdown li::marker {
   background-color: yellow;
 }
 
+#status-led.error {
+  background-color: red;
+}
+
 #status-led.running.llm:hover::after {
   content: "LLM";
 }
 
 #status-led.running.livescript:hover::after {
   content: "Livescript";
+}
+
+#status-led.error:hover::after {
+  content: "ERROR";
 }
 
