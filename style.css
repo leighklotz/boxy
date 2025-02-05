@@ -100,7 +100,7 @@ div.box.markdown ul { margin: 0; padding-left: 1em; }
 
 div.box.markdown li { margin: 0; }
 
-div.box.markdown li::marker {
+div.box.markdown ul li::marker {
     content: "■ " !important;
 }
 

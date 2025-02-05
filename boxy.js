@@ -479,8 +479,19 @@ function insertBoxAtCursor(node) {
 // EDITOR SPI: Insert box contents at the cursor position
 function insertBoxContentsAtCursor(box) {
   clearSelection();
-  let boxText = serializeBox(box);
-  insertTextAtCursor(boxText);
+  let currentNode = box.firstChild;
+  while (currentNode) {
+    if (isCursor(currentNode)) {
+      // skip cursor
+    } else if (isCha(currentNode)) {
+      insertTextAtCursor(currentNode.textContent);
+    } else if (isBox(currentNode)) {
+      insertBoxAtCursor(currentNode);
+    } else {
+      cursor.parentNode.insertBefore(currentNode, cursor);
+    }
+    currentNode = currentNode.nextSibling;
+  }
 }
 
 // EDITOR SPI: Insert box at the cursor position
@@ -575,14 +586,11 @@ function addToClipboard(node) {
   const clipboard = document.getElementById('clipboard');
   clipboard.insertBefore(node, clipboard.firstChild);
 
-  // Check if clipboard exceeds the maximum size
   if (clipboard.children.length > MAX_CLIPBOARD_SIZE) {
-    // Remove the oldest item from the clipboard
     console.log(`Removing item from clipboard: ${clipboard.lastChild}`);
     clipboard.removeChild(clipboard.lastChild);
   }
 }
-
 
 // EDITOR SPI: Pop clipboard and insert at cursor
 function yank() {
@@ -904,7 +912,7 @@ function getBoxRowsText(boxElem) {
 }
 
 // EVALUATOR SPI: Gets text between two cursor positions, useful for selections.
-function getTextBetweenCursors(start, end) {
+function getTextBetweenPoints(start, end) {
   const parts = [];
   let currentNode = start.node;
   let done = false;
@@ -939,7 +947,7 @@ function getTextBetweenCursors(start, end) {
 
 // EVALUATOR SPI: Returns Serialized text of row as a string.
 function getCurrentRowText() {
-  const text = getTextBetweenCursors(findLineStart(cursor), findLineEnd(cursor));
+  const text = getTextBetweenPoints(findLineStart(cursor), findLineEnd(cursor));
   return text.trim()
 }
 
@@ -1081,13 +1089,12 @@ function unshrinkBox(node) {
 function explodeBox() {
   notInEditor('Cannot explode');
   let box = deleteCurrentBox();
-  // todo: there should be a variant of serializeBox that returns the delims as part of the text
-  let boxText = serializeBox(box);
-  let leftDelim = isCodeBox(box) ? '(' : '[';
-  let rightDelim = isCodeBox(box) ? ')' : ']';
-  insertTextAtCursor(leftDelim);
-  insertBoxContentsAtCursor(box); // fixme: this inserts the serialized text, not the box contents
-  insertTextAtCursor(rightDelim);
+  // let boxText = serializeBox(box);
+  // let leftDelim = isCodeBox(box) ? '(' : '[';
+  // let rightDelim = isCodeBox(box) ? ')' : ']';
+  // insertTextAtCursor(leftDelim);
+  insertBoxContentsAtCursor(box);
+  // insertTextAtCursor(rightDelim);
 }
 
 function notInEditor(msg) {

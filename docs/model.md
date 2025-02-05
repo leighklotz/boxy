@@ -157,7 +157,7 @@ You can use this stable SPI to implement new evaluator primitive operations (e.g
 ### **Utility Functions**
 - `highlightText()`
   Applies visual highlighting to specified text.
-- `getTextBetweenCursors()`
+- `getTextBetweenPoints()`
   Retrieves text between two cursor positions.
 - `getCurrentCursorPosition()`  
   Returns the cursor's current position within the document.
