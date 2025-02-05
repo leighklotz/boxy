@@ -1,0 +1,10 @@
+Convert to infix and solve. Show work. [RPN:
+3
+DUP
+*
+DUP
++
+=]    | [3 DUP * DUP + =  
+3 3 * 9 DUP + =  
+9 9 + =  
+18 =]
