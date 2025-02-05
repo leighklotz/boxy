@@ -4,6 +4,7 @@ const clipboard = document.getElementById('clipboard');
 const editor = document.getElementById('editor');
 const cursor = document.getElementById('cursor');
 const alertBox = document.getElementById('alert-box');
+const MAX_CLIPBOARD_SIZE = 20;
 let goalColumn = -1; // Initialize goal column
 let selectionRange = null;
 let quoteFlag = false;
@@ -39,7 +40,6 @@ function codeType(node) {
 
   return false;
 }
-
 
 function isMarkdownBox(node) {
   return isBox(node) && node.classList?.contains('markdown');
@@ -540,7 +540,7 @@ function deleteCharAtCursor() {
     // If box node, remove it and prepend to clipboard
     console.log('Deleting box node and clipping.');
     prevNode.remove();
-    clipboard.insertBefore(prevNode, clipboard.firstChild);
+    addToClipboard(prevNode);
   } else if (prevNode) {
     // If the previous node is not a text node or a box node, remove it entirely
     console.log('Deleting non-text node.');
@@ -552,7 +552,6 @@ function deleteCharAtCursor() {
 
 // EDITOR SPI: Delete rest of line and put in clipboard.
 function killLine() {
-  const clipboard = document.getElementById('clipboard');
   const lineEnd = findEndOfLine(cursor, 0);
   const newBox = document.createElement('div');
   newBox.classList.add('box');
@@ -567,8 +566,23 @@ function killLine() {
     node.remove();
     newBox.insertBefore(node, null);
   }
-  clipboard.insertBefore(newBox, clipboard.firstChild);  
+  addToClipboard(newBox);
 }
+
+function addToClipboard(node) {
+  if (node?.children.length === 0 && node?.textContent.length === 0) return;
+
+  const clipboard = document.getElementById('clipboard');
+  clipboard.insertBefore(node, clipboard.firstChild);
+
+  // Check if clipboard exceeds the maximum size
+  if (clipboard.children.length > MAX_CLIPBOARD_SIZE) {
+    // Remove the oldest item from the clipboard
+    console.log(`Removing item from clipboard: ${clipboard.lastChild}`);
+    clipboard.removeChild(clipboard.lastChild);
+  }
+}
+
 
 // EDITOR SPI: Pop clipboard and insert at cursor
 function yank() {
@@ -605,7 +619,7 @@ function deleteCharForward(){
     // If box node, remove it and prepend to clipboard
     console.log('Deleting box node and clipping.');
     node.remove();
-    clipboard.insertBefore(node, clipboard.firstChild);
+    addToClipboard(node);
   } else {
     // If non-text node, remove it
     node.remove();
