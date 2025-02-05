@@ -597,22 +597,27 @@ function deleteCharAtCursor() {
 }
 
 // EDITOR SPI: Delete rest of line and put in clipboard.
+//             Leave newline at end of row unless cursor is before newline.
 function killLine() {
   const lineEnd = findEndOfLine(cursor, 0);
-  const newBox = document.createElement('div');
-  newBox.classList.add('box');
-  
-  while (cursor.nextSibling !== null) {
-    const node = cursor.nextSibling;
-    if (node === lineEnd.node) {
-      newBox.insertBefore(document.createTextNode(node.textContent.slice(0, lineEnd.offset)), null);
-      node.textContent = node.textContent.slice(lineEnd.offset);
-      break;
+  if ((cursor.nextSibling === lineEnd.node) && lineEnd.node?.textContent === '\n') {
+    deleteCharForward();
+  } else {
+    const newBox = document.createElement('div');
+    newBox.classList.add('box');
+    
+    while (cursor.nextSibling !== null) {
+      const node = cursor.nextSibling;
+      if (node === lineEnd.node) {
+	newBox.insertBefore(document.createTextNode(node.textContent.slice(0, lineEnd.offset)), null);
+	node.textContent = node.textContent.slice(lineEnd.offset);
+	break;
+      }
+      node.remove();
+      newBox.insertBefore(node, null);
     }
-    node.remove();
-    newBox.insertBefore(node, null);
+    addToClipboard(newBox);
   }
-  addToClipboard(newBox);
 }
 
 function addToClipboard(node) {
