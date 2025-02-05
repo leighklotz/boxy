@@ -71,7 +71,7 @@ function findPipeIndex() {
 
 // insert ' | ' and LLM response.
 // caller should delete prior responses before calling, if desired
-function insertLlmResponse(response, applyMarkdown=false) {
+function insertResponse(response, applyMarkdown=false) {
   // Move to the end of the line
   moveCursorToEndOfLineInBox();
   insertTextAtCursor(' | ');

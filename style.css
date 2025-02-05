@@ -2,6 +2,14 @@ body { font-family: sans-serif; }
 
 #clipboard {
     float:right;
+    font-size: 6px;    
+}
+
+#clipboard .box {
+    max-width: 20px;
+    max-height: 1em;
+    text-overflow: clip;
+    overflow: hidden;
 }
 
 div.box {

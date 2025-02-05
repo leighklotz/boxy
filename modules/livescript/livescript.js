@@ -142,7 +142,7 @@ function evaluateCurrentBox() {
   killResponse();
   let response = evaluateBox(cursor.parentNode);
   exitBoxRight();
-  insertLlmResponse(response);
+  insertResponse(response);
 }
 
 // 7. Map a keyboard shortcut to evaluate the current box.

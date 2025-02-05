@@ -69,7 +69,7 @@ async function llmInfer() {
   try {
     const response = await callOpenAPI(messages, "instruct", 0.7, 1.0, 0.0, 42);
     console.log("llmInfer response", JSON.stringify(response));
-    insertLlmResponse(response, applyMarkdown=true);
+    insertResponse(response, applyMarkdown=true);
   } catch (error) {
     console.error("Error during inference:", error);
     statusLedOn('error')
@@ -89,7 +89,7 @@ async function llmChat() {
     console.log("llmChat chatHistory", JSON.stringify(chatHistory));
     const response = await callOpenAPI(chatHistory, "chat", 0.7, 1.0, 0.0, 42);
     console.log("llmChat response", JSON.stringify(response));
-    insertLlmResponse(response, applyMarkdown=true);
+    insertResponse(response, applyMarkdown=true);
   } catch (error) {
     console.error("Error during chat:", error);
     statusLedOn('error')

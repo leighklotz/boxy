@@ -27,7 +27,7 @@ function loadBoxFromString() {
     .then(data => {
       console.log(`Fetched ${url}`);
       killResponse()
-      insertLlmResponse(data);	// applyMarkdown?
+      insertResponse(data);	// applyMarkdown?
     })
     .catch(error => {
       showError(`loadBoxFromString(${url}) error ${error}`)

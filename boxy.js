@@ -540,7 +540,7 @@ function deleteCharAtCursor() {
     // If box node, remove it and prepend to clipboard
     console.log('Deleting box node and clipping.');
     prevNode.remove();
-    clipboard.insertBefore(node, clipboard.firstChild);
+    clipboard.insertBefore(prevNode, clipboard.firstChild);
   } else if (prevNode) {
     // If the previous node is not a text node or a box node, remove it entirely
     console.log('Deleting non-text node.');
@@ -605,7 +605,7 @@ function deleteCharForward(){
     // If box node, remove it and prepend to clipboard
     console.log('Deleting box node and clipping.');
     node.remove();
-    clipboard.InsertBefore(node, clipboard.firstChild);
+    clipboard.insertBefore(node, clipboard.firstChild);
   } else {
     // If non-text node, remove it
     node.remove();
