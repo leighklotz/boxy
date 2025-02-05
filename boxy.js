@@ -25,6 +25,11 @@ function isCodeBox(node) {
   return isBox(node) && node.classList?.contains('code');
 }
 
+// isWhitespaceChas checks if a node's text content is only whitespace and does not contain newline
+function isWhitespaceChas(node) {
+  return isCha(node) && !node.textContent.includes('\n') && /^\s*$/.test(node.textContent);
+}
+
 // parse out code_* class
 function codeType(node) {
   if (! isBox(node)) return "";
@@ -68,8 +73,19 @@ function insertAndEnterBox(boxtype='') {
 }
 
 // EDITOR SPI: Enter the box immediately after the cursor
+//             hack: if at EOL, enter previous box
 function enterNextBox() {
-  const nextNode = cursor.nextSibling;
+  let nextNode = cursor.nextSibling;
+  // todo: this does not account for multiple whitespace nodes before or after cursor
+  if (! nextNode || (isWhitespaceChas(nextNode))) {
+    moveCursorTo(cursor.previousSibling, 0);
+    return
+  }
+  
+  // keep going forward whitespace nodes until you reach a box or eol
+  while (! isBox(nextNode) && isWhitespaceChas(nextNode)) {
+    nextNode = nextNode.nextSibling;
+  }
   if (isBox(nextNode)) {
     moveCursorTo(nextNode, 0);
   }
