@@ -94,12 +94,15 @@ div.box.code::after {
     font-size: 0.4em;
 }
 
+div.box.code.code_javascript::after {
+    content: "JAVASCRIPT";
+}
+
 div.box.markdown p { margin: 0; }
 
 div.box.markdown ul { margin: 0; padding-left: 1em; }
-
+div.box.markdown ol { margin: 0; padding-left: 1em; }
 div.box.markdown li { margin: 0; }
-
 div.box.markdown ul li::marker {
     content: "■ " !important;
 }
