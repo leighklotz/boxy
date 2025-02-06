@@ -1200,6 +1200,19 @@ function setCursorPosition(position) {
   moveCursorTo(position.node, position.offset);
 }
 
+function toggleTheme() {
+    const lightTheme = document.getElementById('light-theme');
+    const darkTheme = document.getElementById('dark-theme');
+
+    if (lightTheme.disabled) {
+        lightTheme.disabled = false;
+        darkTheme.disabled = true;
+    } else {
+        lightTheme.disabled = true;
+        darkTheme.disabled = false;
+    }
+}
+
 function statusLedOn(engine_name = null) {
   if (engine_name !== 'error') statusLedOff('error')  
   document.getElementById('status-led').classList.add('running');

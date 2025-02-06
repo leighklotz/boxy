@@ -1,0 +1,69 @@
+body {
+    background-color: #121212; /* Dark background */
+    color: #ffffff;
+}
+
+
+div.box {
+    border: 1px solid #ffffff;
+    background-color: #1e1e1e; /* Dark box background */
+    color: #ffffff; /* Light text */
+}
+
+span.cursor {
+    background-color: #ffffff;
+}
+
+.alert {
+    background-color: #ffcc00; /* Brighter yellow for alert */
+    color: #121212; /* Dark text */
+    border: 1px solid #777;
+}
+
+div.box.think {
+    font-style: italic;
+}
+
+div.box.think::after {
+    color: #ffffff; /* Light text */
+    background-color: #2a2a2a; /* Dark background */
+    border-bottom: 1px solid #444;
+}
+
+div.box.shrunken {
+    background-color: #444; /* Darker gray */
+    color: #ffffff; /* Light text */
+}
+
+div.box.code {
+    background-color: #2a2a2a; /* Dark background */
+    color: #ffffff; /* Light text */
+}
+
+div.box.code::after {
+    color: #ffffff; /* Light text */
+    background-color: #333; /* Dark background */
+    border-bottom: 1px solid #444;
+}
+
+div.box.markdown ul li::marker {
+    color: #ffffff; /* Light bullet color */
+}
+
+#status-led.running.llm {
+    background-color: #00c853; /* Brighter green */
+}
+
+#status-led.running.livescript {
+    background-color: #ffeb3b; /* Brighter yellow */
+}
+
+#status-led.error {
+    background-color: #ff1744; /* Brighter red */
+}
+
+#status-led.running.llm:hover::after,
+#status-led.running.livescript:hover::after,
+#status-led.error:hover::after {
+    color: #ffffff; /* Light text for better readability */
+}

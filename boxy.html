@@ -5,6 +5,8 @@
     <title>Boxy Editor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style-light.css" id="light-theme">
+    <link rel="stylesheet" href="style-dark.css" id="dark-theme" disabled>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
@@ -13,6 +15,7 @@
     <header>
       <a title="Copyright (c) 2024 Leigh L. Klotz, Jr." href="https://github.com/leighklotz/boxy">boxy</a>
       <span id="status-led" class=""></span>
+      <a href="#" onclick="toggleTheme()">theme</a>
       <div id="alert-box" class="alert" style="display: none;">Unbound key</div>
       <div id="clipboard" class="box" tabindex="0" title="Clipboard"></div><br />
     </header>

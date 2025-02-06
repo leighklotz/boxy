@@ -137,4 +137,3 @@ div.box.markdown ul li::marker {
 #status-led.error:hover::after {
   content: "ERROR";
 }
-
