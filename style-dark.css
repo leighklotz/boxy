@@ -4,6 +4,10 @@ body {
 }
 
 
+header * {
+    color: #ffffff !important;
+}
+
 div.box {
     border: 1px solid #ffffff;
     background-color: #1e1e1e; /* Dark box background */
