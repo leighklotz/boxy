@@ -144,6 +144,3 @@ function evaluateCurrentBox() {
   exitBoxRight();
   insertResponse(response);
 }
-
-// 7. Map a keyboard shortcut to evaluate the current box.
-keyMap['Ctrl-='] = evaluateCurrentBox;

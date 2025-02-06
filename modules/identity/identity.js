@@ -6,5 +6,3 @@ function llmDuplicateTest() {
   console.log("llmDuplicateTest getCurrentRowText", text);
   insertResponse(text)
 }
-
-keyMap['Tab'] = llmDuplicateTest

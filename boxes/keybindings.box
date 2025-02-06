@@ -1,4 +1,14 @@
-// Key map for commands
+modules |
+modules/identity/keymap.js | keyMap['Tab']
+modules/livescript/keymap.js | keyMap['Ctrl-=']
+modules/llm-infer/keymap.js | [keyMap['Ctrl-|'] = llmChat;
+keyMap['|'] = llmInfer;]
+modules/markdown/keymap.js | keyMap['Ctrl-\\']
+modules/save-restore/keymap.js | keyMap['Ctrl-\\']
+modules/save-restore/keymap.js | [keyMap['Ctrl-o'] = loadBoxFromString
+keyMap['Ctrl-%'] = downloadSerializedCurrentBox
+keyMap['Ctrl-^'] = downloadSerializedBoxy]
+keymap.js | [// Key map for commands
 const keyMap = {
   '[': insertAndEnterBox,
   '(': insertAndEnterCodeBox,
@@ -31,4 +41,5 @@ const keyMap = {
   'ArrowDown': moveCursorDown,
   'Backspace': deleteCharAtCursor,
   'Enter': insertNewline
-};
+};]
+

@@ -27,10 +27,7 @@ div.box {
 
 span.cursor {
     background-color: black;
-    display: inline-block;
-    width: 2px;
-    height: 1em;
-    animation: blink 0.7s step-start infinite;
+    background-color: #00c853 
 }
 
 @keyframes blink {

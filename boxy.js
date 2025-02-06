@@ -1169,6 +1169,7 @@ function shrinkBox() {
   exitBoxRight()
 }
 
+// EDITOR SPI: Unshrinks current box
 function unshrinkBox(node) {
   notInEditor('Cannot unshrink');
   if (! isBox(node)) {
@@ -1178,15 +1179,26 @@ function unshrinkBox(node) {
   exitBoxRight()
 }
 
+function toggleCurrentBoxExpansion() {
+    console.log("toggleCurrentBoxExpansion");
+    let box = cursor.parentNode;
+    if (!box.classList.contains("fullsize")) {
+        console.log("toggleCurrentBoxExpansion: expanding");
+        box.classList.add("fullsize");
+    } else {
+        console.log("toggleCurrentBoxExpansion: unexpanding");
+        box.classList.remove("fullsize");
+    }
+}
+
 function explodeBox() {
-  notInEditor('Cannot explode');
-  let box = deleteCurrentBox();
-  // let boxText = serializeBox(box);
-  // let leftDelim = isCodeBox(box) ? '(' : '[';
-  // let rightDelim = isCodeBox(box) ? ')' : ']';
-  // insertTextAtCursor(leftDelim);
-  insertBoxContentsAtCursor(box);
-  // insertTextAtCursor(rightDelim);
+    notInEditor('Cannot explode');
+    let box = deleteCurrentBox();
+    let leftDelim = isCodeBox(box) ? '(' : '[';
+    let rightDelim = isCodeBox(box) ? ')' : ']';
+    insertTextAtCursor(leftDelim);
+    insertBoxContentsAtCursor(box);
+    insertTextAtCursor(rightDelim);
 }
 
 function notInEditor(msg) {

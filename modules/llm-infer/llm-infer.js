@@ -150,5 +150,3 @@ function chatTest() {
   console.log(JSON.stringify(chatHistory));
 }
 
-keyMap['Ctrl-|'] = llmChat;
-keyMap['|'] = llmInfer;

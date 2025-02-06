@@ -134,4 +134,3 @@ window.addEventListener('DOMContentLoaded', (event) => {
   removeWhitespaceBetweenListItems();
 });
 
-keyMap['Ctrl-\\'] = formatMarkdownBoxKey;

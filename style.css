@@ -17,6 +17,11 @@ body { font-family: sans-serif; }
     min-height: 90vh;
 }
 
+div.box.fullsize {
+    min-width: 99%;
+    min-height: 90vh;
+}
+
 div.box {
     padding: 5px;
     margin: 2px;
@@ -31,9 +36,9 @@ div.box {
 
 span.cursor {
     display: inline-block;
-    width: 2px;
+    width: 4px;
     height: 1em;
-    animation: blink 0.7s step-start infinite;
+    animation: blink 1.0s step-start infinite;
 }
 
 @keyframes blink {

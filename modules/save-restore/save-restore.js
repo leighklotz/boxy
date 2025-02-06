@@ -65,8 +65,3 @@ function downloadSerializedBox(box) {
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
 }
-
-
-keyMap['Ctrl-o'] = loadBoxFromString
-keyMap['Ctrl-%'] = downloadSerializedCurrentBox
-keyMap['Ctrl-^'] = downloadSerializedBoxy
