@@ -1,0 +1,2 @@
+
+keyMap['Ctrl-='] = evaluateCurrentBox;
