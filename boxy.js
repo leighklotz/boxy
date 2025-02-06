@@ -1165,7 +1165,8 @@ function shrinkBox() {
   if (! isBox(node)) {
     throw new Error(`shrinkBox: not a box: ${node}`);
   }
-  node.classList.add('shrunken')
+  node.classList.add('shrunken');
+  node.classList.remove('fullsize');
   exitBoxRight()
 }
 
@@ -1175,13 +1176,18 @@ function unshrinkBox(node) {
   if (! isBox(node)) {
     throw new Error(`shrinkBox: not a box: ${node}`);
   }
-  node.classList.remove('shrunken')
-  exitBoxRight()
+  if (node.classList?.contains('shrunken')) {
+      node.classList.remove('fullsize')
+      node.classList.remove('shrunken')
+      exitBoxRight()
+  }
 }
 
 function toggleCurrentBoxExpansion() {
+    notInEditor('Cannot unshrink');
     console.log("toggleCurrentBoxExpansion");
     let box = cursor.parentNode;
+    box.classList.remove('shrunken')
     if (!box.classList.contains("fullsize")) {
         console.log("toggleCurrentBoxExpansion: expanding");
         box.classList.add("fullsize");
