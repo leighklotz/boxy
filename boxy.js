@@ -993,9 +993,10 @@ function getBoxRowsText(boxElem) {
       parts.push(ser);
     } else {
       // Throw error for unexpected content
-      throw new Error(
-        `Unexpected content <${child.tagName.toLowerCase()}> (id=${child.id || 'no-id'}) inside a box (box id=${boxElem.id || 'no-id'}).`
-      );
+        console.warn(
+            `Unexpected content <${child.tagName.toLowerCase()}> (id=${child.id || 'no-id'}) inside a box (box id=${boxElem.id || 'no-id'}).`
+        );
+        parts.push(child.outerHTML);
     }
   }
 
