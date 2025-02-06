@@ -14,15 +14,6 @@ body { font-family: sans-serif; }
 
 div.box {
     border: 1px solid black;
-    padding: 5px;
-    margin: 2px;
-    display: inline-block;
-    min-width: 20px;
-    min-height: 1em;
-    vertical-align: top;
-    white-space: pre-wrap;
-    cursor: text;
-    position: relative;
 }
 
 span.cursor {
