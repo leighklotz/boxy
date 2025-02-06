@@ -276,5 +276,3 @@ Boxy Evaluate is not yet implemented.
    - Error handling includes checks for empty nodes or unexpected cursor positions, ensuring consistent behavior.
 
 ---
-
-
