@@ -1,0 +1,125 @@
+body { font-family: sans-serif; }
+
+#clipboard {
+    float:right;
+    font-size: 6px;    
+}
+
+#clipboard .box {
+    max-width: 20px;
+    max-height: 1em;
+    text-overflow: clip;
+    overflow: hidden;
+}
+
+div.box {
+    padding: 5px;
+    margin: 2px;
+    display: inline-block;
+    min-width: 20px;
+    min-height: 1em;
+    vertical-align: top;
+    white-space: pre-wrap;
+    cursor: text;
+    position: relative;
+}
+
+span.cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    animation: blink 0.7s step-start infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
+
+.alert {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 5px 10px;
+    font-size: 14px;
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 2s;
+}
+
+div.box.think {
+    font-style: italic
+}
+
+div.box.think::after {
+    content: "THINK";
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0;
+    z-index: 1;
+    font-family: "Lucida Console", Courier, monospace;
+    font-size: 0.4em;
+}
+
+div.box.shrunken {
+    overflow: hidden;
+    width: 20px;
+    height: 20px;
+}
+
+div.box.code {
+    font-family: "Lucida Console", Courier, monospace;
+}
+
+div.box.code::after {
+    content: "CODE";
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0;
+    z-index: 1;
+    font-family: "Lucida Console", Courier, monospace;
+    font-size: 0.4em;
+}
+
+div.box.code.code_javascript::after {
+    content: "JAVASCRIPT";
+}
+
+div.box.markdown p { margin: 0; }
+
+div.box.markdown ul { margin: 0; padding-left: 1em; }
+div.box.markdown ol { margin: 0; padding-left: 1em; }
+div.box.markdown li { margin: 0; }
+div.box.markdown ul li::marker {
+    content: "■ " !important;
+}
+
+#status-led {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  background-color: transparent;
+}
+
+#status-led.running.llm {
+}
+
+#status-led.running.livescript {
+}
+
+#status-led.error {
+}
+
+#status-led.running.llm:hover::after {
+  content: "LLM";
+}
+
+#status-led.running.livescript:hover::after {
+  content: "Livescript";
+}
+
+#status-led.error:hover::after {
+  content: "ERROR";
+}
