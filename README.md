@@ -92,7 +92,16 @@ Example:
 ```
 
 ### Save:
-Put the cursor in a boxy box and press `Ctrl-^`. The box text will download.
+| **Key Binding** | **Action**                            | **Description**                                                         |
+|-----------------|---------------------------------------|-------------------------------------------------------------------------|
+| Ctrl-^          | downloadSerializedCurrentBox          | Download the current box.                                               |
+
+Place the cursor inside the box and press `Ctrl-^`. This will download the selected text.  
+Do this from the editor box to apply get everything. 
+
+Limitations:
+- If any markdown boxes are visible, click inside them to exit markdown mode. 
+- SVG support is not yet available.
 
 ## identity module
 | **Key Binding** | **Action**                            | **Description**                                                         |
@@ -125,9 +134,12 @@ Put the cursor in a boxy box and press `Ctrl-^`. The box text will download.
 ![docs/llm-infer.png](docs/llm-chat-longer.png)
 
 ## More Screenshots
+
 ![docs/editor.png](docs/editor.png)
 
 ![docs/square-logo.png](docs/square-logo.png)
+
+![docs/slide-rule.png](docs/slide-rule.png)
 
 ![docs/canadian-flag.png](docs/canadian-flag.png)
 
