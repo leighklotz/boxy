@@ -1220,17 +1220,26 @@ function setCursorPosition(position) {
 }
 
 function toggleTheme() {
-    const lightTheme = document.getElementById('light-theme');
-    const darkTheme = document.getElementById('dark-theme');
+    const themes = [
+        { id: 'light-theme', disabled: true },
+        { id: 'dark-theme', disabled: true },
+        { id: 'green-theme', disabled: true }
+    ];
+    const activeTheme = themes.find(theme => !document.getElementById(theme.id).disabled);
 
-    if (lightTheme.disabled) {
-        lightTheme.disabled = false;
-        darkTheme.disabled = true;
+    if (activeTheme) {
+        const currentIndex = themes.indexOf(activeTheme);
+        const nextIndex = (currentIndex + 1) % themes.length;
+	console.log(`toggleTheme: ${themes[nextIndex].id}`);
+        themes.forEach((theme, index) => {
+            document.getElementById(theme.id).disabled = index !== nextIndex;
+        });
     } else {
-        lightTheme.disabled = true;
-        darkTheme.disabled = false;
+        console.error("toggleTheme: cannot figure out current theme; using first");
+        document.getElementById(themes[0].id).disabled = false;
     }
 }
+
 
 function statusLedOn(engine_name = null) {
   if (engine_name !== 'error') statusLedOff('error')  
