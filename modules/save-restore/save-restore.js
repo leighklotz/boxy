@@ -1,13 +1,8 @@
-/** 
- * Example use:
- * fetchUrlToString('https://www.example.com/')
- *  .then(data => {
- *    console.log(data); // The response text as a string
- *  })
- *  .catch(error => {
- *    // Handle errors here
- *  });
-*/
+// modules/save-restore/save-restore.js
+
+// todo: use localStorage() in addition to URL-based
+// that will give local users save/restore capability as well
+
 async function fetchUrlToString(url) {
   try {
     const response = await fetch(url);
