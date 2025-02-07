@@ -818,12 +818,12 @@ function handleKeydown(event) {
 }
 
 // Handle mouse double clicks
-function handleDoubleClick(event) {
-  return handleClick(event, dbl=true);
+function handleEditorDoubleClick(event) {
+  return handleEditorClick(event, dbl=true);
 }
   
 // Handle mouse clicks for cursor movement, allowing movement between boxes
-function handleClick(event, dbl=false) {
+function handleEditorClick(event, dbl=false) {
   console.log('Handling mouse click.');
   // Get the element under the click
   const element = document.elementFromPoint(event.clientX, event.clientY);
@@ -832,29 +832,57 @@ function handleClick(event, dbl=false) {
   // if it's the cursor, do not do processing, just clear selection range
   if (element === cursor) {
     console.log('Clicked on cursor.');
-  } else if (dbl && isShrunkenBox(element)) {
-    unshrinkBox(element);
-    handleClick(event, dbl=false);
+  } else if (dbl) {
+    handleEditorDblClick(event, element);
   } else {
-    // Check if the element is within the editor
-    if (element && editor.contains(element)) {
-      console.log('Element is within editor, proceeding.');
-      // Create a range at the click position
-      const range = document.caretRangeFromPoint(event.clientX, event.clientY);
-      if (range) {
-        console.log('Range found at:', range.startContainer, 'with offset:', range.startOffset);
-        // Move cursor to the clicked position, even if it's outside the current box
-        moveCursorToClickedPosition(range);
-      } else {
-        console.log('Failed to create range from click.');
-      }
-    } else {
-      console.log('Clicked element is not within the editor.');
-    }
+    handleEditorClick2(event, element);
   }
 
   selectionRange = null; // Clear any existing selection
 }
+
+function handleEditorClick2(event, element) {
+  if (element && editor.contains(element)) {
+    console.log('Element is within editor, proceeding.');
+    // Create a range at the click position
+    const range = document.caretRangeFromPoint(event.clientX, event.clientY);
+    if (range) {
+      console.log('Range found at:', range.startContainer, 'with offset:', range.startOffset);
+      // Move cursor to the clicked position, even if it's outside the current box
+      moveCursorToClickedPosition(range);
+    } else {
+      console.log('Failed to create range from click.');
+    }
+  }
+}
+
+function handleEditorDblClick(event, element) {
+  if (isShrunkenBox(element)) {
+    unshrinkBox(element);
+    handleEditorClick2(event, element);
+  }
+}
+
+// Restricted variant on handleClick but for use in clipboard.
+// todo: make this all better; still attach handlers to #clipboard #editor
+//      is it best practice to use two ahndler functions or
+//      use two levels of key/click maps?
+function handleClipboardClick(event) {
+  console.log('Handling clipbord mouse click.');
+  const box = document.elementFromPoint(event.clientX, event.clientY);
+  console.log('Box under click:', box);
+
+  if (!box || !clipboard.contains(box))
+    return;
+
+  let newBox = clipboard.removeChild(box);
+  // newBox = deserializeBox(serializeBox(box))
+
+  insertBoxAtCursor(newBox);
+
+  selectionRange = null; // Clear any existing selection
+}
+
 
 // Mouse Left Click
 function moveCursorToClickedPosition(range) {
@@ -1269,10 +1297,14 @@ function statusLedOff(engine_name = null) {
   if (engine_name) document.getElementById('status-led').classList.remove(engine_name);
 }
 
-// Add event listeners
+// Add editor event listeners
 editor.addEventListener('keydown', handleKeydown);
-editor.addEventListener('click', handleClick);
-editor.addEventListener('dblclick', handleDoubleClick);
+editor.addEventListener('click', handleEditorClick);
+editor.addEventListener('dblclick', handleEditorDoubleClick);
+
+// Add clipboard event listeners
+clipboard.addEventListener('click', handleClipboardClick);
+
 
 // Set initial focus
 editor.focus();
