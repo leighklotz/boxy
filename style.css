@@ -36,6 +36,7 @@ div.box {
     white-space: pre-wrap;
     cursor: text;
     position: relative;
+    border-radius: 5px;
 }
 
 span.cursor {
@@ -88,6 +89,7 @@ div.box.shrunken {
 
 div.box.code {
     font-family: "Lucida Console", Courier, monospace;
+    border-radius: 0px;
 }
 
 div.box.code::after {
