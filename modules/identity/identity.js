@@ -1,8 +1,8 @@
 // modules/identity/identity.js - part of boxy
 
-function llmDuplicateTest() {
+function duplicateBoxRow() {
   killResponse()
   let text = getCurrentRowText();
-  console.log("llmDuplicateTest getCurrentRowText", text);
+  console.log("duplicateBoxRow", text);
   insertResponse(text)
 }
