@@ -143,6 +143,8 @@ Limitations:
 
 ![docs/canadian-flag.png](docs/canadian-flag.png)
 
+![docs/asteroids.png](docs/asteroids.png)
+
 ## References
 - https://klotz.me/thesis.pdf
 - https://boxer-project.github.io/boxer-literature/theses/Bochser,%20An%20Integrated%20Scheme%20Programming%20System%20(Eisenberg,%20MIT%20MSc,%201985).pdf

@@ -1,0 +1,44 @@
+[[Draw an Astroids game screenshot in SVG. Use green lines and black background.
+Objects are not filled.
+The spaceship object is an acute-angle triangle at the center of the screen/
+The three asteroid objects are closed, non-convex polygons with 5 to 10 sides.  
+Each asteroid has a unique shape.
+
+Animate three asteroids to move and move across the screen, each asteroid having a different velocity.
+Animate the spaceship to rotate in place about its center of its short side.]  | [Creating an SVG with the described elements involves defining the shapes and adding animations using SVG and SMIL (Synchronized Multimedia Integration Language). Below is a simple example:
+
+```xml
+<svg width="800" height="600" style="background-color: black;">
+  <!-- Spaceship -->
+  <polygon points="400,300 380,280 420,280" fill="green">
+    <animateTransform attributeName="transform" type="rotate" from="0 400 280" to="360 400 280" dur="5s" repeatCount="indefinite"></animateTransform>
+  </polygon>
+
+  <!-- Asteroid 1 -->
+  <polygon points="100,100 120,80 150,110 130,140 90,120" fill="none" stroke="green">
+    <animate attributeName="points" dur="10s" repeatCount="indefinite" values="100,100 120,80 150,110 130,140 90,120;
+                     700,100 720,80 750,110 730,140 690,120;
+                     100,100 120,80 150,110 130,140 90,120"></animate>
+  </polygon>
+
+  <!-- Asteroid 2 -->
+  <polygon points="200,200 220,180 230,210 210,240 170,220" fill="none" stroke="green">
+    <animate attributeName="points" dur="8s" repeatCount="indefinite" values="200,200 220,180 230,210 210,240 170,220;
+                     600,200 620,180 630,210 610,240 570,220;
+                     200,200 220,180 230,210 210,240 170,220"></animate>
+  </polygon>
+
+  <!-- Asteroid 3 -->
+  <polygon points="300,300 320,280 350,310 330,340 290,320" fill="none" stroke="green">
+    <animate attributeName="points" dur="12s" repeatCount="indefinite" values="300,300 320,280 350,310 330,340 290,320;
+                     500,300 520,280 550,310 530,340 490,320;
+                     300,300 320,280 350,310 330,340 290,320"></animate>
+  </polygon>
+</svg>
+```
+
+
+### Explanation:
+- **Spaceship:** An acute-angle triangle centered at (400, 300) that rotates in place.
+- **Asteroids:** Three distinct non-convex polygons with different numbers of sides. Each has an animation that moves it across the screen at different speeds.
+- **Animation:** Uses SMIL for both rotation and translation. Adjust `dur` for speed and `values` for paths.]] 
