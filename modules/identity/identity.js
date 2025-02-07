@@ -4,5 +4,5 @@ function duplicateBoxRow() {
   killResponse()
   let text = getCurrentRowText();
   console.log("duplicateBoxRow", text);
-  insertResponse(text)
+  insertResponse(text, unbox=false)
 }

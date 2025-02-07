@@ -71,14 +71,15 @@ function findPipeIndex() {
 
 // insert ' | ' and LLM response.
 // caller should delete prior responses before calling, if desired
-function insertResponse(response, applyMarkdown=false) {
+// bug: if unbox=false it something is applying formatMarkdownBox anyway.
+function insertResponse(response, applyMarkdown=false, unbox=true) {
   // Move to the end of the line
   moveCursorToEndOfLineInBox();
   insertTextAtCursor(' | ');
   // Insert the LLM response in a new context box, with cursor at EOL
   let rawText = response.trim();
   let responseBox = deserializeBox(rawText);
-  if (rawText.includes('\n')) {
+  if (unbox && rawText.includes('\n')) {
     insertBoxAtCursor(responseBox);
     console.log("formatting responseBox as markdown");
     if (applyMarkdown) {

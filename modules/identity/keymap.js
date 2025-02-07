@@ -1,4 +1,4 @@
 keyMap['Tab'] = duplicateBoxRow
 
-// addToMenu('Duplicate Row', duplicateBoxRow, 'Tab');
+addToMenu('Duplicate Row', duplicateBoxRow, 'Tab');
 
