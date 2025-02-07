@@ -17,6 +17,10 @@ body { font-family: sans-serif; }
     min-height: 90vh;
 }
 
+#editor:focus {
+  outline: none;
+}
+
 div.box.fullsize {
     min-width: 99%;
     min-height: 90vh;
@@ -38,8 +42,12 @@ span.cursor {
     display: inline-block;
     width: 4px;
     height: 1em;
-    animation: blink 1.0s step-start infinite;
+    border-radius: 2px;
 }
+
+#editor:focus span.cursor {
+    animation: blink 1.2s step-start infinite;
+}    
 
 @keyframes blink {
     50% { opacity: 0; }
