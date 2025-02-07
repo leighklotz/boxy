@@ -1240,6 +1240,23 @@ function toggleTheme() {
     }
 }
 
+function addToMenu(label, fun, keyBinding) {
+  const topMenus = document.getElementById('top-menus');
+
+  // Start with separator
+  topMenus.appendChild(document.createTextNode(' | '));
+
+  // Create a new anchor element
+  const menuItem = document.createElement('a');
+  menuItem.href = '#';
+  menuItem.onclick = fun;
+  menuItem.title = keyBinding;
+  menuItem.textContent = label;
+  // Append the new menu item to the top menus
+  topMenus.appendChild(menuItem);
+  console.log(topMenus.outerHTML);
+}
+    
 
 function statusLedOn(engine_name = null) {
   if (engine_name !== 'error') statusLedOff('error')  

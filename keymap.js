@@ -32,3 +32,8 @@ const keyMap = {
   'Backspace': deleteCharAtCursor,
   'Enter': insertNewline
 };
+
+// todo: make keyMap value into an object so we can define the label and menu there and automate this:
+addToMenu('Toggle Theme', toggleTheme, '');
+addToMenu('Expand/Contract Box', toggleCurrentBoxExpansion, 'F3');
+addToMenu('Explode Box', explode, 'Ctrl-*');

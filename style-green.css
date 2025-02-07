@@ -1,0 +1,72 @@
+body {
+    background-color: #121212;
+    color: #00c853;
+}
+
+header * {
+    color: #00c853 !important
+}
+
+div.box {
+    border: 1px solid #00c853;
+    background-color: #1e1e1e;
+    color: #00c853;
+}
+
+span.cursor {
+    background-color: #00c853
+}
+
+.alert {
+    background-color: #ffcc00;
+    color: #121212;
+    border: 1px solid #777;
+}
+
+div.box.think {
+    font-style: italic;
+}
+
+div.box.think::after {
+    color: #00c853;
+    background-color: #2a2a2a;
+    border-bottom: 1px solid #444;
+}
+
+div.box.shrunken {
+    background-color: #444;
+    color: #00c853;
+}
+
+div.box.code {
+    background-color: #2a2a2a;
+    color: #00c853;
+}
+
+div.box.code::after {
+    background-color: #333;
+    border-bottom: 1px solid #444;
+    color: #00c853;
+}
+
+div.box.markdown ul li::marker {
+    color: #00c853;
+}
+
+#status-led.running.llm {
+    background-color: #00c853;
+}
+
+#status-led.running.livescript {
+    background-color: #ffeb3b;
+}
+
+#status-led.error {
+    background-color: #ff1744;
+}
+
+#status-led.running.llm:hover::after,
+#status-led.running.livescript:hover::after,
+#status-led.error:hover::after {
+    color: #00c853;
+}

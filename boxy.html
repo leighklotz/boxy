@@ -5,20 +5,19 @@
     <title>Boxy Editor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="style-light.css" id="light-theme">
+    <link rel="stylesheet" href="style-light.css" id="light-theme" disabled>
     <link rel="stylesheet" href="style-dark.css" id="dark-theme" disabled>
-    <link rel="stylesheet" href="style-green.css" id="green-theme" disabled>
+    <link rel="stylesheet" href="style-green.css" id="green-theme">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body>
 
     <header>
-      <a title="Copyright (c) 2024 Leigh L. Klotz, Jr." href="https://github.com/leighklotz/boxy">boxy</a>
       <span id="status-led" class=""></span>
-      <a href="#" onclick="toggleTheme()">theme</a>
+      <span id="top-menus"><a target="_new" title="Boxy Source code: Copyright (c) 2024-2025 Leigh L. Klotz, Jr." href="https://github.com/leighklotz/boxy">boxy</a></span>
       <div id="alert-box" class="alert" style="display: none;">Unbound key</div>
-      <div id="clipboard" class="box" tabindex="0" title="Clipboard"></div><br />
+      <div id="clipboard" class="box" tabindex="0" title="Clipboard"></div>
     </header>
 
     <div id="editor" class="box" contenteditable="false" tabindex="0"><span id="cursor" class="cursor"></span></div>
