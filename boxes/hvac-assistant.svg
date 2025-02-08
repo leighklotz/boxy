@@ -1,0 +1,51 @@
+[I'm using an 80mm 5v PC fan (quiet) with rubber feet atop my oil-filled radiator. Thermal imaging shows the hot spot is at the bottom of the radiator, 138F, and it's cooler at the top. I plan to use the fan on the top. It emits warm air. Thermal imaging show it is slightly cooler under the fan, possibly a little cooler at the bottom; however, that was with the fan at the far end of the radiator (liearly from the control head) and I don't know the normal heating pattern without the fan. So I need to find that out. But in any case, emitting warm air is good. Right now it's pointed straight up, so that's not great since the heat already goes up. So I ordered an accordion duct for an 80mm PC fan (and I hope it fits, as a standard) that has a 90 degree radius of bend, so it can aim the warm air out. As a PC cooling product, it also should stand the temperature of <<138F easily. What do you think of my design? | Your design makes sense. Directing warm air out can improve cooling efficiency by avoiding recirculating hot air. Ensure the duct fits well and consider how it affects airflow dynamics around the radiator.
+Draw an SVG diagram of my setup, with temperature and objects and airflow indicated. | [I can't directly create an SVG diagram here, but I can describe a detailed setup that you can use to create the SVG. Here's a step-by-step guide:
+
+1. **Base Plate**: Draw a rectangle representing the oil-filled radiator base plate.
+2. **Hot Spot**: Indicate a hot spot at the bottom of the radiator with a red circle or dot labeled "138F".
+3. **Top Cooler Area**: Indicate a slightly cooler area at the top of the radiator with a blue circle or dot labeled "Slightly Cooler".
+4. **Fan**: Draw an 80mm fan at the top of the radiator, pointing straight up.
+5. **Airflow Arrow (Before Duct)**: Draw an arrow pointing upwards from the fan to show the initial airflow.
+6. **Accordion Duct**: Draw the accordion duct connected to the fan, bent at a 90-degree angle pointing outwards.
+7. **Airflow Arrow (After Duct)**: Draw an arrow pointing outwards from the end of the duct to show the redirected airflow.
+
+Here's an example of the SVG code based on the above description:
+
+```xml
+<svg width="300" height="400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Radiator Base Plate -->
+  <rect x="50" y="50" width="200" height="300" fill="gray"></rect>
+
+  <!-- Hot Spot -->
+  <circle cx="150" cy="320" r="10" fill="red"></circle>
+  <text x="140" y="325" fill="white" font-size="10">138F</text>
+
+  <!-- Top Cooler Area -->
+  <circle cx="150" cy="80" r="10" fill="blue"></circle>
+  <text x="135" y="85" fill="white" font-size="10">Slightly Cooler</text>
+
+  <!-- Fan -->
+  <circle cx="150" cy="50" r="15" fill="lightgray"></circle>
+  <line x1="150" y1="50" x2="150" y2="35" stroke="black" stroke-width="2"></line>
+
+  <!-- Airflow Arrow (Before Duct) -->
+  <line x1="150" y1="50" x2="150" y2="25" stroke="black" stroke-width="2" marker-end="url(#arrowhead)"></line>
+
+  <!-- Accordion Duct -->
+  <line x1="150" y1="50" x2="150" y2="10" stroke="black" stroke-width="2"></line>
+  <line x1="150" y1="10" x2="100" y2="10" stroke="black" stroke-width="2"></line>
+
+  <!-- Airflow Arrow (After Duct) -->
+  <line x1="100" y1="10" x2="80" y2="10" stroke="black" stroke-width="2" marker-end="url(#arrowhead)"></line>
+
+  <!-- Arrowhead Marker -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="black"></polygon>
+    </marker>
+  </defs>
+</svg>
+```
+
+
+You can use this SVG code in a tool like [SVG-edit](https://svg-edit.github.io/svgedit/) or any text editor that supports SVG to visualize your setup. Feel free to adjust the dimensions and positions to fit your specific setup.]]
