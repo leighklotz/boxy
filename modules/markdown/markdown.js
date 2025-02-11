@@ -28,19 +28,21 @@ function formatMarkdownBox(box) {
   // Get the text content from current box
   const markdownText = serializeBox(box);
 
+  // Store the original markdown in a data attribute
+  box.dataset.markdown = markdownText;
+
   // Use marked to parse and format the markdown
   const formattedHtml = marked.parse(markdownText);
 
   // Sanitize
   const sanitizedHtml = sanitize_dom(formattedHtml);
 
-  let priorContent = box.innerHTML;
-
-  // Create a function that will revert the content and then remove the event listener
+  // Create a function that will revert the content and then remove the event listener and the markdown data attribute
   const restoreAndRemoveListener = () => {
-    box.innerHTML = priorContent;
+    box.innerHTML = box.dataset.markdown;
     box.classList.remove('markdown');
     box.removeEventListener('click', restoreAndRemoveListener);
+    delete box.dataset.markdown;
   };
 
   // this fails becuase our cursor is not real and so there is no blur event
@@ -48,7 +50,7 @@ function formatMarkdownBox(box) {
   // own boxblur event, hence we need an event schema.
   if (false) {
     box.addEventListener('blur', () => {
-      box.innerHTML = formattedHtml;
+      box.innerHTML = box.dataset.markdown;
     });
   }
 
@@ -56,7 +58,7 @@ function formatMarkdownBox(box) {
   box.addEventListener('click', restoreAndRemoveListener);
 
   // Display the formatted markdown in the box
-  box.innerHTML = formattedHtml;
+  box.innerHTML = sanitizedHtml;
 
   removeWhitespaceBetweenListItems(box);
 }
@@ -101,32 +103,6 @@ function removeWhitespaceBetweenListItems(box) {
     }
   });
 }
-
-// 
-// function removeWhitespaceBetweenListItems(box) {
-//   if (!box) return; // Check if the box element exists
-//   const uls = box.querySelectorAll('ul'); // Find all <ul> elements inside the box
-//   
-//   uls.forEach(ul => {
-//     // Remove whitespace inside the <ul>
-//     let currentNode = ul.firstChild;
-//     while (currentNode) {
-//       const nextNode = currentNode.nextSibling; // Cache the next sibling
-//       if (currentNode.nodeType === Node.TEXT_NODE && currentNode.nodeValue.trim() === '') {
-//         ul.removeChild(currentNode); // Remove whitespace text nodes
-//       }
-//       currentNode = nextNode;
-//     }
-// 
-//     // Remove whitespace after the <ul>
-//     let nextNode = ul.nextSibling;
-//     while (nextNode && nextNode.nodeType === Node.TEXT_NODE && nextNode.nodeValue.trim() === '') {
-//       const nodeToRemove = nextNode;
-//       nextNode = nextNode.nextSibling; // Cache the next sibling
-//       ul.parentNode.removeChild(nodeToRemove); // Remove the text node
-//     }
-//   });
-// }
 
 // Execute the function after the DOM is fully loaded
 // todo: why?
