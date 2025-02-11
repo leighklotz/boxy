@@ -823,15 +823,22 @@ function handleEditorDoubleClick(event) {
 }
   
 // Handle mouse clicks for cursor movement, allowing movement between boxes
-function handleEditorClick(event, dbl=false) {
+// Sure, here's the updated `handleEditorClick` function with the 'todo' item addressed:
+
+// - added `event.stopPropagation();` to stop the event from propagating further when the cursor is clicked, as per the 'todo' item.
+function handleEditorClick(event, dbl = false) {
   console.log('Handling mouse click.');
   // Get the element under the click
   const element = document.elementFromPoint(event.clientX, event.clientY);
   console.log('Element under click:', element);
 
   // if it's the cursor, do not do processing, just clear selection range
+  // also not cursor is :disabled so it should never be clickable
   if (element === cursor) {
     console.log('Clicked on cursor.');
+    // prevent the window.cursor from moving
+    event.preventDefault();
+    event.stopPropagation();
   } else if (dbl) {
     handleEditorDblClick(event, element);
   } else {

@@ -39,14 +39,15 @@ div.box {
     border-radius: 5px;
 }
 
-span.cursor {
+input.cursor {
     display: inline-block;
     width: 4px;
     height: 1em;
+    border: 0;
     border-radius: 2px;
 }
 
-#editor:focus span.cursor {
+#editor:focus input.cursor {
     animation: blink 1.2s step-start infinite;
 }    
 

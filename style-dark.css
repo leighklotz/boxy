@@ -14,7 +14,7 @@ div.box {
     color: #ffffff; /* Light text */
 }
 
-span.cursor {
+input.cursor {
     background-color: #00c853 
 }
 
