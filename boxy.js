@@ -883,6 +883,7 @@ function handleClipboardClick(event) {
     return;
 
   let newBox = clipboard.removeChild(box);
+  // this would copy so we need to do it if we do not remove it.
   // newBox = deserializeBox(serializeBox(box))
 
   insertBoxAtCursor(newBox);
@@ -997,7 +998,12 @@ function getCurrentBoxText() {
 
 // EVALUATOR SPI: 
 function serializeBox(boxElem) {
-  return getBoxRowsText(boxElem).join('');
+  // todo: fix this workaround
+  if (boxElem.dataset.markdown) {
+    return boxElem.dataset.markdown
+  } else {
+    return getBoxRowsText(boxElem).join('');
+  }
 }
 
 // EVALUATOR SPI: 
