@@ -16,7 +16,7 @@ div.box {
     border: 1px solid black;
 }
 
-span.cursor {
+input.cursor {
     background-color: black;
     background-color: #00c853 
 }

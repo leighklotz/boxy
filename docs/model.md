@@ -10,7 +10,7 @@ The Boxy Model provides a unique way to interact with structured content using n
 1. **Editor Container**
    - The root of the interface is a `<div>` with the ID `editor` and class `box`.
    - It has `contenteditable="false"` and `tabindex="0"` to handle keyboard input.
-   - Contains a `<span class="cursor">` element for cursor positioning.
+   - Contains an `<input class="cursor">` element for cursor positioning.
 2. **Boxes**
    - Boxes are represented as `<div>` elements with the class `box`.
    - Boxes can contain rows of text and other boxes, enabling arbitrary nesting.
@@ -90,7 +90,7 @@ The editor supports a variety of keyboard shortcuts for navigation and manipulat
 - Box insertion creates a new `<div>` element with the `box` class.
 - Deletion removes text or nodes while maintaining document structure.
 2. **Cursor Positioning**
-- The cursor is represented as a `<span>` element with the class `cursor`.
+- The cursor is represented as an `<input>` element with the class `cursor`.
 - Cursor movements are handled by `moveCursorTo()`, which updates the cursor's position in the DOM.
 3. **Text and Box Serialization**
 - The `gatherEntireBox()` function serializes a box and its contents, including nested boxes.
