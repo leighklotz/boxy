@@ -150,7 +150,7 @@ Limitations:
 
 ![docs/asteroids.png](docs/asteroids.png)
 
-![docs/hvac-assistant.png](docs/hvac-assistant.png)
+![docs/hvac-assistant.svg](docs/hvac-assistant.svg)
 
 ## References
 - https://klotz.me/thesis.pdf
