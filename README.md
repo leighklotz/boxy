@@ -66,8 +66,8 @@ Note that if a text region is selected, any insert or delete commands will delet
 | C-d, Delete     | Delete char forward                   | Delete the next character |
 | C-k             | Kill line                             | Delete content from cursor to the end of the line in box   |
 | C-y             | Yank (paste)                          | Paste top item from clipboard at the cursor position. |
-| C-Shift-C       | Shrink box                            | Shrink the currently selected box with nested content. |
-| Double Click    | Expand box                           | Expand the clicked box with nested content. |
+| C-Shift-B       | Shrink box                            | Shrink the currently selected box with nested content. |
+| Double Click    | Expand box                            | Expand the clicked box with nested content. |
 | C-leftarrow     | Undo                                  | Undo the last action.                                      |
 | C-rightarrow    | Redo                                  | Redo the last undone action.                               |
 | <printingchar>  | Self insert                           | Insert the character used to invoke this.                  |

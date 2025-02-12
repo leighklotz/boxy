@@ -119,3 +119,28 @@ function downloadSerializedBox(box) {
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
 }
+
+/// copy and paste (text)
+/// bare minimum
+
+async function pasteText() {
+  try {
+    const text = await navigator.clipboard.readText();
+    console.log(`Pasting text ${text}`);
+    insertTextAtCursor(text);
+  } catch (err) {
+    showError(err.message);
+    throw err;
+  }
+}
+
+async function copyBoxText() {
+  try {
+    const text = getCurrentBoxText();
+    console.log(`Copying box text ${text}`);
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    showError(err.message);
+    throw err;
+  }
+}
