@@ -39,28 +39,38 @@ async function fetchUrlToString(url) {
 function loadBoxFromString() {
   killResponse();
   let url = getCurrentRowText().trim();
-  const extension = url.split('.').pop().toLowerCase();
-  const imageExtensions = ['jpg', 'png', 'webp', 'jpeg'];
+  const parsedUrl = new URL(url, window.location.href);
+  const path = parsedUrl.pathname;
+  const fileName = path.split('/').pop() || '';
+  const parts = fileName.split('.');
+  const extension = parts.length > 1 ? parts.pop().toLowerCase() : '';
+  const boxExtensions = ['box'];
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
 
+  // Handle image URLs
   if (imageExtensions.includes(extension)) {
-    // Handle image URLs
     const img = document.createElement('img');
     img.src = url;
-    img.style.maxWidth = '100%'; // Ensure image doesn't overflow
+    img.style.maxWidth = '80%'; // Ensure image doesn't overflow
     insertResponse(img.outerHTML);
     return;
   }
 
-  // Handle .box files and other URLs
-  fetchUrlToString(url)
-    .then(data => {
-      console.log(`Fetched ${url}`);
-      killResponse();
-      insertResponse(data);
-    })
-    .catch(error => {
-      showError(`loadBoxFromString(${url}) error: ${error}`);
-    });
+  // Handle .box files 
+  if (boxExtensions.includes(extension)) {
+    fetchUrlToString(url)
+      .then(data => {
+        console.log(`Fetched ${url}`);
+        killResponse();
+        insertResponse(data);
+      })
+      .catch(error => {
+        showError(`loadBoxFromString(${url}) error: ${error}`);
+      });
+    return;
+  }
+
+  throw new Error(`Cannot understand ${extension} box type`);
 }
 
 function downloadSerializedBoxy() {
