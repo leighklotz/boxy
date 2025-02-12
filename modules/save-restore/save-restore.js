@@ -17,12 +17,13 @@ async function fetchUrlToString(url) {
 }
 
 function loadBoxFromString() {
+  killResponse();
   let url = getCurrentRowText().trim();
   fetchUrlToString(url)
     .then(data => {
       console.log(`Fetched ${url}`);
       killResponse()
-      insertResponse(data);	// applyMarkdown?
+      insertResponse(data);	// applyMarkdown? images?
     })
     .catch(error => {
       showError(`loadBoxFromString(${url}) error ${error}`)
