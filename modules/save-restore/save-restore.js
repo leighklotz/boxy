@@ -123,6 +123,7 @@ function downloadSerializedBox(box) {
 /// copy and paste (text)
 /// bare minimum
 
+// todo: make async better
 async function pasteText() {
   try {
     const text = await navigator.clipboard.readText();
@@ -134,6 +135,7 @@ async function pasteText() {
   }
 }
 
+// todo: make async better
 async function copyBoxText() {
   try {
     const text = getCurrentBoxText();

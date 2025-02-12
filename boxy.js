@@ -636,7 +636,7 @@ function killLine() {
   }
 }
 
-function addToClipboard(node) {
+async function addToClipboard(node) {
   if (node?.children.length === 0 && node?.textContent.length === 0) return;
 
   const clipboard = document.getElementById('clipboard');
@@ -646,6 +646,16 @@ function addToClipboard(node) {
     console.log(`Removing item from clipboard: ${clipboard.lastChild}`);
     clipboard.removeChild(clipboard.lastChild);
   }
+
+  const text = serializeBox(node);
+  try {
+    // todo: make async better
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    showError(err.message);
+    throw err;
+  }
+
 }
 
 // EDITOR SPI: Pop clipboard and insert at cursor
