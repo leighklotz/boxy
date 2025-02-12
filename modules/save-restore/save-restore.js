@@ -45,6 +45,7 @@ function loadBoxFromString() {
   const parts = fileName.split('.');
   const extension = parts.length > 1 ? parts.pop().toLowerCase() : '';
   const boxExtensions = ['box'];
+  const jsExtensions = ['js'];
   const imageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
 
   // Handle image URLs
@@ -63,6 +64,20 @@ function loadBoxFromString() {
         console.log(`Fetched ${url}`);
         killResponse();
         insertResponse(data);
+      })
+      .catch(error => {
+        showError(`loadBoxFromString(${url}) error: ${error}`);
+      });
+    return;
+  }
+
+  // Handle .js files 
+  if (jsExtensions.includes(extension)) {
+    fetchUrlToString(url)
+      .then(data => {
+        console.log(`Fetched ${url}`);
+        killResponse();
+        insertResponse("```javascript\n" + data + "\n```\n");
       })
       .catch(error => {
         showError(`loadBoxFromString(${url}) error: ${error}`);
