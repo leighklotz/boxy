@@ -35,7 +35,7 @@ function downloadSerializedBoxy() {
 }
 
 function downloadSerializedCurrentBox() {
-  return downloadSerializedBox(cursor.parentNode);
+  downloadSerializedBox(cursor.parentNode);
 }
 
 function downloadSerializedBox(box) {
