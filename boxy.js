@@ -972,7 +972,7 @@ function serializeBox(boxElem) {
 }
 
 // EVALUATOR SPI: 
-// todo: tidy up differences in model wrt code boxes, markdown boxes, markdown language, code language, () and [] and ```
+// todo: tidy up differences in model wrt code boxes, markdown boxes, markdown language, code language, parens, brackets, and triple-backquote
 function getBoxRowsText(boxElem) {
   const parts = [];
   const children = Array.from(boxElem.childNodes);
