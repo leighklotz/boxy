@@ -2,6 +2,26 @@
 
 // todo: use localStorage() in addition to URL-based
 // that will give local users save/restore capability as well
+// options, with (b) currently preferred
+// - (a) auto save/restore just one box: global space prevents different boxes in different browser tabs
+// - (b) like current save/restore, but to local storage: easy to implement but save/update/overwrite issues
+// - (c) menu of boxes: flat space, similar to Arduino examples and sketches: easy to implement
+// - (d) skip out into an outer-limits box that shows all the boxes in local storage and you can then click on one: cool but hard to do
+function saveToLocalStorage() {
+  const serializedString = serializeBox(editor);
+  localStorage.setItem('savedBox', serializedString);
+  showStatus('Box saved to localStorage');
+}
+
+function loadFromLocalStorage() {
+  const savedData = localStorage.getItem('savedBox');
+  if (savedData) {
+    insertResponse(savedData);
+    showStatus('Box loaded from localStorage');
+  } else {
+    showError('No saved box found in localStorage');
+  }
+}
 
 async function fetchUrlToString(url) {
   try {
@@ -19,15 +39,28 @@ async function fetchUrlToString(url) {
 function loadBoxFromString() {
   killResponse();
   let url = getCurrentRowText().trim();
+  const extension = url.split('.').pop().toLowerCase();
+  const imageExtensions = ['jpg', 'png', 'webp', 'jpeg'];
+
+  if (imageExtensions.includes(extension)) {
+    // Handle image URLs
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.maxWidth = '100%'; // Ensure image doesn't overflow
+    insertResponse(img.outerHTML);
+    return;
+  }
+
+  // Handle .box files and other URLs
   fetchUrlToString(url)
     .then(data => {
       console.log(`Fetched ${url}`);
-      killResponse()
-      insertResponse(data);	// applyMarkdown? images?
+      killResponse();
+      insertResponse(data);
     })
     .catch(error => {
-      showError(`loadBoxFromString(${url}) error ${error}`)
-    })
+      showError(`loadBoxFromString(${url}) error: ${error}`);
+    });
 }
 
 function downloadSerializedBoxy() {
