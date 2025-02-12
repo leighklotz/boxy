@@ -227,41 +227,6 @@ function moveCursorToEndOfBox() {
   }
 }
 
-// todo: write this function
-// function findBeginningOfLine(node, offset) {
-//   let currentNode = node;
-//   let currentOffset = offset;
-// 
-//   while (currentNode) {
-//     if (isCursor(currentNode)) {
-//       currentNode = currentNode.previousSibling;
-//     } else if (isCha(currentNode)) {
-//       // If the current node is a text node, search backward for a newline character
-//       const newlineIndex = currentNode.textContent.lastIndexOf('\n', currentOffset - 1);
-//       if (newlineIndex !== -1) {
-//         // Found a newline character, the beginning of the line is just after this newline
-//         return { node: currentNode, offset: newlineIndex + 1 };
-//       } else {
-//         // No newline found in this text node, continue to the previous sibling
-//         if (currentNode.previousSibling) {
-//           currentOffset = currentNode.previousSibling.textContent.length;
-//           currentNode = currentNode.previousSibling;
-//         } else {
-//           // If there are no previous siblings, the beginning of the line is at the start of this text node
-//           return { node: currentNode, offset: 0 };
-//         }
-//       }
-//     } else if (isBox(currentNode)) {
-//       currentNode = currentNode.previousSibling;
-//     } else {
-//       currentNode = currentNode.previousSibling;
-//     }
-//   }
-// 
-//   // If we reach here, the beginning of the line is at the start of the parent box
-//   return { node: node.parentNode, offset: 0 };
-// }
-
 function findBeginningOfLine(node, offset) {
   let currentNode = node;
   let currentOffset = offset;
