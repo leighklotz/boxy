@@ -84,12 +84,17 @@ Note that if a text region is selected, any insert or delete commands will delet
 | Ctrl-o          | Restore                               | Read the URL on the line, fetch the box, and insert the results.|
 
 ### Restore:
-Put the URL of a boxy box to load into a box and press `Ctrl-o`
+Put the URL of a boxy box to load into a box and press `Ctrl-o`.
 
 Example:
 ```
  boxes/cardiac-fib.box *Ctrl-o*
 ```
+
+The URL is interpreted as relative to the local `./run.sh` Boxy server. If you are instead running Boxy directly from a file:// url, you will not be able to access restore.
+
+Restore handles boxes and some image types. For example, use `boxes/asteroids.box` to retrieve from a local copy of boxy, or a remote URL such as `https://raw.githubusercontent.com/leighklotz/boxy/refs/heads/main/boxes/asteroids.box`.
+
 
 ### Save:
 | **Key Binding** | **Action**                            | **Description**                                                         |
