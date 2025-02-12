@@ -1010,7 +1010,7 @@ function getBoxRowsText(boxElem) {
     } else {
       // Throw error for unexpected content
         console.warn(
-            `Unexpected content <${child.tagName.toLowerCase()}> (id=${child.id || 'no-id'}) inside a box (box id=${boxElem.id || 'no-id'}).`
+            `Unexpected content <${child?.tagName?.toLowerCase()}> (id=${child?.id || 'no-id'}) inside a box (box id=${boxElem.id || 'no-id'}).`
         );
         parts.push(child.outerHTML);
     }
