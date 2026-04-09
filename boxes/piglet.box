@@ -1,0 +1,15 @@
+draw a piglet in SVTG | [Creating an SVG image of a piglet involves using SVG (Scalable Vector Graphics) code. Here's a simple representation of a piglet:
+
+```svg
+<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="50" cy="50" r="40" fill="pink" stroke="black" stroke-width="2"></circle>
+  <circle cx="40" cy="40" r="5" fill="white"></circle>
+  <circle cx="60" cy="40" r="5" fill="white"></circle>
+  <path d="M50 60 Q40 70 30 60" stroke="black" stroke-width="2" fill="none"></path>
+  <path d="M50 60 Q60 70 70 60" stroke="black" stroke-width="2" fill="none"></path>
+  <path d="M50 60 Q50 80 50 70" stroke="black" stroke-width="2" fill="none"></path>
+</svg>
+```
+
+
+This SVG code creates a basic piglet shape with a pink body, two white eyes, and a simple snout.]
