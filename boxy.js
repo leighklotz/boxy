@@ -232,13 +232,13 @@ function insertTextAtCursor(text) {
     const val = node.textContent;
     node.textContent = val.slice(0, offset) + text + val.slice(offset);
     cursorManager.virtualIndex += text.length;
-  } else if (isBox(node)) {
-    const textNode = document.createTextNode(text);
-    node.parentNode.insertBefore(textNode, node);
-    cursorManager.virtualIndex += text.length;
   } else {
     const textNode = document.createTextNode(text);
-    node.parentNode.insertBefore(textNode, node);
+    if (node === editor) {
+      editor.appendChild(textNode);
+    } else {
+      node.parentNode.insertBefore(textNode, node);
+    }
     cursorManager.virtualIndex += text.length;
   }
   cursorManager.refresh();
@@ -472,7 +472,7 @@ function handleKeydown(event) {
       event.preventDefault();
       insertCharAtCursor(event.key);
     } else {
-      event.preventDefault();
+      event.preventDefault;
       showUnboundKeyAlert(key);
     }
   } catch (e) {
