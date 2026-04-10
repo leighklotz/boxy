@@ -23,10 +23,11 @@ Here’s a UX specification for implementing a visual editor that handles both t
      - Handle lines of varying lengths by stopping at the end of the line when shorter than the goal column.
      - Skip over empty lines while aiming to restore the goal column once a sufficiently long line is reached.
    - **Horizontal Movement (C-f and C-b):**
-     - Treat the contents of boxes as individual characters, meaning a single horizontal move should allow the cursor to enter or leave a box.
+     - Treat the contents of boxes as individual characters, meaning a single horizontal move skip over a box. 
      - When inside a box, horizontal navigation should allow character-by-character movement or navigation to nested boxes.
    - **Box Traversal:**
-     - C-f should move into a box if it’s at the cursor position, and C-b should exit the box, treating it like moving between characters.
+     - `C-[` should enter the box after the cursor.
+     - `]` exits a current box and puts the cursor to the right.
    - **Column Resetting:**
      - If horizontal movement occurs, reset the goal column for subsequent vertical navigation.
    - **Selection and Editing:**
@@ -89,8 +90,8 @@ Note that if a text region is selected, any insert or delete commands will delet
 | C-)             | Exit box to left                      | Exit current box and put point before it             |
 | C-p             | Move cursor up                        | Move cursor to the previous line, maintaining goal column. |
 | C-n             | Move cursor down                      | Move cursor to the next line, maintaining goal column.     |
-| C-f             | Move cursor forward                   | Move cursor to the next character; enters boxes if present.|
-| C-b             | Move cursor backward                  | Move cursor to the previous character; exits boxes if present. |
+| C-f             | Move cursor forward                   | Move cursor to the next character; does not enter box.|
+| C-b             | Move cursor backward                  | Move cursor to the previous character; does not enter box. |
 | C-a             | Move to beginning of line in box      | Move cursor to the start of the current line in box.       |
 | C-e             | Move to end of line in box            | Move cursor to the end of the current line in box          |
 | C-f             | Move forward                          | Move cursor forward one char or box          |
@@ -128,7 +129,7 @@ Here are the major implementation decisions to consider for the spec, focused on
 
 ### 3. **Handling Box Boundaries as Characters**
    - **Entry and Exit Points:**
-     - Treat entering a box as moving one character forward, and exiting as moving one character backward.
+     - Treat boxes as characters, and they must be explicitly entered and exited.
      - Adjust the cursor navigation logic to allow smooth transitions across box boundaries, ensuring that boxes and nested boxes are considered a single unit during horizontal navigation.
    - **Box Expansion and Collapsing:**
      - When a box is collapsed, replace its content with a single placeholder node. 
@@ -204,7 +205,7 @@ Boxy Evaluate is not yet implemented.
      - Stops at the end of shorter lines and skips empty lines.
    - **Horizontal Movement (C-f, C-b):**
      - Moves forward/backward one character or box.
-     - Avoids entering boxes unless explicitly commanded.
+     - Does not enter boxes.
    - **Boundary Handling:**
      - Treats boxes as single units; requires explicit commands to enter/exit.
    - **Column Resetting:**

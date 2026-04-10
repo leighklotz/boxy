@@ -52,8 +52,8 @@ Note that if a text region is selected, any insert or delete commands will delet
 | C-)             | Exit box to left                      | Exit current box and put point before it              |
 | C-p             | Move cursor up                        | Move cursor to the previous line, maintaining goal column. |
 | C-n             | Move cursor down                      | Move cursor to the next line, maintaining goal column.     |
-| C-f             | Move cursor forward                   | Move cursor to the next character; enters boxes if present.|
-| C-b             | Move cursor backward                  | Move cursor to the previous character; exits boxes if present. |
+| C-f             | Move cursor forward                   | Move cursor to the next character; does not enter box.|
+| C-b             | Move cursor backward                  | Move cursor to the previous character; does not exit box. |
 | C-a             | Move to beginning of line in box      | Move cursor to the start of the current line in box.       |
 | C-e             | Move to end of line in box            | Move cursor to the end of the current line in box          |
 | C-f             | Move forward                          | Move cursor forward one char or box          |
