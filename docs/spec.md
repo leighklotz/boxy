@@ -15,7 +15,7 @@ Here’s a UX specification for implementing a visual editor that handles both t
      - Users can expand or collapse boxes, revealing or hiding nested content, but collapsed boxes should retain a placeholder representation in the flow.
    - **Text Entry and Cursor Behavior:**
      - Text should be editable within or outside of boxes.
-     - **Floating Cursor Strategy**: To prevent DOM fragmentation from `splitText`, the cursor is a separate visual overlay. Its position is determined by a **Logical Unit Sequence (LUS)** that tracks the `virtualIndex` of the cursor relative to text nodes and boxes.
+     - **Floating Cursor Strategy**: To prevent DOM fragmentation from `splitText`, the cursor is a separate visual overlay. Its position is determined by a **Row** (the flattened sequence of text nodes and box elements) and a `virtualIndex` representing the cursor's position within that Row.
 
 ### 2. **Emacs-style Cursor Movement**
    - **Vertical Movement (C-p and C-n):**
@@ -86,7 +86,7 @@ Note that if a text region is selected, any insert or delete commands will delet
 | C-[             | Enter box                             | Enter box after point                  |
 | C-(             | Enter box                             | Enter box after point                  |
 | C-)             | Exit box to left                      | Exit current box and put point before it             |
-| C-)             | Exit box to left                      | Exit current box and put point before it              |
+| C-)             | Exit box to left                      | Exit current box and put point before it             |
 | C-p             | Move cursor up                        | Move cursor to the previous line, maintaining goal column. |
 | C-n             | Move cursor down                      | Move cursor to the next line, maintaining goal column.     |
 | C-f             | Move cursor forward                   | Move cursor to the next character; enters boxes if present.|
@@ -97,14 +97,7 @@ Note that if a text region is selected, any insert or delete commands will delet
 | C-b             | Move backward                         | Move cursor backward one char or box          |
 | C-p             | Move up                               | Move cursor up one row in box box, preserving goal column          |
 | C-n             | Move down                             | Move cursor down one row in box box, preserving goal column          |
-| Arrow Keys      | Move Up, Down, Left, or Right         | Like Ctrl-P, Ctrl-N, Ctrl-B, Ctrl-F. |
-| Backspace       | Delete character backward                  | Delete the previous character |
-| C-d, Delete     | Delete character forward                   | Delete the next character |
-| C-k             | Kill line                             | Delete content from cursor to the end of the line in box   |
-| C-y             | Yank (paste)                          | Paste previously cut or copied text/box at the cursor position. Remove from clipboard.|
-| C-w             | Cut region                            | Cut the selected region or current box to the clipboard.   |
-| C-c             | Copy Region                           | Copy the selection region or current box with nested content. |
-| C-Shift-C       | Collapse/Expand box                   | Collapse or expand the currently selected box with nested content. |
+| C-q             | Quote Character                       | Insert the next typed character instead of acting on it.      |
 | C-leftarrow     | Undo                                  | Undo the last action.                                      |
 | C-rightarrow    | Redo                                  | Redo the last undone action.                               |
 | <printingchar>  | Self insert                           | Insert the character used to invoke this.                  |
@@ -128,10 +121,10 @@ Here are the major implementation decisions to consider for the spec, focused on
    - **Column Restoration Logic:**
      - Implement logic to restore the goal column when skipping shorter lines or empty lines.
      - On horizontal movement (C-f, C-b), reset the goal column to the new column.
-   - **Floating Cursor / LUS Implementation:**
+   - **Floating Cursor / Row Implementation:**
      - To prevent DOM fragmentation (caused by using `splitText` to place the cursor), use a separate `<input>` overlay.
-     - Maintain a **Logical Unit Sequence (LUS)**: a flattened array of text nodes and box elements that represent the current editing context.
-     - The `virtualIndex` within this LUS serves as the source of truth for position.
+     - Maintain a **Row** (the flattened sequence of text nodes and box elements) that represents the current editing context.
+     - The `virtualIndex` within this Row serves as the source of truth for position.
 
 ### 3. **Handling Box Boundaries as Characters**
    - **Entry and Exit Points:**
@@ -146,8 +139,8 @@ Here are the major implementation decisions to consider for the spec, focused on
      - Implement rendering as a recursive function that iterates through the tree-list structure, drawing nodes based on their type.
      - Boxes should be rendered inline, with nested content appearing indented or visually contained within the parent box.
    - **Performance Optimization:**
-     - Use lazy rendering for nested boxes, loading content only when expanded, to avoid performance degradation with deeply nested structures.
-     - Implement line caching to speed up cursor movement and ensure responsive editing.
+     - Use lazy rendering for nested boxes and line caching for responsiveness.
+     - Use a Floating Cursor (Range API overlay) to avoid expensive DOM mutations.
 
 ### 5. **Keyboard Event Handling and Emacs-style Commands**
    - **Event Dispatcher:**
@@ -201,7 +194,7 @@ Boxy Evaluate is not yet implemented.
    - **Cursor Handling:**
      - The cursor is a **floating overlay element** (absolute-positioned `<input>`).
      - It does not reside in the DOM tree to prevent `splitText` fragmentation.
-     - It is positioned visually using the `Range` API based on the Logical Unit Sequence (LUS).
+     - It is positioned visually using the `Range` API based on the current **Row**.
    - **Clipboard Canvas:**
 	- A line above the editor that shows clipboard items. You cannot click into them.
 
