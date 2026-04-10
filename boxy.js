@@ -252,6 +252,10 @@ function insertNewline() {
   insertTextAtCursor('\n');
 }
 
+function insertQuotedChar() {
+  quoteFlag = true;
+}
+
 function deleteCharAtCursor() {
   const { node, offset } = cursorManager.getCursorPosition();
   
