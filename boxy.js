@@ -113,7 +113,6 @@ class CursorManager {
         }
         cumulative += unit.length;
       } else {
-        // It's a BOX.
         if (this.virtualIndex === cumulative) {
           return { node: unit.element, offset: 0 };
         }
@@ -124,7 +123,6 @@ class CursorManager {
         }
       }
     }
-    // End of LUS
     if (this.virtualIndex === cumulative && this.lus.length > 0) {
         const last = this.lus[this.lus.length - 1];
         if (last.type === 'TEXT') return { node: last.node, offset: last.length };
@@ -138,7 +136,6 @@ class CursorManager {
     const { node, offset } = this.getCursorPosition();
 
     try {
-      // Ensure offset is valid for the node type
       const validOffset = (node.nodeType === Node.TEXT_NODE) ? offset : 0;
       range.setStart(node, validOffset);
       range.setEnd(node, validOffset);
@@ -164,6 +161,8 @@ window.addEventListener('DOMContentLoaded', () => {
   cursorManager = new CursorManager(editor, cursor);
   cursorManager.refresh();
 });
+
+// --- MOVEMENT COMMANDS ---
 
 function moveCursorForward() {
   cursorManager.move('FORWARD');
@@ -192,6 +191,38 @@ function moveCursorUp() {
 function moveCursorDown() {
   cursorManager.verticalMove('DOWN');
 }
+
+// --- STUBBED COMMANDS (From keymap.js) ---
+
+function moveCursorToStartOfLineInBox() {
+  // TODO: Move cursor to the first text node or the beginning of the current row within the active box.
+}
+
+function shrinkBox() {
+  // TODO: Add 'shrunken' class to the current box to reduce its visual footprint.
+}
+
+function moveCursorToEndOfLineInBox() {
+  // TODO: Move cursor to the last text node or the end of the current row within the active box.
+}
+
+function killLine() {
+  // TODO: Remove all content from the cursor position to the end of the current row.
+}
+
+function moveCursorToStartOfBox() {
+  // TODO: Move cursor to the logical start of the current box (the first unit in its LUS).
+}
+
+function moveCursorToEndOfBox() {
+  // TODO: Move cursor to the logical end of the current box (the last unit in its LUS).
+}
+
+function toggleCurrentBoxExpansion() {
+  // TODO: Toggle between 'shrunken' and 'fullsize' visual states for the current box.
+}
+
+// --- INSERTION / DELETION COMMANDS ---
 
 function insertTextAtCursor(text) {
   clearSelection();
@@ -247,30 +278,7 @@ function deleteCharAtCursor() {
   } else if (isBox(node)) {
     node.remove();
     addToClipboard(node);
-    // If we were at the end of the box (index 1), we are now at index 0.
-    // We detect this by checking if we were at the start of the next unit.
-    // But simply: if index was > 0, we decrement.
-    // Actually, if we delete a box at index 0, index stays 0.
-    // If we delete a box at index 1, index becomes 0.
-    // We'll use a more robust way: check if the node was the 'nextSibling' of the previous unit.
-    // For simplicity, we'll just check if the current virtualIndex is > 0 and if the node was the end of a unit.
-    // Actually, the most reliable way is to check if the index should change.
-    // If we delete the box we are currently "at", the index only changes if we were "after" it.
-    // Since getCursorPosition returns the box itself for offset 0, we only decrement if we were at offset 1.
-    // But getCursorPosition doesn't return offset 1 for boxes. It returns the next node.
-    // So if we are at index 1, we are at the next node.
-    // If we delete the box at index 0, the next node becomes index 0.
-    // So we MUST decrement if the node we are deleting is the previous sibling of our current node.
-    // Wait, if the node is the one we are deleting, and we are at index 1, the node is at index 0.
-    // The next node is at index 1. After deletion, the next node is at index 0.
-    // So we decrement.
-    // Let's just check if the virtualIndex was > 0 and the box was not the very first thing.
-    // Actually, if we delete the box at index 0, virtualIndex 0 stays 0.
-    // If we delete the box at index 1, virtualIndex 1 becomes 0.
-    // We can determine this by checking if the node is the nextSibling of the previous unit.
-    // Let's assume:
     if (cursorManager.virtualIndex > 0) {
-        // If we are at the start of the next unit, we were at the end of this box.
         cursorManager.virtualIndex -= 1;
     }
   }
@@ -298,7 +306,7 @@ function insertAndEnterBox(boxtype='') {
   newBox.classList.add('box');
   if (boxtype) newBox.classList.add(boxtype);
   
-  const { node, offset } = cursorManager.getCursorPosition();
+  const { node } = cursorManager.getCursorPosition();
   if (isBox(node)) {
     node.parentNode.insertBefore(newBox, node);
   } else if (node !== editor) {
@@ -308,13 +316,18 @@ function insertAndEnterBox(boxtype='') {
   }
   
   cursorManager.refresh();
-  
   cursorManager.mode = Mode.INTERIOR;
   cursorManager.activeBox = newBox;
   cursorManager.lus = cursorManager.buildLUS(newBox);
   cursorManager.virtualIndex = 0;
   cursorManager.syncDOM();
 }
+
+function insertAndEnterCodeBox() {
+  insertAndEnterBox('code');
+}
+
+// --- UTILITIES ---
 
 function isBox(node) {
   return (node?.nodeType === Node.ELEMENT_NODE && node.classList?.contains('box'));
@@ -361,41 +374,13 @@ function isEditor(node) {
   return (node === editor);
 }
 
-function insertAndEnterCodeBox() {
-  insertAndEnterBox('code');
-}
-
-function enterNextBox() {
-  cursorManager.enter();
-}
-
-function exitBoxLeft() {
-  cursorManager.exitBox();
-}
-
-function exitBoxRight() {
-  cursorManager.exitBox();
-}
-
-function moveCursorTo(node, offset = 0) {}
-function moveCursorToStartOfBox() {}
-function moveCursorToStartOfLineInBox() {}
-function moveCursorToEndOfBox() {}
-function findBeginningOfLine(node, offset) { return { node, offset }; }
-function findEndOfLine(node, offset) { return { node, offset }; }
-function moveCursorToEndOfLineInBox() {}
-function getPreviousCharNode(node) { return null; }
-function getNextCharNode(node) { return null; }
-function getColumnPosition(cursorNode) { return 0; }
 function insertBoxAtCursor(node) {
   const { node: targetNode } = cursorManager.getCursorPosition();
   targetNode.parentNode.insertBefore(node, targetNode);
   cursorManager.refresh();
 }
+
 function insertBoxContentsAtCursor(box) {}
-function insertTextAtCursor(text) {}
-function insertNewline() {}
-function insertQuotedChar() { quoteFlag = true; }
 
 async function addToClipboard(node) {
   if (node?.children.length === 0 && node?.textContent.length === 0) return;
@@ -434,7 +419,9 @@ function showUnboundKeyAlert(key) {
   alertBox.style.display = 'block';
   alertBox.style.opacity = 1;
   setTimeout(() => { alertBox.style.opacity = 0; }, 500);
-  setTimeout(() => { alertBox.style.display = 'none'; }, 500);
+  setTimeout(() => {
+    alertBox.style.display = 'none';
+  }, 500);
 }
 
 function showError(msg) {
@@ -442,7 +429,9 @@ function showError(msg) {
   alertBox.style.display = 'block';
   alertBox.style.opacity = 1;
   setTimeout(() => { alertBox.style.opacity = 0; }, 1000);
-  setTimeout(() => { alertBox.style.display = 'none'; }, 1000);
+  setTimeout(() => {
+    alertBox.style.display = 'none';
+  }, 1000);
 }
 
 function handleKeydown(event) {
@@ -535,7 +524,6 @@ function moveCursorToClickedPosition(range) {
   if (node === cursor) return;
   if (isShrunkenBox(node)) return;
   if (isBox(node)) {
-    // Enter the box
     cursorManager.mode = Mode.INTERIOR;
     cursorManager.activeBox = node;
     cursorManager.lus = cursorManager.buildLUS(node);
@@ -544,9 +532,6 @@ function moveCursorToClickedPosition(range) {
     return;
   }
   offset = Math.max(0, Math.min(offset, node.textContent?.length ?? 0));
-  // For simplicity, we'll just sync the manager to the clicked node
-  // In a real implementation, we'd calculate the virtualIndex.
-  // For now, let's just rebuild the LUS and find the index.
   cursorManager.refresh(); 
 }
 
@@ -621,7 +606,6 @@ function toggleTheme() {}
 function addToMenu(label, fun, keyBinding) {}
 function statusLedOn(engine_name = null) {}
 function statusLedOff(engine_name = null) {}
-
 function clearBoxContent(box) { box.innerHTML = ''; }
 
 editor.addEventListener('keydown', handleKeydown);
