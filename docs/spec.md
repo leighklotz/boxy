@@ -15,7 +15,7 @@ Here’s a UX specification for implementing a visual editor that handles both t
      - Users can expand or collapse boxes, revealing or hiding nested content, but collapsed boxes should retain a placeholder representation in the flow.
    - **Text Entry and Cursor Behavior:**
      - Text should be editable within or outside of boxes.
-     - The cursor should behave in a predictable, Emacs-like manner across both text and box boundaries.
+     - **Floating Cursor Strategy**: To prevent DOM fragmentation from `splitText`, the cursor is a separate visual overlay. Its position is determined by a **Logical Unit Sequence (LUS)** that tracks the `virtualIndex` of the cursor relative to text nodes and boxes.
 
 ### 2. **Emacs-style Cursor Movement**
    - **Vertical Movement (C-p and C-n):**
@@ -98,10 +98,12 @@ Note that if a text region is selected, any insert or delete commands will delet
 | C-p             | Move up                               | Move cursor up one row in box box, preserving goal column          |
 | C-n             | Move down                             | Move cursor down one row in box box, preserving goal column          |
 | Arrow Keys      | Move Up, Down, Left, or Right         | Like Ctrl-P, Ctrl-N, Ctrl-B, Ctrl-F. |
+| Backspace       | Delete character backward                  | Delete the previous character |
+| C-d, Delete     | Delete character forward                   | Delete the next character |
 | C-k             | Kill line                             | Delete content from cursor to the end of the line in box   |
 | C-y             | Yank (paste)                          | Paste previously cut or copied text/box at the cursor position. Remove from clipboard.|
 | C-w             | Cut region                            | Cut the selected region or current box to the clipboard.   |
-| C-c             | Copy Region                           | Copy the selected region or current box to the clipboard.   |
+| C-c             | Copy Region                           | Copy the selection region or current box with nested content. |
 | C-Shift-C       | Collapse/Expand box                   | Collapse or expand the currently selected box with nested content. |
 | C-leftarrow     | Undo                                  | Undo the last action.                                      |
 | C-rightarrow    | Redo                                  | Redo the last undone action.                               |
@@ -126,6 +128,10 @@ Here are the major implementation decisions to consider for the spec, focused on
    - **Column Restoration Logic:**
      - Implement logic to restore the goal column when skipping shorter lines or empty lines.
      - On horizontal movement (C-f, C-b), reset the goal column to the new column.
+   - **Floating Cursor / LUS Implementation:**
+     - To prevent DOM fragmentation (caused by using `splitText` to place the cursor), use a separate `<input>` overlay.
+     - Maintain a **Logical Unit Sequence (LUS)**: a flattened array of text nodes and box elements that represent the current editing context.
+     - The `virtualIndex` within this LUS serves as the source of truth for position.
 
 ### 3. **Handling Box Boundaries as Characters**
    - **Entry and Exit Points:**
@@ -193,8 +199,9 @@ Boxy Evaluate is not yet implemented.
      - The central editing area where users can interact with text and boxes.
      - Boxes appear as bordered elements within the text flow, supporting nested structures.
    - **Cursor Handling:**
-     - The cursor is represented as a distinct element.
-     - Cursor behaves according to Emacs-like principles, without creating residual empty nodes or spaces.
+     - The cursor is a **floating overlay element** (absolute-positioned `<input>`).
+     - It does not reside in the DOM tree to prevent `splitText` fragmentation.
+     - It is positioned visually using the `Range` API based on the Logical Unit Sequence (LUS).
    - **Clipboard Canvas:**
 	- A line above the editor that shows clipboard items. You cannot click into them.
 
@@ -246,12 +253,12 @@ Boxy Evaluate is not yet implemented.
 | C-e             | Move to end of line in box            | Move to the end of the current line in box.              |
 | C-k             | Kill line                             | Delete content from cursor to end of line in box.        |
 | C-y             | Yank (paste)                          | Paste cut/copied text or current box at the cursor position. |
-| C-w             | Cut region                            | Cut selected region of text or current box to the clipboard. |
+| C-w             | Cut region                            | Cut selected region of text or current box to the clipboard.   |
 | C-c             | Copy Region                           | Copy the selection region or current box with nested content. |
 | C-c             | Collapse/Expand box                   | Collapse/expand the current box with nested content.     |
 | <printingchar>  | Self insert                           | Insert the character typed.                              |
 | <return>        | Newline                               | Insert a new line and move cursor to beginning.          |
-| <unbound key>   | Unbound key                           | Display "$key undefined" alert in a yellow rectangle.    |
+| <unbound key>   | Unbound key                           | Display "$key undefined" in a yellow rectangle.    |
 
 ## 5. **Command Palette for Editor Actions**
    - Users can run editor commands through a command palette (e.g., M-x style).
@@ -261,7 +268,8 @@ Boxy Evaluate is not yet implemented.
    - **Rendering Strategy**:
      - Uses recursive rendering to handle text and nested boxes.
    - **Performance Optimization**:
-     - Lazy rendering for nested boxes and line caching for responsiveness.
+     - Uses a Floating Cursor (Range API overlay) to avoid expensive DOM mutations.
+     - Uses lazy rendering for nested boxes and line caching for responsiveness.
 
 ## 7. **Selection and Region Management**
    - Supports mark and region handling within and across boxes.
@@ -275,4 +283,7 @@ Boxy Evaluate is not yet implemented.
    - Alerts for unbound keys, faded over 2 seconds.
    - Error handling includes checks for empty nodes or unexpected cursor positions, ensuring consistent behavior.
 
----
+## **Current Implementation Status & Known Issues**
+- **Vertical/Horizontal Motion**: Full traversal logic (C-p/C-n/C-f/C-b) is currently stubbed.
+- **Nested Typing**: Text entry and deletion within deep hierarchies of nested boxes is still being refined for stability.
+- **Startup Positioning**: The cursor position upon initial page load requires stabilization.

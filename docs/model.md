@@ -14,7 +14,7 @@ The Boxy Model provides a unique way to interact with structured content using n
 2. **Boxes**
    - Boxes are represented as `<div>` elements with the class `box`.
    - Boxes can contain rows of text and other boxes, enabling arbitrary nesting.
-   - Each box is treated as a single unit in most cursor movements, though users can enter and edit them using specific commands.
+   - Each box is treated as a single unit in the Logical Unit Sequence (LUS) for navigation.
 3. **Rows and Text**
    - Text content is stored in text nodes within boxes.
    - Rows are implicitly defined by newline characters (`\n`), which separate lines of text within a box.
@@ -23,8 +23,8 @@ The Boxy Model provides a unique way to interact with structured content using n
 The editor provides a text-based interface with nested box manipulation capabilities.
 1. **Navigation**
    - The editor supports Emacs-style key bindings for cursor movement (e.g., `Ctrl-f`, `Ctrl-b`, `Ctrl-p`, `Ctrl-n`).
-   - Cursor movements treat boxes as single units by default, though specific commands allow entering and exiting boxes.
-   - Boxes can be entered using `[` or `Ctrl-[`, and exited using `]` or a mouse click.
+   - The `CursorManager` maintains a `virtualIndex` representing the logical position within a flattened sequence of units (LUS).
+   - Boxes can be entered using `[` or `Ctrl-[`, and exited using `]` or `Ctrl-]`.
 2. **Text Manipulation**
    - The editor allows insertion and deletion of characters, as well as more advanced operations like `kill-line` (`Ctrl-k`).
    - Newlines are handled as implicit row boundaries, allowing text to flow naturally across multiple lines.
@@ -47,23 +47,13 @@ The evaluator provides a way to process and modify the content of boxes.
      - Navigate the document hierarchy.
      - Access the current cursor position and row content.
 
-### **Cursor Management**
-The cursor's position determines the active context within the document.
-1. **Movement**
-   - The cursor can move within the current box, row, or document.
-   - Vertical movements (`Ctrl-p`/`Ctrl-n`) maintain a "goal column" to align the cursor vertically across rows.
-   - Horizontal movements (`Ctrl-f`/`Ctrl-b`) treat boxes as single units by default.
-2. **Box Entry**
-   - Entering a box moves the cursor to the start of its content.
-   - Exiting a box moves the cursor to the boundary of the box in its parent row.
-3. **Specialized Commands**
-   - `moveCursorToStartOfBox()`: Moves the cursor to the start of the current box.
-   - `moveCursorToEndOfBox()`: Moves the cursor to the end of the current box.
-   - `moveCursorToStartOfLineInBox()`: Moves the cursor to the start of the current row.
-   - `moveCursorToEndOfLineInBox()`: Moves the cursor to the end of the current row.
-   - `statusLedOn()`: Turns status-led on.
-   - `statusLedOff()`: turns'status-led off.
-
+### **Cursor Management (Floating Cursor Strategy)**
+To avoid DOM fragmentation caused by excessive `splitText` operations, Boxy uses a **Floating Cursor**.
+1. **Logical Unit Sequence (LUS)**: The cursor position is tracked via a `virtualIndex` within an array of logical units (text nodes or box elements).
+2. **Visual Positioning**: Instead of inserting an `<input>` into the DOM tree, the `CursorManager` calculates the visual coordinates of the logical position using the `Range` API and positions an absolute-positioned `<input>` overlay over the editor.
+3. **Modes**: 
+   - `SURFACE`: The cursor moves through the top-level elements of the editor.
+   - `INTERIOR`: The cursor moves through the elements within a specific box.
 
 ### **Key Commands**
 The editor supports a variety of keyboard shortcuts for navigation and manipulation, in additon to mouse clicks:
@@ -86,14 +76,14 @@ The editor supports a variety of keyboard shortcuts for navigation and manipulat
 
 ### **Implementation Details**
 1. **Insertion and Deletion**
-- Text insertion uses `insertCharAtCursor()` and `insertTextAtCursor()`.
+- Text insertion uses `insertCharAtCursor()` and `insertTextAtCursor()`, which update the `virtualIndex`.
 - Box insertion creates a new `<div>` element with the `box` class.
 - Deletion removes text or nodes while maintaining document structure.
 2. **Cursor Positioning**
-- The cursor is represented as an `<input>` element with the class `cursor`.
-- Cursor movements are handled by `moveCursorTo()`, which updates the cursor's position in the DOM.
+- The cursor is a floating `<input>` element.
+- Physical DOM positioning is synchronized via `CursorManager.syncDOM()` using `getBoundingClientRect()`.
 3. **Text and Box Serialization**
-- The `gatherEntireBox()` function serializes a box and its contents, including nested boxes.
+- The `serializeBox()` function serializes a box and its contents, including nested boxes.
 - The `getCurrentRowText()` function collects text from the current row, handling boxes and text nodes appropriately.
 
 ### **Evaluator Integration**
@@ -109,62 +99,9 @@ The evaluator interacts with the document through high-level functions:
 1. **Undo/Redo**: Currently not implemented.
 2. **Selection**: Basic selection is not fully supported beyond cursor movement.
 3. **Clipboard Operations**: Cut/copy/paste functionality is incomplete.
-4. and refine the evaluator's integration with the document structure.
+4. **LUS Synchronization**: Refining the edge cases where the LUS and the physical DOM deviate.
 
----
-
-### Editor SPI
-You can use this stable SPI to implement new editor primitive operations (e.g. for keybindings)
-
-#### **Manipulation Functions**
-- `insertCharAtCursor()`
-- `insertTextAtCursor()`
-- `insertNewline()`
-- `deleteCharAtCursor()`
-- `killLine()`
-- `deleteCurrentBox()`
-
-### **Cursor Management Functions**
-- `moveCursorTo()`
-- `moveCursorToStartOfBox()`
-- `moveCursorToEndOfBox()`
-- `moveCursorToStartOfLineInBox()`
-- `moveCursorToEndOfLineInBox()`
-- `getCurrentCursorPosition()`
-- `setCursorPosition()`
-- 'moveCursorBackward()`
-- `moveCursorForward()`
-
-
-### **Box Operations**
-- `insertAndEnterBox()`
-- `deleteCurrentBox()`
-- `replaceBoxContent()`
-- `serializeBox()`
-
-
-### Evaluator SPI
-You can use this stable SPI to implement new evaluator primitive operations (e.g. for functions or keybindings)
-
-### **Text Access Functions**
-- `getCurrentRowText()`
-   Retrieves the current row's text content, excluding the cursor.
-- `serializeBox(boxElem)`
-   Retrieves the specfied box's text content, excluding the cursor.
-- `deserializeBox()`
-   parses a serialized box string back into DOM elements.
-
-### **Utility Functions**
-- `highlightText()`
-  Applies visual highlighting to specified text.
-- `getTextBetweenPoints()`
-  Retrieves text between two cursor positions.
-- `getCurrentCursorPosition()`  
-  Returns the cursor's current position within the document.
-
-### **Limitations**
-1. **Undo/Redo**: Currently not implemented.
-2. **Selection**: Basic selection is not fully supported beyond cursor movement.
-3. **Clipboard Operations**: Only ctrl-k and ctrl-y are implemented. No styling.
-4. and refine the evaluator's integration with the document structure.
-
+### **Known Issues (Current Implementation)**
+- **Cursor Motion**: Vertical navigation (`C-p`/`C-n`) and horizontal traversal logic are currently stubbed/incomplete.
+- **Typing in Boxes**: Entering a box works, but maintaining stable typing/insertion behavior in deep nesting is still being refined.
+- **Startup Cursor**: Initial cursor positioning on page load requires stabilization.
