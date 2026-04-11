@@ -81,8 +81,8 @@ Note that if a text region is selected, any insert or delete commands will delet
 |-----------------|---------------------------------------|----------------------------------------------------------|
 | [               | Insert and enter box                  | Insert a box at the point and enter it.                  |
 | (               | Insert and enter box                  | Insert a box at the point and enter it.                  |
-| ]               | Exit box                              | Exit current box and put pouint after it.                |
-| )               | Exit box                              | Exit current box and put pouint after it.                |
+| ]               | Exit box                              | Exit current box and put point after it.                |
+| )               | Exit box                              | Exit current box and put point after it.                |
 | C-[             | Enter box                             | Enter box after point                  |
 | C-(             | Enter box                             | Enter box after point                  |
 | C-)             | Exit box to left                      | Exit current box and put point before it             |
