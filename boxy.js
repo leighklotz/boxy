@@ -80,22 +80,53 @@ class CursorManager {
     }
   }
 
-  exitBox() {
-    if (this.mode === Mode.INTERIOR) {
-        const boxToExit = this.activeBox;
-        this.mode = Mode.SURFACE;
-        this.activeBox = null;
+  /**
+   * Exits the current box context.
+   * @param {boolean} toAfter - If true, places cursor after the box; if false, before it.
+   */
+  exitBox(toAfter = true) {
+    if (this.mode === Mode.INTERIOR && this.activeBox) {
+      const exitedElement = this.activeBox;
+      // The parent of the current box is our new logical context (the "Row")
+      const nextContainer = exitedElement.parentElement;
+
+      // Safety check: if we can't find a container or it's just the cursor, abort
+      if (!nextContainer || nextContainer === this.cursorElement) return;
+
+      // 1. Determine new context mode and active box
+      // If parent is editor, we are on surface. Otherwise, we are in an interior of another box.
+      const isGoingToSurface = (nextContainer === this.editor);
+      this.mode = isGoingToSurface ? Mode.SURFACE : Mode.INTERIOR;
+      this.activeBox = isGoingToSurface ? null : nextContainer;
+
+      // 2. Refresh the LUS for the NEW context container immediately
+      if (isGoingToSurface) {
+        this.surfaceLUS = this.buildLUS(this.editor);
         this.lus = this.surfaceLUS;
-        
-        let cumulative = 0;
-        for (let i = 0; i < this.lus.length; i++) {
-            if (this.lus[i].type === 'BOX' && this.lus[i].element === boxToExit) {
-                this.virtualIndex = cumulative + 1;
-                break;
-            }
-            cumulative += this.lus[i].length;
+      } else {
+        this.lus = this.buildLUS(nextContainer);
+      }
+
+      // 3. Re-position Cursor: Find the exited element in its parent's LUS sequence
+      let cumulative = 0;
+      let found = false;
+      for (const unit of this.lus) {
+        if (unit.element === exitedElement || unit.node === exitedElement) {
+          // If exiting right: move to end of the unit in parent context
+          // If exiting left: move to start of the unit in parent context
+          this.virtualIndex = toAfter ? cumulative + unit.length : cumulative;
+          found = true;
+          break;
         }
-        this.syncDOM();
+        cumulative += unit.length;
+      }
+
+      // Fallback if for some reason the element isn't in its own LUS (DOM desync)
+      if (!found) {
+         this.virtualIndex = toAfter ? this.getTotalLength() : 0;
+      }
+
+      this.syncDOM();
     }
   }
 
@@ -109,44 +140,42 @@ class CursorManager {
     for (let i = 0; i < this.lus.length; i++) {
       const unit = this.lus[i];
       if (unit.type === 'TEXT') {
-        // Use <= to ensure that when virtualIndex is at the end of a text node, 
-        // it returns that specific text node with its full offset.
         if (this.virtualIndex >= cumulative && this.virtualIndex <= cumulative + unit.length) {
           return { node: unit.node, offset: this.virtualIndex - cumulative };
         }
         cumulative += unit.length;
       } else { // BOX logic
-        // If the cursor is exactly at the start of a box
         if (this.virtualIndex === cumulative) {
           return { node: unit.element, offset: 0 };
         }
         cumulative += 1;
-        // If the cursor is exactly at the end of a box
         if (this.virtualIndex === cumulative) {
           const next = unit.element.nextSibling;
-          if (next && this.mode !== Mode.INTERIOR) {
+          // If there's a sibling in the DOM that belongs to this context/row
+          if (next && (this.mode !== Mode.INTERIOR || next.parentElement === this.activeBox)) {
             return { node: next, offset: 0 };
           }
         }
       }
     }
 
-    // If we are in INTERIOR mode and haven't found a text node/box unit
+    // Handle the tail of the sequence correctly to avoid "Col 0" issues
+    if (this.virtualIndex >= this.getTotalLength() && this.getTotalLength() > 0) {
+      const lastUnit = this.lus[this.lus.length - 1];
+      if (lastUnit.type === 'TEXT') {
+        return { node: lastUnit.node, offset: lastUnit.length };
+      } else if (lastUnit.type === 'BOX') {
+        // MAGIC OFFSET: Returning -1 signals "immediately after this element" 
+        // rather than inside it or at the start of its parent.
+        return { node: lastUnit.element, offset: -1 };
+      }
+    }
+
     if (this.mode === Mode.INTERIOR) {
       return { node: this.activeBox, offset: 0 };
     }
 
-    // Handle the end of the sequence at the surface level correctly
-    if (this.virtualIndex >= this.getTotalLength()) {
-        // Instead of returning editor with offset 0, we return the parent or last element if possible
-        const lastUnit = this.lus[this.lus.length - 1];
-        if (lastUnit && lastUnit.type === 'TEXT') {
-            return { node: lastUnit.node, offset: lastUnit.length };
-        }
-        // Fallback to editor if truly at the end of everything
-        return { node: this.editor, offset: 0 };
-    }
-
+    // Final fallback for completely empty editor or uninitialized state
     return { node: this.editor, offset: 0 };
   }
 
@@ -196,11 +225,11 @@ function enterNextBox() {
 }
 
 function exitBoxLeft() {
-  cursorManager.exitBox();
+  cursorManager.exitBox(false);
 }
 
 function exitBoxRight() {
-  cursorManager.exitBox();
+  cursorManager.exitBox(true);
 }
 
 function moveCursorUp() {
@@ -253,23 +282,30 @@ function insertTextAtCursor(text) {
     cursorManager.virtualIndex += text.length;
   } 
   else if (isBox(node)) {
-    // If the cursor is pointing at a box element itself (the fallback for empty boxes),
-    // insert the character inside it as a child.
     const textNode = document.createTextNode(text);
-    node.prepend(textNode); 
+    if (offset === -1) {
+      // Use the magic offset to insert AFTER the box instead of inside it
+      node.after(textNode);
+    } else {
+      // Standard behavior: if we are at offset 0, enter/prepend into the box
+      node.prepend(textNode); 
+    }
     cursorManager.virtualIndex += text.length;
   } 
   else {
     const textNode = document.createTextNode(text);
     if (node === editor) {
       editor.appendChild(textNode);
+    } else if (offset === -1 && node.parentElement) {
+       // Handle potential fallback for other elements to append after them
+       node.after(textNode);
     } else {
       node.parentNode.insertBefore(textNode, node);
     }
     cursorManager.virtualIndex += text.length;
   }
-  cursorManager.refresh();
-}
+  cursorManager.refresh();}
+
 
 function insertCharAtCursor(char) {
   insertTextAtCursor(char);
