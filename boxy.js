@@ -103,31 +103,50 @@ class CursorManager {
     console.log(`Vertical move ${direction}`);
   }
 
+
   getCursorPosition() {
     let cumulative = 0;
     for (let i = 0; i < this.lus.length; i++) {
       const unit = this.lus[i];
       if (unit.type === 'TEXT') {
-        if (this.virtualIndex >= cumulative && this.virtualIndex < cumulative + unit.length) {
+        // Use <= to ensure that when virtualIndex is at the end of a text node, 
+        // it returns that specific text node with its full offset.
+        if (this.virtualIndex >= cumulative && this.virtualIndex <= cumulative + unit.length) {
           return { node: unit.node, offset: this.virtualIndex - cumulative };
         }
         cumulative += unit.length;
-      } else {
+      } else { // BOX logic
+        // If the cursor is exactly at the start of a box
         if (this.virtualIndex === cumulative) {
           return { node: unit.element, offset: 0 };
         }
         cumulative += 1;
+        // If the cursor is exactly at the end of a box
         if (this.virtualIndex === cumulative) {
           const next = unit.element.nextSibling;
-          return { node: next || this.editor, offset: 0 };
+          if (next && this.mode !== Mode.INTERIOR) {
+            return { node: next, offset: 0 };
+          }
         }
       }
     }
-    if (this.virtualIndex === cumulative && this.lus.length > 0) {
-        const last = this.lus[this.lus.length - 1];
-        if (last.type === 'TEXT') return { node: last.node, offset: last.length };
-        return { node: last.element, offset: 0 };
+
+    // If we are in INTERIOR mode and haven't found a text node/box unit
+    if (this.mode === Mode.INTERIOR) {
+      return { node: this.activeBox, offset: 0 };
     }
+
+    // Handle the end of the sequence at the surface level correctly
+    if (this.virtualIndex >= this.getTotalLength()) {
+        // Instead of returning editor with offset 0, we return the parent or last element if possible
+        const lastUnit = this.lus[this.lus.length - 1];
+        if (lastUnit && lastUnit.type === 'TEXT') {
+            return { node: lastUnit.node, offset: lastUnit.length };
+        }
+        // Fallback to editor if truly at the end of everything
+        return { node: this.editor, offset: 0 };
+    }
+
     return { node: this.editor, offset: 0 };
   }
 
@@ -232,7 +251,15 @@ function insertTextAtCursor(text) {
     const val = node.textContent;
     node.textContent = val.slice(0, offset) + text + val.slice(offset);
     cursorManager.virtualIndex += text.length;
-  } else {
+  } 
+  else if (isBox(node)) {
+    // If the cursor is pointing at a box element itself (the fallback for empty boxes),
+    // insert the character inside it as a child.
+    const textNode = document.createTextNode(text);
+    node.prepend(textNode); 
+    cursorManager.virtualIndex += text.length;
+  } 
+  else {
     const textNode = document.createTextNode(text);
     if (node === editor) {
       editor.appendChild(textNode);
@@ -309,17 +336,30 @@ function insertAndEnterBox(boxtype='') {
   const newBox = document.createElement('div');
   newBox.classList.add('box');
   if (boxtype) newBox.classList.add(boxtype);
-  
-  const { node } = cursorManager.getCursorPosition();
-  if (isBox(node)) {
-    node.parentNode.insertBefore(newBox, node);
-  } else if (node !== editor) {
-    node.parentNode.insertBefore(newBox, node);
-  } else {
+
+  const { node, offset } = cursorManager.getCursorPosition();
+
+  // 1. If the cursor is at the editor level, append directly to it
+  if (node === editor) {
     editor.appendChild(newBox);
   }
-  
+  // 2. If we are currently on an existing box element, insert before/after it
+  else if (isBox(node)) {
+    node.parentNode.insertBefore(newBox, node);
+  }
+  // 3. Otherwise, handle insertion into text nodes or other elements
+  else {
+    if (node.nodeType === Node.TEXT_NODE && offset >= node.textContent.length) {
+      // If at the end of a text node, insert after it so content flows naturally
+      node.parentNode.insertBefore(newBox, node.nextSibling);
+    } else {
+      node.parentNode.insertBefore(newBox, node);
+    }
+  }
+
   cursorManager.refresh();
+
+  // Enter the new box context immediately
   cursorManager.mode = Mode.INTERIOR;
   cursorManager.activeBox = newBox;
   cursorManager.lus = cursorManager.buildLUS(newBox);
