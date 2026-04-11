@@ -181,20 +181,66 @@ class CursorManager {
 
   syncDOM() {
     const range = document.createRange();
-    const { node, offset } = this.getCursorPosition();
+    let { node, offset } = this.getCursorPosition();
 
     try {
-      const validOffset = (node.nodeType === Node.TEXT_NODE) ? offset : 0;
-      range.setStart(node, validOffset);
-      range.setEnd(node, validOffset);
-      
+      // 1. Handle the "Magic Offset" (-1) which means "after this element/box"
+      if (node.nodeType !== Node.TEXT_NODE && offset === -1) {
+        const sibling = node.nextSibling;
+        if (sibling) {
+          range.setStart(sibling, 0);
+          range.setEnd(sibling, 0);
+        } else if (node.parentElement) {
+          // If it's the last child in its container, use a range on the parent or end of node
+          const parent = node.parentElement;
+          // Try to position at the very end of the container context
+          range.setStart(parent, parent.childNodes.length); 
+          // Note: some browsers may require setEnd as well for zero-width ranges
+          range.setEnd(parent, parent.childNodes.length);
+        } else {
+          range.setStart(node, 0);
+          range.setEnd(node, 1); // Force a non-zero rect if possible
+        }
+      } else {
+        // 2. Standard Logic for Text Nodes and Element Starts
+        const validOffset = (node.nodeType === Node.TEXT_NODE) ? offset : 0;
+        range.setStart(node, validOffset);
+
+        // To prevent zero-width/zero-rect issues at insertion points:
+        // If we are inside a text node and not at the very start or end of it,
+        // create a range with width (1 character) to ensure BoundingClientRect works.
+        let end = validOffset;
+        if (node.nodeType === Node.TEXT_NODE && node.textContent.length > 0) {
+          if (validOffset < node.textContent.length) {
+            // We are in the middle or at the start: expand range to include next char
+            end++; 
+          } else if (validOffset > 0) {
+            // We are at the very end of a text node: use [offset-1, offset] 
+            // to get the rect for the position between characters.
+            range.setStart(node, validOffset - 1);
+            end = validOffset;
+          }
+        }
+        range.setEnd(node, end);
+      }
+
       const rect = range.getBoundingClientRect();
       const editorRect = this.editor.getBoundingClientRect();
 
-      this.cursorElement.style.display = 'block';
-      this.cursorElement.style.position = 'absolute';
-      this.cursorElement.style.top = `${rect.top - editorRect.top}px`;
-      this.cursorElement.style.left = `${rect.left - editorRect.left}px`;
+      // Fallback: If the browser still returns a zeroed rect (common for empty editors), 
+      // do not move the cursor to top-left; keep it at current or default position.
+      if (rect.width === 0 && rect.height === 0) {
+          // Optional: Use node's own rect if we can't get a range rect
+          const fallbackRect = node.getBoundingClientRect ? node.getBoundingClientRect() : editorRect;
+          this.cursorElement.style.top = `${fallbackRect.top - editorRect.top}px`;
+          this.cursorElement.style.left = `${fallbackRect.left - editorRect.left}px`;
+      } else {
+        this.cursorElement.style.display = 'block';
+        this.cursorElement.style.position = 'absolute';
+        this.cursorElement.style.top = `${rect.top - editorRect.top}px`;
+        this.cursorElement.style.left = `${rect.left - editorRect.left}px`;
+      }
+
       this.cursorElement.style.width = '4px';
       this.cursorElement.style.height = '1.2em';
     } catch (e) {
@@ -405,6 +451,86 @@ function insertAndEnterBox(boxtype='') {
 
 function insertAndEnterCodeBox() {
   insertAndEnterBox('code');
+}
+
+/**
+ * Returns an object representing the start of the line containing the cursor/node.
+ * Designed to work with iterators that update a .node property via nextSibling.
+ */
+function findBeginningOfLine(cursor, offset = 0) {
+  const parent = cursor.parentNode;
+
+  // If inside a text node, check if there's a newline before the current position in this node
+  if (cursor.nodeType === Node.TEXT_NODE && cursor.textContent.includes('\n')) {
+    const lastNewlineIdx = cursor.textContent.lastIndexOf('\n');
+    return { node: cursor, offset: lastNewlineIdx + 1 };
+  }
+
+  // Otherwise, return the beginning of the parent container's child sequence
+  const firstChild = parent ? parent.firstChild : editor;
+  return { node: firstChild || parent, offset: 0 };
+}
+
+/**
+ * Updates the cursorManager state to position the virtual cursor at a specific DOM node
+ * and offset.
+ */
+function moveCursorTo(node, offset) {
+  // Determine if we are moving into an interior box context or back to surface
+  const isInsideBox = (node.parentElement && isBox(node.parentElement));
+
+  if (isInsideBox) {
+    cursorManager.mode = Mode.INTERIOR;
+    cursorManager.activeBox = node.parentElement;
+    cursorManager.lus = cursorManager.buildLUS(node.parentElement);
+  } else {
+    cursorManager.mode = Mode.SURFACE;
+    cursorManager.activeBox = null;
+    cursorManager.surfaceLUS = cursorManager.buildLUS(editor);
+    cursorManager.lus = cursorManager.surfaceLUS;
+  }
+
+  // Calculate the virtualIndex by traversing the LUS units
+  let cumulative = 0;
+  let found = false;
+  for (const unit of cursorManager.lus) {
+    if (unit.type === 'TEXT' && unit.node === node) {
+      cursorManager.virtualIndex = cumulative + offset;
+      found = true;
+      break;
+    } else if (unit.type === 'BOX' && unit.element === node) {
+      // If target is the box itself, we land at its start in the sequence
+      cursorManager.virtualIndex = cumulative;
+      found = true;
+      break;
+    }
+    cumulative += unit.length;
+  }
+
+  // Fallback: if not found (e.g. node was removed or desynced), default to end of current LUS
+  if (!found) {
+    cursorManager.virtualIndex = cursorManager.getTotalLength();
+  }
+
+  cursorManager.syncDOM();
+}
+
+/**
+ * Recursively gathers all text content from a node, including nested boxes.
+ * Returns an array of strings to be flattened by callers like getChatHistory.
+ */
+function gatherText(node) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return [node.textContent];
+  } else if (isBox(node)) {
+    const results = [];
+    for (let i = 0; i < node.childNodes.length; i++) {
+      results.push(...gatherText(node.childNodes[i]));
+    }
+    return results;
+  }
+  // Return empty for non-text/non-box nodes to avoid breaking spread operators
+  return [];
 }
 
 // --- UTILITIES ---
