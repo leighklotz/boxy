@@ -55,8 +55,38 @@ class CursorManager {
   }
 
   move(direction) {
-    const delta = direction === 'FORWARD' ? 1 : -1;
-    const newIndex = this.virtualIndex + delta;
+    const isForward = direction === 'FORWARD';
+    let newIndex = this.virtualIndex + (isForward ? 1 : -1);
+
+    // 1. Boundary check: ensure we stay within the LUS bounds
+    if (newIndex < 0 || newIndex > this.getTotalLength()) return;
+
+    // 2. Context-aware traversal
+    // If we are on the SURFACE, we treat boxes as atomic units that are skipped.
+    if (this.mode === Mode.SURFACE) {
+      let cumulative = 0;
+      for (const unit of this.lus) {
+        if (unit.type === 'BOX') {
+          const boxStart = cumulative;
+          const boxEnd = cumulative + unit.length;
+
+          // If the movement lands on the start of a box, jump to the end.
+          if (newIndex === boxStart) {
+            newIndex = boxEnd;
+            break;
+          } 
+          // If the movement lands on the end of a box, jump to the start.
+          else if (newIndex === boxEnd) {
+            newIndex = boxStart;
+            break;
+          }
+        }
+        cumulative += unit.length;
+      }
+    }
+
+    // 3. Finalize the move
+    // We perform a second bounds check in case the jump exceeded the LUS
     if (newIndex >= 0 && newIndex <= this.getTotalLength()) {
       this.virtualIndex = newIndex;
       this.syncDOM();
