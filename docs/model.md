@@ -23,8 +23,9 @@ The Boxy Model provides a unique way to interact with structured content using n
 The editor provides a text-based interface with nested box manipulation capabilities.
 1. **Navigation**
    - The editor supports Emacs-style key bindings for cursor movement (e.g., `Ctrl-f`, `Ctrl-b`, `Ctrl-p`, `Ctrl-n`).
-   - Cursor movements treat boxes as single units by default, though specific commands allow entering and exiting boxes.
-   - Boxes can be entered using `[` or `Ctrl-[`, and exited using `]` or a mouse click.
+   - Cursor movements treat boxes as single units by default. `Ctrl-f` and `Ctrl-b` move over a whole box and do not enter it.
+   - Boxes are entered explicitly with `[` when creating a new box, with `Ctrl-[` / `Ctrl-(` for an adjacent existing box, or with a mouse click.
+   - Boxes are exited explicitly with `]`, `)`, `Ctrl-]`, or `Ctrl-)`, depending on which side of the box point should land on.
 2. **Text Manipulation**
    - The editor allows insertion and deletion of characters, as well as more advanced operations like `kill-line` (`Ctrl-k`).
    - Newlines are handled as implicit row boundaries, allowing text to flow naturally across multiple lines.
@@ -52,7 +53,7 @@ The cursor's position determines the active context within the document.
 1. **Movement**
    - The cursor can move within the current box, row, or document.
    - Vertical movements (`Ctrl-p`/`Ctrl-n`) maintain a "goal column" to align the cursor vertically across rows.
-   - Horizontal movements (`Ctrl-f`/`Ctrl-b`) treat boxes as single units by default.
+   - Horizontal movements (`Ctrl-f`/`Ctrl-b`) treat boxes as single units and reset the goal column for later vertical motion.
 2. **Box Entry**
    - Entering a box moves the cursor to the start of its content.
    - Exiting a box moves the cursor to the boundary of the box in its parent row.
@@ -72,9 +73,9 @@ The editor supports a variety of keyboard shortcuts for navigation and manipulat
 |---------------------|----------------------------------------------|
 | `[`                 | Insert a new box and enter it.               |
 | `Ctrl-[`            | Enter box to right.                          |
-| `Ctrl-]`            | Exit box to left.                            |
-| `]` /               | Exit the current box.                        |
-| `Ctrl-f` / `Ctrl-b` | Move cursor forward/backward.                |
+| `Ctrl-]` / `Ctrl-)` | Exit box to left.                            |
+| `]` / `)`           | Exit the current box to the right.           |
+| `Ctrl-f` / `Ctrl-b` | Move cursor forward/backward over one character or box. |
 | `Ctrl-p` / `Ctrl-n` | Move cursor up/down.                         |
 | `Ctrl-k`            | Kill line (delete from cursor to end of row).|
 | `Ctrl-d`            | Delete character forward.                    |
@@ -167,4 +168,3 @@ You can use this stable SPI to implement new evaluator primitive operations (e.g
 2. **Selection**: Basic selection is not fully supported beyond cursor movement.
 3. **Clipboard Operations**: Only ctrl-k and ctrl-y are implemented. No styling.
 4. and refine the evaluator's integration with the document structure.
-

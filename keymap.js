@@ -10,6 +10,7 @@ const keyMap = {
   'Ctrl-)': exitBoxLeft,
   'Ctrl-f': moveCursorForward,
   'Ctrl-b': moveCursorBackward,
+  'Ctrl-c': copySelectionOrCurrentBox,
   'Ctrl-a': moveCursorToStartOfLineInBox,
   'Ctrl-B': shrinkBox,
   'Ctrl-d': deleteCharForward,
@@ -20,6 +21,7 @@ const keyMap = {
   'Ctrl-n': moveCursorDown,
   'Ctrl-q': insertQuotedChar,
   'Ctrl-R': () => { window.location.reload() },
+  'Ctrl-w': cutSelectionOrCurrentBox,
   'Ctrl-y': yank,
   'Ctrl-,': moveCursorToStartOfBox,
   'Ctrl-.': moveCursorToEndOfBox,
@@ -37,3 +39,5 @@ const keyMap = {
 addToMenu('Toggle Theme', toggleTheme, '');
 addToMenu('Expand/Contract Box', toggleCurrentBoxExpansion, 'F3');
 addToMenu('Explode Box', explodeBox, 'Ctrl-*');
+addToMenu('Copy Selection/Box', copySelectionOrCurrentBox, 'Ctrl-c');
+addToMenu('Cut Selection/Box', cutSelectionOrCurrentBox, 'Ctrl-w');

@@ -21,14 +21,15 @@ Here’s a UX specification for implementing a visual editor that handles both t
    - **Vertical Movement (C-p and C-n):**
      - Maintain column position as the user navigates vertically.
      - Handle lines of varying lengths by stopping at the end of the line when shorter than the goal column.
-     - Skip over empty lines while aiming to restore the goal column once a sufficiently long line is reached.
+     - Preserve the goal column across repeated vertical motion so it can be restored on later rows.
    - **Horizontal Movement (C-f and C-b):**
-     - Treat the contents of boxes as individual characters, meaning a single horizontal move should allow the cursor to enter or leave a box.
-     - When inside a box, horizontal navigation should allow character-by-character movement or navigation to nested boxes.
+     - Treat each box as a single character-sized unit in the enclosing row.
+     - `C-f` and `C-b` move over a whole box and do not enter it.
    - **Box Traversal:**
-     - C-f should move into a box if it’s at the cursor position, and C-b should exit the box, treating it like moving between characters.
+     - Enter boxes only with explicit enter-box commands or by mouse click.
+     - Exit boxes only with explicit exit-box commands.
    - **Column Resetting:**
-     - If horizontal movement occurs, reset the goal column for subsequent vertical navigation.
+     - Horizontal movement, explicit box entry/exit, and mouse repositioning reset the goal column for subsequent vertical navigation.
    - **Selection and Editing:**
      - Standard Emacs commands (or equivalents) should work for selecting text, cutting, and pasting, even when dealing with nested boxes.
      - Boxes can be selected, cut, and pasted as entire units, preserving nested content.
@@ -46,7 +47,7 @@ Here’s a UX specification for implementing a visual editor that handles both t
    - Boxes can contain other boxes, creating a hierarchy.
    - When navigating inside nested boxes, the behavior should adapt accordingly:
      - Vertical movement should continue to respect the goal column, even within nested boxes.
-     - Horizontal movement should allow entry and exit of nested boxes.
+     - Horizontal movement should continue to treat nested boxes as atomic units; entry and exit remain explicit commands.
    - Expanding and collapsing boxes should be possible without losing the contents or breaking the text flow.
 
 ### 5. **Undo/Redo Functionality**
@@ -74,41 +75,40 @@ Here’s a UX specification for implementing a visual editor that handles both t
 | Click Drag | Select text |Mark the dragged-over text as selected.       |
 
 ## Boxy Editor Key Bindings
-Below is comprehensive table of key bindings for the visual editor, based on standard Emacs conventions along with custom commands for managing boxes.
-Note that if a text region is selected, any insert or delete commands will delete the current region first.
+Below is the current keybinding set for the visual editor.
+Boxes are atomic under `C-f` and `C-b`: those commands move over a whole box as one character and do not enter it.
+Enter a box explicitly with `C-[` / `C-(` or with a mouse click. If a text region is selected, insert and delete commands replace that region first.
 
-| **Key Binding** | **Action**                            | **Description**                                          |
-|-----------------|---------------------------------------|----------------------------------------------------------|
-| [               | Insert and enter box                  | Insert a box at the point and enter it.                  |
-| (               | Insert and enter box                  | Insert a box at the point and enter it.                  |
-| ]               | Exit box                              | Exit current box and put pouint after it.                |
-| )               | Exit box                              | Exit current box and put pouint after it.                |
-| C-[             | Enter box                             | Enter box after point                  |
-| C-(             | Enter box                             | Enter box after point                  |
-| C-)             | Exit box to left                      | Exit current box and put point before it             |
-| C-)             | Exit box to left                      | Exit current box and put point before it              |
-| C-p             | Move cursor up                        | Move cursor to the previous line, maintaining goal column. |
-| C-n             | Move cursor down                      | Move cursor to the next line, maintaining goal column.     |
-| C-f             | Move cursor forward                   | Move cursor to the next character; enters boxes if present.|
-| C-b             | Move cursor backward                  | Move cursor to the previous character; exits boxes if present. |
-| C-a             | Move to beginning of line in box      | Move cursor to the start of the current line in box.       |
-| C-e             | Move to end of line in box            | Move cursor to the end of the current line in box          |
-| C-f             | Move forward                          | Move cursor forward one char or box          |
-| C-b             | Move backward                         | Move cursor backward one char or box          |
-| C-p             | Move up                               | Move cursor up one row in box box, preserving goal column          |
-| C-n             | Move down                             | Move cursor down one row in box box, preserving goal column          |
-| Arrow Keys      | Move Up, Down, Left, or Right         | Like Ctrl-P, Ctrl-N, Ctrl-B, Ctrl-F. |
-| C-k             | Kill line                             | Delete content from cursor to the end of the line in box   |
-| C-y             | Yank (paste)                          | Paste previously cut or copied text/box at the cursor position. Remove from clipboard.|
-| C-w             | Cut region                            | Cut the selected region or current box to the clipboard.   |
-| C-c             | Copy Region                           | Copy the selected region or current box to the clipboard.   |
-| C-Shift-C       | Collapse/Expand box                   | Collapse or expand the currently selected box with nested content. |
-| C-leftarrow     | Undo                                  | Undo the last action.                                      |
-| C-rightarrow    | Redo                                  | Redo the last undone action.                               |
-| <printingchar>  | Self insert                           | Insert the character used to invoke this.                  |
-| <return>        | Newline                               | Insert a new line and move cursor to beginning. Extend box to fit. |
-| C-|             | Evaluate                              | Send the text of the current row to the "evaluate" function and output the resulting box after a pipe symbol on the same line.  |
-| <unbound key>   | Unbound key                           | Display "$key undefined" in an alertish yellow rectangle at top of screen, then fade.|
+| **Key Binding** | **Action** | **Description** |
+|-----------------|------------|-----------------|
+| `[` | Insert and enter box | Insert a data box at point and enter it. |
+| `(` | Insert and enter code box | Insert a code box at point and enter it. |
+| `]`, `)` | Exit box right | Exit the current box and place point after it. |
+| `C-[`, `C-(` | Enter adjacent box | Enter the box next to point without changing `C-f`/`C-b` behavior. |
+| `C-]`, `C-)` | Exit box left | Exit the current box and place point before it. |
+| `C-f`, `Right` | Move forward | Move forward one character or one whole box. |
+| `C-b`, `Left` | Move backward | Move backward one character or one whole box. |
+| `C-p`, `Up` | Move up | Move up one row while preserving goal column. |
+| `C-n`, `Down` | Move down | Move down one row while preserving goal column. |
+| `C-a` | Start of line | Move to the start of the current row in the current box. |
+| `C-e` | End of line | Move to the end of the current row in the current box. |
+| `C-,` | Start of box | Move to the start of the current box. |
+| `C-.` | End of box | Move to the end of the current box. |
+| `C-q` | Quote next character | Insert the next typed character literally. |
+| `Backspace` | Delete backward | Delete the previous character or box. |
+| `C-d`, `Delete` | Delete forward | Delete the next character or box. |
+| `C-k` | Kill line | Delete to end of row and store the deleted fragment in the clipboard strip. |
+| `C-y` | Yank | Reinsert the most recent clipboard item. |
+| `C-c` | Copy selection/box | Copy the current selection, or the current box if there is no selection. |
+| `C-w` | Cut selection/box | Cut the current selection, or the current box if there is no selection. |
+| `C-Shift-B` | Shrink box | Collapse the current box into a single motion unit. |
+| `F3` | Expand/contract box | Toggle expanded display for the current box. |
+| `Double Click` | Expand shrunken box | Expand a shrunken box and place point by mouse. |
+| `|` | Evaluate row | Evaluate the current row and append the result after ` | `. |
+| `C-|` | Evaluate box | Evaluate the current box and append the result after ` | `. |
+| `<printingchar>` | Self insert | Insert the typed character. Inside code/markdown boxes, raw `[]()` self-insert. |
+| `<return>` | Newline | Insert a new line at point. |
+| `<unbound key>` | Unbound key | Display a temporary undefined-key alert. |
 
 ## Boxy Editor Implementation Notes
 Here are the major implementation decisions to consider for the spec, focused on underlying structures, algorithms, and behavior logic:
@@ -208,7 +208,7 @@ Boxy Evaluate is not yet implemented.
    - **Boundary Handling:**
      - Treats boxes as single units; requires explicit commands to enter/exit.
    - **Column Resetting:**
-     - Horizontal movement resets the goal column for vertical navigation.
+     - Horizontal movement, explicit box entry/exit, and mouse repositioning reset the goal column for vertical navigation.
 
 ## 3. **Box Management**
    - **Adding Boxes:**
@@ -234,21 +234,21 @@ Boxy Evaluate is not yet implemented.
 | (               | Insert and enter box                  | Insert a box at the cursor and enter it.                 |
 | ]               | Exit box right                        | Exit current box and place cursor after it.              |
 | )               | Exit box right                        | Exit current box and place cursor after it.              |
-| C-[             | Enter next box                        | Enter the box immediately after the cursor.              |
-| C-(             | Enter next box                        | Enter the box immediately after the cursor.              |
+| C-[             | Enter next box                        | Enter the adjacent box explicitly.                       |
+| C-(             | Enter next box                        | Enter the adjacent box explicitly.                       |
 | C-]             | Exit box left                         | Exit current box and place cursor before it.             |
 | C-)             | Exit box left                         | Exit current box and place cursor before it.             |
 | C-p             | Move up                               | Move up one row, maintaining goal column.                |
 | C-n             | Move down                             | Move down one row, maintaining goal column.              |
-| C-f             | Move forward                          | Move right one character or box.                         |
-| C-b             | Move backward                         | Move left one character or box.                          |
+| C-f             | Move forward                          | Move right one character or one whole box.               |
+| C-b             | Move backward                         | Move left one character or one whole box.                |
 | C-a             | Move to beginning of line in box      | Move to the start of the current line in box.            |
 | C-e             | Move to end of line in box            | Move to the end of the current line in box.              |
 | C-k             | Kill line                             | Delete content from cursor to end of line in box.        |
 | C-y             | Yank (paste)                          | Paste cut/copied text or current box at the cursor position. |
 | C-w             | Cut region                            | Cut selected region of text or current box to the clipboard. |
 | C-c             | Copy Region                           | Copy the selection region or current box with nested content. |
-| C-c             | Collapse/Expand box                   | Collapse/expand the current box with nested content.     |
+| F3              | Expand/Contract box                   | Toggle expanded display for the current box.             |
 | <printingchar>  | Self insert                           | Insert the character typed.                              |
 | <return>        | Newline                               | Insert a new line and move cursor to beginning.          |
 | <unbound key>   | Unbound key                           | Display "$key undefined" alert in a yellow rectangle.    |

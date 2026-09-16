@@ -37,44 +37,39 @@ Then visit <a href="http://localhost:8080">http://localhost:8080/boxy.html</a>.
 | Click Drag | Select text |Mark the dragged-over text as selected.       |
 
 ## Boxy Editor Key Bindings
-Below is comprehensive table of key bindings for the visual editor, based on standard Emacs conventions along with custom commands for managing boxes.
-Note that if a text region is selected, any insert or delete commands will delete the current region first.
+Below is the current keybinding set for the visual editor.
+Boxes are atomic under `C-f` and `C-b`: those commands move over a whole box as one character and do not enter it.
+Enter a box explicitly with `C-[` / `C-(` or with a mouse click. If a text region is selected, insert and delete commands replace that region first.
 
-| **Key Binding** | **Action**                            | **Description**                                          |
-|-----------------|---------------------------------------|----------------------------------------------------------|
-| [               | Insert and enter box                  | Insert a box at the point and enter it.                  |
-| (               | Insert and enter box                  | Insert a code box at the point and enter it.                  |
-| ]               | Exit box                              | Exit current box and put pouint after it.                |
-| )               | Exit box                              | Exit current box and put pouint after it.                |
-| C-[             | Enter box                             | Enter box after point                  |
-| C-(             | Enter box                             | Enter box after point                  |
-| C-)             | Exit box to left                      | Exit current box and put point before it             |
-| C-)             | Exit box to left                      | Exit current box and put point before it              |
-| C-p             | Move cursor up                        | Move cursor to the previous line, maintaining goal column. |
-| C-n             | Move cursor down                      | Move cursor to the next line, maintaining goal column.     |
-| C-f             | Move cursor forward                   | Move cursor to the next character; enters boxes if present.|
-| C-b             | Move cursor backward                  | Move cursor to the previous character; exits boxes if present. |
-| C-a             | Move to beginning of line in box      | Move cursor to the start of the current line in box.       |
-| C-e             | Move to end of line in box            | Move cursor to the end of the current line in box          |
-| C-f             | Move forward                          | Move cursor forward one char or box          |
-| C-b             | Move backward                         | Move cursor backward one char or box          |
-| C-p             | Move up                               | Move cursor up one row in box box, preserving goal column          |
-| C-n             | Move down                             | Move cursor down one row in box box, preserving goal column          |
-| C-q             | Quote Character                       | Insert the next typed character instead of acting on it.      |
-| Arrow Keys      | Move Up, Down, Left, or Right         | Like Ctrl-P, Ctrl-N, Ctrl-B, Ctrl-F. |
-| Backspace       | Delete char backward                  | Delete the previous character |
-| C-d, Delete     | Delete char forward                   | Delete the next character |
-| C-k             | Kill line                             | Delete content from cursor to the end of the line in box   |
-| C-y             | Yank (paste)                          | Paste top item from clipboard at the cursor position. |
-| C-Shift-B       | Shrink box                            | Shrink the currently selected box with nested content. |
-| Double Click    | Expand box                            | Expand the clicked box with nested content. |
-| C-leftarrow     | Undo                                  | Undo the last action.                                      |
-| C-rightarrow    | Redo                                  | Redo the last undone action.                               |
-| <printingchar>  | Self insert                           | Insert the character used to invoke this.                  |
-| <return>        | Newline                               | Insert a new line and move cursor to beginning. Extend box to fit. |
-| &#124;        | Evaluate Row                            | Send the text of the current row to the "evaluate" function and output the resulting box after a pipe symbol on the same line.  |
-| C-&#124;        | Evaluate Box                          | Send the text of the current box to the "evaluate" function and output the resulting box after a pipe symbol on the same line.  |
-| &lt;unbound key&gt; | Unbound key                       | Display "$key undefined" in an alertish yellow rectangle at top of screen, then fade.|
+| **Key Binding** | **Action** | **Description** |
+|-----------------|------------|-----------------|
+| `[` | Insert and enter box | Insert a data box at point and enter it. |
+| `(` | Insert and enter code box | Insert a code box at point and enter it. |
+| `]`, `)` | Exit box right | Exit the current box and place point after it. |
+| `C-[`, `C-(` | Enter adjacent box | Enter the box next to point without changing `C-f`/`C-b` behavior. |
+| `C-]`, `C-)` | Exit box left | Exit the current box and place point before it. |
+| `C-f`, `Right` | Move forward | Move forward one character or one whole box. |
+| `C-b`, `Left` | Move backward | Move backward one character or one whole box. |
+| `C-p`, `Up` | Move up | Move up one row while preserving goal column. |
+| `C-n`, `Down` | Move down | Move down one row while preserving goal column. |
+| `C-a` | Start of line | Move to the start of the current row in the current box. |
+| `C-e` | End of line | Move to the end of the current row in the current box. |
+| `C-,` | Start of box | Move to the start of the current box. |
+| `C-.` | End of box | Move to the end of the current box. |
+| `C-q` | Quote next character | Insert the next typed character literally. |
+| `Backspace` | Delete backward | Delete the previous character or box. |
+| `C-d`, `Delete` | Delete forward | Delete the next character or box. |
+| `C-k` | Kill line | Delete to end of row and store the deleted fragment in the clipboard strip. |
+| `C-y` | Yank | Reinsert the most recent clipboard item. |
+| `C-c` | Copy selection/box | Copy the current selection, or the current box if there is no selection. |
+| `C-w` | Cut selection/box | Cut the current selection, or the current box if there is no selection. |
+| `C-Shift-B` | Shrink box | Collapse the current box into a single motion unit. |
+| `F3` | Expand/contract box | Toggle expanded display for the current box. |
+| `Double Click` | Expand shrunken box | Expand a shrunken box and place point by mouse. |
+| `|` | Evaluate row | Evaluate the current row and append the result after ` | `. |
+| `C-|` | Evaluate box | Evaluate the current box and append the result after ` | `. |
+| `<printingchar>` | Self insert | Insert the typed character. Inside code/markdown boxes, raw `[]()` self-insert. |
+| `<unbound key>` | Unbound key | Display a temporary undefined-key alert. |
 
 ## Modules
 
