@@ -22,6 +22,12 @@
   <script src="../keymap.js"></script>
   <script src="../modules/eval-base/eval-base.js"></script>
   <script>
+    if (!navigator.clipboard) {
+      navigator.clipboard = {};
+    }
+    navigator.clipboard.writeText = async () => {};
+    navigator.clipboard.readText = async () => '';
+
     function assert(condition, message) {
       if (!condition) throw new Error(message);
     }

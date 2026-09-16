@@ -30,7 +30,7 @@ The editor provides a text-based interface with nested box manipulation capabili
    - The editor allows insertion and deletion of characters, as well as more advanced operations like `kill-line` (`Ctrl-k`).
    - Newlines are handled as implicit row boundaries, allowing text to flow naturally across multiple lines.
 3. **Box Manipulation**
-   - Boxes can be inserted at the cursor position using `[` or `Ctrl-[`.
+   - Boxes can be inserted at the cursor position using `[` for data boxes or `(` for code boxes.
    - Exiting a box moves the cursor to the position immediately before or after the box, depending on the command used.
    - Boxes are serialized as `[...]` in their parent rows, with nested boxes represented recursively.
 
