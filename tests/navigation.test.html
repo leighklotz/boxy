@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Boxy Navigation Tests</title>
+  <style>
+    body { font-family: monospace; }
+    .pass { color: green; }
+    .fail { color: red; }
+  </style>
+</head>
+<body>
+  <header>
+    <span id="status-led"></span>
+    <span id="top-menus"></span>
+    <div id="alert-box" style="display:none"></div>
+    <div id="clipboard" class="box" tabindex="0"></div>
+  </header>
+  <div id="editor" class="box" tabindex="0"><input disabled type="text" id="cursor" class="cursor"></div>
+  <ol id="results"></ol>
+  <script src="../boxy.js"></script>
+  <script src="../keymap.js"></script>
+  <script src="../modules/eval-base/eval-base.js"></script>
+  <script>
+    if (!navigator.clipboard) {
+      navigator.clipboard = {};
+    }
+    navigator.clipboard.writeText = async () => {};
+    navigator.clipboard.readText = async () => '';
+
+    function assert(condition, message) {
+      if (!condition) throw new Error(message);
+    }
+
+    function testKeyEvent(key, extra = {}) {
+      return {
+        key,
+        code: extra.code || '',
+        ctrlKey: !!extra.ctrlKey,
+        shiftKey: !!extra.shiftKey,
+        metaKey: false,
+        preventDefault() {},
+      };
+    }
+
+    function makeText(text) {
+      return document.createTextNode(text);
+    }
+
+    function makeBox(text = '', classes = []) {
+      const box = document.createElement('div');
+      box.classList.add('box');
+      classes.forEach((name) => box.classList.add(name));
+      if (text) box.appendChild(document.createTextNode(text));
+      return box;
+    }
+
+    function resetEditor(children = []) {
+      editor.replaceChildren();
+      clipboard.replaceChildren();
+      children.forEach((child) => editor.appendChild(child));
+      editor.appendChild(cursor);
+      selectionRange = null;
+      goalColumn = -1;
+      quoteFlag = false;
+    }
+
+    function selectRange(node, start, end) {
+      const range = document.createRange();
+      range.setStart(node, start);
+      range.setEnd(node, end);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      updateSelectionRange();
+    }
+
+    function runTests() {
+      const tests = [
+        function horizontalMotionSkipsBoxes() {
+          const inner = makeBox('x');
+          resetEditor([makeText('a'), inner, makeText('b')]);
+          moveCursorToOffsetInBox(editor, 1);
+          moveCursorForward();
+          assert(cursor.parentNode === editor, 'cursor should stay in outer box');
+          assert(getCursorOffsetInBox(editor) === 2, 'Ctrl-f should skip over a box');
+          moveCursorBackward();
+          assert(getCursorOffsetInBox(editor) === 1, 'Ctrl-b should skip back over a box');
+        },
+        function explicitEnterAndExit() {
+          const inner = makeBox('x');
+          resetEditor([makeText('a'), inner, makeText('b')]);
+          moveCursorToOffsetInBox(editor, 1);
+          enterNextBox();
+          assert(cursor.parentNode === inner, 'explicit enter should move into the box');
+          assert(getCursorOffsetInBox(inner) === 0, 'enter should put point at box start');
+          exitBoxRight();
+          assert(cursor.parentNode === editor, 'exit right should return to parent box');
+          assert(getCursorOffsetInBox(editor) === 2, 'exit right should land after the box');
+          enterNextBox();
+          exitBoxLeft();
+          assert(cursor.parentNode === editor, 'exit left should return to parent box');
+          assert(getCursorOffsetInBox(editor) === 1, 'exit left should land before the box');
+        },
+        function goalColumnSurvivesShortAndEmptyRows() {
+          resetEditor([makeText('abcd\nx\n\nabcd')]);
+          moveCursorToOffsetInBox(editor, 3);
+          moveCursorDown();
+          assert(getCurrentRowInfo().rowIndex === 1, 'first down should reach second row');
+          assert(getCurrentRowInfo().column === 1, 'short row should clamp at end');
+          moveCursorDown();
+          assert(getCurrentRowInfo().rowIndex === 2, 'second down should reach empty row');
+          assert(getCurrentRowInfo().column === 0, 'empty row should clamp to column 0');
+          moveCursorDown();
+          assert(getCurrentRowInfo().rowIndex === 3, 'third down should reach final row');
+          assert(getCurrentRowInfo().column === 3, 'goal column should be restored on later rows');
+        },
+        function rawDelimitersInsertLiterally() {
+          const codeBox = makeBox('', ['code']);
+          resetEditor([codeBox]);
+          moveCursorTo(codeBox, 0);
+          handleKeydown(testKeyEvent('['));
+          handleKeydown(testKeyEvent(']'));
+          handleKeydown(testKeyEvent('('));
+          handleKeydown(testKeyEvent(')'));
+          assert(serializeBox(codeBox) === '[]()', 'code boxes should self-insert delimiters');
+          resetEditor([]);
+          insertQuotedChar();
+          handleKeydown(testKeyEvent('['));
+          assert(serializeBox(editor) === '[', 'quoted delimiters should insert literally outside code boxes');
+        },
+        function cutSelectionAndYankFragment() {
+          resetEditor([makeText('abcdef')]);
+          const textNode = editor.firstChild;
+          selectRange(textNode, 1, 3);
+          cutSelectionOrCurrentBox();
+          assert(serializeBox(editor) === 'adef', 'cut should remove the selected fragment');
+          assert(getCursorOffsetInBox(editor) === 1, 'cut should leave point at the selection start');
+          yank();
+          assert(serializeBox(editor) === 'abcdef', 'yank should reinsert the cut fragment as text');
+        },
+        function restoreLikeInsertLeavesPointOutsideResultBox() {
+          resetEditor([makeText('boxes/demo.box')]);
+          insertResponse('[x]\n[y]');
+          assert(cursor.parentNode === editor, 'restored content should not force point out of the containing box');
+          assert(getCursorOffsetInBox(editor) === getBoxLength(editor), 'point should remain after the inserted result');
+        },
+        function shrunkenBoxesStayAtomic() {
+          const inner = makeBox('x');
+          inner.classList.add('shrunken');
+          resetEditor([makeText('a'), inner, makeText('b')]);
+          moveCursorToOffsetInBox(editor, 1);
+          moveCursorForward();
+          assert(getCursorOffsetInBox(editor) === 2, 'forward motion should skip a shrunken box');
+          moveCursorToOffsetInBox(editor, 1);
+          enterNextBox();
+          assert(cursor.parentNode === editor, 'explicit enter should not enter a shrunken box');
+          assert(getCursorOffsetInBox(editor) === 1, 'failed enter should leave point in place');
+        },
+      ];
+
+      const resultsNode = document.getElementById('results');
+      let failures = 0;
+      tests.forEach((test) => {
+        const item = document.createElement('li');
+        try {
+          test();
+          item.textContent = `PASS ${test.name}`;
+          item.className = 'pass';
+        } catch (error) {
+          failures += 1;
+          item.textContent = `FAIL ${test.name}: ${error.message}`;
+          item.className = 'fail';
+        }
+        resultsNode.appendChild(item);
+      });
+
+      window.TEST_RESULTS = { total: tests.length, failures };
+      document.title = failures === 0 ? 'PASS' : 'FAIL';
+    }
+
+    runTests();
+  </script>
+</body>
+</html>

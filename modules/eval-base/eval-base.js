@@ -85,7 +85,6 @@ function insertResponse(response, applyMarkdown=false, unbox=true) {
     if (applyMarkdown) {
       formatMarkdownBox(responseBox);
     }
-    exitBoxRight();
   } else {
     // unbox single-line text responses
     insertBoxContentsAtCursor(responseBox);
